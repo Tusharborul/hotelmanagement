@@ -5,6 +5,18 @@ const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Disable body scroll when menu is open
+  React.useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [menuOpen]);
+
   return (
     <header className="border-b border-gray-200">
     <div className="max-w-7xl mx-auto px-8 w-full  relative h-20 flex items-center justify-between">
@@ -54,16 +66,23 @@ const Header = () => {
 
         {/* Mobile Menu */}
         {menuOpen && (
-          <div className="fixed top-0 right-0 h-full w-2/5 max-w-xs bg-white shadow-lg z-50 flex flex-col items-center py-10 px-6 lg:hidden transition-all duration-300">
-            {/* Close button */}
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
-              onClick={() => setMenuOpen(false)}
-            >
-              <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+          <div className="fixed inset-0 w-full h-full bg-white shadow-lg z-50 flex flex-col items-center py-6 px-6 lg:hidden overflow-hidden">
+            {/* Logo at top */}
+            <div className="w-full flex items-center justify-between mb-8">
+              <div className="text-[22px] sm:text-[26px] font-medium flex items-center">
+                <span className="text-blue-600 font-medium">Lanka</span>
+                <span className="text-gray-900 font-medium ml-1">Stay.</span>
+              </div>
+              {/* Close button */}
+              <button
+                className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                onClick={() => setMenuOpen(false)}
+              >
+                <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             <nav className="flex flex-col gap-5 font-[Poppins] items-center mt-10">
               <a href="home" className="text-[#3252DF] text-[18px]" onClick={() => setMenuOpen(false)}>Home</a>
               <a href="hoteldetails" className="text-[#152C5B] hover:text-[#3252DF] transition" onClick={() => setMenuOpen(false)}>Hotels</a>

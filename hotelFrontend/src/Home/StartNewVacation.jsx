@@ -36,8 +36,8 @@ const StartNewVacation = () => (
       </div>
     </div>
     {/* Right Side */}
-    <div className="flex-1 flex justify-center items-center relative mt-6 lg:mt-0">
-  <div className="absolute -bottom-8 -right-8 w-[360px] sm:w-[460px] lg:w-[560px] h-[240px] sm:h-80 lg:h-[450px] rounded-2xl border-2 border-gray-200 bg-white z-0"></div>
+    <div className=" flex-1 flex justify-center items-center relative mt-6 lg:mt-0">
+  <div className="hidden md:block absolute -bottom-8 -right-4 w-[320px] sm:w-[420px] lg:w-[520px] h-[200px] sm:h-[300px] lg:h-[410px] rounded-2xl border-2 border-gray-300 bg-white z-0"></div>
   <img src={vacationImg} alt="Vacation" className="w-[320px] sm:w-[420px] lg:w-[520px] h-[200px] sm:h-[300px] lg:h-[410px] object-cover rounded-2xl border-2 border-white shadow-lg z-10 relative" />
     </div>
   </div>

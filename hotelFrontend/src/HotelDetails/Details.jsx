@@ -11,8 +11,35 @@ import tv from "../assets/Details/ic_tv.png";
 
 
 
-const Details = () => {
+const Details = ({ hotel, hotelId }) => {
     const navigate = useNavigate();
+    
+    // Default values if hotel data is not available
+    const defaultDescription = "Minimal techno is a minimalist subgenre of techno music. It is characterized by a stripped-down aesthetic that exploits the use of repetition and understated development. Minimal techno is thought to have been originally developed in the early 1990s by Detroit-based producers Robert Hood and Daniel Bell.";
+    const defaultPrice = 200;
+    const defaultFacilities = {
+        bedrooms: 1,
+        livingrooms: 1,
+        bathrooms: 1,
+        diningrooms: 1,
+        wifi: '10 mbp/s',
+        unitsReady: 7,
+        refrigerator: 1,
+        television: 2
+    };
+
+    const description = hotel?.description || defaultDescription;
+    const price = hotel?.price || defaultPrice;
+    const facilities = hotel?.facilities || defaultFacilities;
+
+    const handleBooking = () => {
+        if (hotelId) {
+            navigate(`/booking?hotelId=${hotelId}`);
+        } else {
+            navigate('/booking');
+        }
+    };
+
     return (
         <div className=" mb-6 mt-20 ">
             <div className="flex flex-col lg:flex-row gap-8">
@@ -20,19 +47,21 @@ const Details = () => {
                 <div className="flex-1">
                     <h2 className="text-[20px] font-semibold text-[#1a237e] mb-4">About the place</h2>
                     <p className="text-[16px] text-gray-400 mb-2">
-                        Minimal techno is a minimalist subgenre of techno music. It is characterized by a stripped-down aesthetic that exploits the use of repetition and understated development. Minimal techno is thought to have been originally developed in the early 1990s by Detroit-based producers Robert Hood and Daniel Bell.
+                        {description}
                     </p>
-                    <p className="text-[16px] text-gray-400">
-                        Such trends saw the demise of the soul-infused techno that typified the original Detroit sound. Robert Hood has noted that he and Daniel Bell both realized something was missing from techno in the post-rave era.
-                    </p>
+                    {hotel?.name && (
+                        <p className="text-[16px] text-gray-400">
+                            Located in {hotel.location}, this property offers a comfortable stay with modern amenities.
+                        </p>
+                    )}
                 </div>
                 {/* Right: Booking Card */}
                 <div className="w-full lg:w-[487px] h-auto lg:h-[230px] bg-white rounded-2xl shadow-md flex flex-col justify-center border border-gray-200 p-6 lg:p-20">
                     <div className="text-[20px] text-[#1a237e] font-semibold mb-2">Start Booking</div>
-                    <div className="text-[36px] font-bold text-[#2ad3b3] mb-2">$200 <span className="text-[18px] text-gray-400 font-normal">per Day</span></div>
+                    <div className="text-[36px] font-bold text-[#2ad3b3] mb-2">${price} <span className="text-[18px] text-gray-400 font-normal">per Day</span></div>
                     <button
                         className="bg-[#3256e2] w-full lg:w-[347px] h-[41px] text-white font-semibold rounded-xl px-8 py-3 shadow-sm hover:bg-blue-700 transition mt-4"
-                        onClick={() => navigate('/booking')}
+                        onClick={handleBooking}
                     >
                         Book Now!
                     </button>
@@ -43,35 +72,35 @@ const Details = () => {
                 {/* Example icons, replace src with your actual icon paths */}
                 <div className="flex flex-col items-left">
                     <img src={bedroom} alt="Bedroom" className="w-9 h-9 mb-2" />
-                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">1</span> bedroom</span>
+                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{facilities.bedrooms}</span> bedroom</span>
                 </div>
                 <div className="flex flex-col items-left">
                     <img src={livingroom} alt="Living Room" className="w-9 h-9 mb-2" />
-                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">1</span> living room</span>
+                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{facilities.livingrooms}</span> living room</span>
                 </div>
                 <div className="flex flex-col items-left">
                     <img src={bathroom} alt="Bathroom" className="w-9 h-9 mb-2" />
-                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">1</span> bathroom</span>
+                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{facilities.bathrooms}</span> bathroom</span>
                 </div>
                 <div className="flex flex-col items-left">
                     <img src={diningroom} alt="Dining Room" className="w-9 h-9 mb-2" />
-                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">1</span> dining room</span>
+                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{facilities.diningrooms}</span> dining room</span>
                 </div>
                 <div className="flex flex-col items-left">
                     <img src={wifi} alt="WiFi" className="w-9 h-9 mb-2" />
-                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">10</span> mbp/s</span>
+                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{facilities.wifi}</span></span>
                 </div>
                 <div className="flex flex-col items-left">
                     <img src={unit} alt="Unit Ready" className="w-9 h-9 mb-2" />
-                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">7</span> unit ready</span>
+                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{facilities.unitsReady}</span> unit ready</span>
                 </div>
                 <div className="flex flex-col items-left">
                     <img src={fridge} alt="Refrigerator" className="w-9 h-9 mb-2" />
-                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">1</span> refrigerator</span>
+                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{facilities.refrigerator}</span> refrigerator</span>
                 </div>
                 <div className="flex flex-col items-left">
                     <img src={tv} alt="Television" className="w-9 h-9 mb-2" />
-                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">2</span> television</span>
+                    <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{facilities.television}</span> television</span>
                 </div>
             </div>
         </div>

@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authService } from '../services/authService';
+import { hotelService } from '../services/hotelService';
 
 const RegisterHotel = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [userForm, setUserForm] = useState({
     name: "",
     email: "",
@@ -54,19 +57,57 @@ const RegisterHotel = () => {
   }
 
   const navigate = useNavigate();
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const uErrors = validateUserForm();
     const hErrors = validateHotelForm();
     setUserErrors(uErrors);
     setHotelErrors(hErrors);
+    
     if (Object.keys(uErrors).length === 0 && Object.keys(hErrors).length === 0) {
-      // Redirect to complete hotel register page
-      navigate('/completehotelregister');
-      // Optionally reset forms
-      setUserForm({ name: "", email: "", phone: "", country: "", nic: "", username: "", password: "" });
-      setHotelForm({ hotelName: "", regNo: "", address: "", images: null, documents: null, facilities: "" });
-      setShowPassword(false);
+      setLoading(true);
+      try {
+        // First register the user
+        await authService.register({
+          name: userForm.name,
+          email: userForm.email,
+          phone: userForm.phone,
+          countryCode: '+94',
+          country: userForm.country,
+          username: userForm.username,
+          password: userForm.password
+        });
+
+        // Then create the hotel with the logged-in user
+        const hotelData = {
+          name: hotelForm.hotelName,
+          location: userForm.country,
+          address: hotelForm.address,
+          registrationNo: hotelForm.regNo,
+          ownerNIC: userForm.nic,
+          price: 200, // Default price
+          description: hotelForm.facilities,
+          images: hotelForm.images ? [hotelForm.images] : [],
+          documents: hotelForm.documents ? [hotelForm.documents] : [],
+          facilities: hotelForm.facilities
+        };
+
+        await hotelService.createHotel(hotelData);
+        
+        // Redirect to complete hotel register page
+        navigate('/completehotelregister');
+        
+        // Reset forms
+        setUserForm({ name: "", email: "", phone: "", country: "", nic: "", username: "", password: "" });
+        setHotelForm({ hotelName: "", regNo: "", address: "", images: null, documents: null, facilities: "" });
+        setShowPassword(false);
+      } catch (error) {
+        const errorMsg = error.response?.data?.message || 'Registration failed. Please try again.';
+        setUserErrors({ submit: errorMsg });
+        setHotelErrors({ submit: errorMsg });
+      } finally {
+        setLoading(false);
+      }
     }
   }
 
@@ -122,6 +163,7 @@ const RegisterHotel = () => {
                 </span>
               </div>
               {userErrors.password && <span className="text-red-500 text-xs">{userErrors.password}</span>}
+              {userErrors.submit && <div className="text-red-500 text-sm mt-2">{userErrors.submit}</div>}
               </div>
             </div>
 
@@ -175,10 +217,11 @@ const RegisterHotel = () => {
               <label className="font-semibold">Facilities</label>
               <input type="text" name="facilities" value={hotelForm.facilities} onChange={handleHotelChange} placeholder="Describe" className="border rounded-md px-4 py-2 outline-none" />
               {hotelErrors.facilities && <span className="text-red-500 text-xs">{hotelErrors.facilities}</span>}
+              {hotelErrors.submit && <div className="text-red-500 text-sm mt-2">{hotelErrors.submit}</div>}
 
               <div className="mt-6">
-                <button className="bg-blue-600 text-white font-semibold rounded-lg px-8 py-2 shadow-lg hover:bg-blue-700 transition focus:outline-none w-full" type="submit">
-                  Register
+                <button className="bg-blue-600 text-white font-semibold rounded-lg px-8 py-2 shadow-lg hover:bg-blue-700 transition focus:outline-none w-full disabled:opacity-50 disabled:cursor-not-allowed" type="submit" disabled={loading}>
+                  {loading ? 'Registering...' : 'Register'}
                 </button>
                 <div className="text-center mt-3">
                   <a href="login" className="text-black underline">Login</a>

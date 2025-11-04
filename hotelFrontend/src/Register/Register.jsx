@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 import Lanka from "./Lanka";
+import { authService } from '../services/authService';
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,6 +17,7 @@ const Register = () => {
     password: ''
   });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -42,13 +44,24 @@ const Register = () => {
     return e;
   };
 
-  const handleSubmit = (ev) => {
+  const handleSubmit = async (ev) => {
     ev.preventDefault();
     const e = validate();
     setErrors(e);
+    
     if (Object.keys(e).length === 0) {
-      // Redirect to register success page
-      navigate('/registersucess');
+      setLoading(true);
+      try {
+        await authService.register(form);
+        // Redirect to register success page
+        navigate('/registersucess');
+      } catch (error) {
+        setErrors({
+          submit: error.response?.data?.message || 'Registration failed. Please try again.'
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
   return (
@@ -116,8 +129,11 @@ const Register = () => {
             </div>
             {errors.password && <div className="text-red-500 text-xs mt-1">{errors.password}</div>}
           </div>
+          {errors.submit && <div className="text-red-500 text-sm mt-2 text-center">{errors.submit}</div>}
           <p className="text-xs text-gray-500 mt-2 mb-2 text-center">By signing up you agree to <a href="#" className="text-blue-600 underline">terms and conditions</a> at zoho.</p>
-          <button type="submit" className="bg-[#0057FF] text-white text-base font-medium rounded-lg py-2 mt-2 mb-2 w-full shadow hover:bg-[#003bb3] transition">Register</button>
+          <button type="submit" disabled={loading} className="bg-[#0057FF] text-white text-base font-medium rounded-lg py-2 mt-2 mb-2 w-full shadow hover:bg-[#003bb3] transition disabled:opacity-50 disabled:cursor-not-allowed">
+            {loading ? 'Registering...' : 'Register'}
+          </button>
           <a href="login" className="text-black text-sm underline text-center">Login</a>
         </form>
       </div>
