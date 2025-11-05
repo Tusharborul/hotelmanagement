@@ -18,7 +18,9 @@ const MostPicked = () => {
             name: hotel.name,
             location: hotel.location,
             price: `$${hotel.price} per night`,
-            image: hotel.mainImage ? `http://localhost:5000/uploads/${hotel.mainImage}` : location1
+            image: hotel.mainImage 
+              ? (hotel.mainImage.startsWith('http') ? hotel.mainImage : `http://localhost:5000/uploads/${hotel.mainImage}`)
+              : location1
           }));
           setPlaces(hotels);
         }

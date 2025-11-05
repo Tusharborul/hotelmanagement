@@ -17,6 +17,9 @@ const HotelDetails = () => {
     useEffect(() => {
         const fetchHotelDetails = async () => {
             if (hotelId) {
+                // Store the hotel ID in localStorage
+                localStorage.setItem('lastViewedHotelId', hotelId);
+                
                 try {
                     const response = await hotelService.getHotel(hotelId);
                     setHotel(response.data);

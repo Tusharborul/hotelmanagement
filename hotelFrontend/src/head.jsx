@@ -1,9 +1,48 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authService } from "./services/authService";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(authService.isAuthenticated());
   const navigate = useNavigate();
+
+  const handleHotelsClick = (e) => {
+    e.preventDefault();
+    const lastViewedHotelId = localStorage.getItem('lastViewedHotelId');
+    if (lastViewedHotelId) {
+      navigate(`/hoteldetails?id=${lastViewedHotelId}`);
+    } else {
+      navigate('/home');
+    }
+  };
+
+  const handleAuthClick = () => {
+    if (isLoggedIn) {
+      // Logout
+      authService.logout();
+      setIsLoggedIn(false);
+      navigate('/home');
+    } else {
+      // Login
+      navigate('/login');
+    }
+  };
+
+  // Check login status on component mount and when navigation changes
+  React.useEffect(() => {
+    const checkAuth = () => {
+      setIsLoggedIn(authService.isAuthenticated());
+    };
+    
+    checkAuth();
+    // Listen for storage changes (for cross-tab login/logout)
+    window.addEventListener('storage', checkAuth);
+    
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+    };
+  }, []);
 
   // Disable body scroll when menu is open
   React.useEffect(() => {
@@ -32,17 +71,17 @@ const Header = () => {
         {/* Desktop Nav */}
         <div className="hidden lg:flex items-center justify-start gap-10">
           <nav className="flex gap-4 sm:gap-6 lg:gap-8 font-[Poppins]">
-            <a href="home" className="text-[#3252DF] text-[16px]">Home</a>
-            <a href="hoteldetails" className="text-[#152C5B] hover:text-[#3252DF] transition">Hotels</a>
+            <a href="/home" className="text-[#3252DF] text-[16px]">Home</a>
+            <a href="#" onClick={handleHotelsClick} className="text-[#152C5B] hover:text-[#3252DF] transition cursor-pointer">Hotels</a>
             <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition">Rooms</a>
             <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition">About</a>
             <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition">Contact</a>
           </nav>
           <button
             className="bg-blue-600 text-white font-semibold rounded-lg px-8 py-2 shadow-lg hover:bg-blue-700 transition focus:outline-none"
-            onClick={() => navigate("/login")}
+            onClick={handleAuthClick}
           >
-            Login
+            {isLoggedIn ? 'Logout' : 'Login'}
           </button>
         </div>
 
@@ -84,8 +123,8 @@ const Header = () => {
               </button>
             </div>
             <nav className="flex flex-col gap-5 font-[Poppins] items-center mt-10">
-              <a href="home" className="text-[#3252DF] text-[18px]" onClick={() => setMenuOpen(false)}>Home</a>
-              <a href="hoteldetails" className="text-[#152C5B] hover:text-[#3252DF] transition" onClick={() => setMenuOpen(false)}>Hotels</a>
+              <a href="/home" className="text-[#3252DF] text-[18px]" onClick={() => setMenuOpen(false)}>Home</a>
+              <a href="#" onClick={(e) => { handleHotelsClick(e); setMenuOpen(false); }} className="text-[#152C5B] hover:text-[#3252DF] transition cursor-pointer">Hotels</a>
               <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition" onClick={() => setMenuOpen(false)}>Rooms</a>
               <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition" onClick={() => setMenuOpen(false)}>About</a>
               <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition" onClick={() => setMenuOpen(false)}>Contact</a>
@@ -94,10 +133,10 @@ const Header = () => {
               className="bg-blue-600 text-white font-semibold rounded-lg px-8 py-2 mt-10 shadow-lg hover:bg-blue-700 transition focus:outline-none"
               onClick={() => {
                 setMenuOpen(false);
-                navigate("/login");
+                handleAuthClick();
               }}
             >
-              Login
+              {isLoggedIn ? 'Logout' : 'Login'}
             </button>
           </div>
         )}

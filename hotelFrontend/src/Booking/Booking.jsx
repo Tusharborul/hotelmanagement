@@ -50,11 +50,31 @@ const Booking = () => {
     fetchHotel();
   }, [hotelId, navigate]);
 
-  const hotelImage = hotel?.mainImage 
-    ? `http://localhost:5000/uploads/${hotel.mainImage}` 
-    : placeImg;
-  const hotelName = hotel?.name || "Blue Origin Fams";
-  const hotelLocation = hotel?.location || "Galle, Sri Lanka";
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl) return placeImg;
+    return imageUrl.startsWith('http') ? imageUrl : `http://localhost:5000/uploads/${imageUrl}`;
+  };
+
+  const hotelImage = hotel?.mainImage ? getImageUrl(hotel.mainImage) : placeImg;
+  const hotelName = hotel?.name;
+  const hotelLocation = hotel?.location;
+  
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center">
+        <div className="text-xl text-gray-400">Loading booking details...</div>
+      </div>
+    );
+  }
+
+  if (!hotel) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center">
+        <div className="text-xl text-gray-400">Hotel not found.</div>
+      </div>
+    );
+  }
+
   return (
   <div className="w-full min-h-screen flex flex-col items-center bg-white pt-4 sm:pt-6 md:pt-8 px-4 sm:px-6">
     {/* Logo */}
@@ -197,7 +217,10 @@ const Booking = () => {
       >
         Book Now
       </button>
-      <button className="bg-gray-100 text-gray-400 text-base sm:text-lg font-medium rounded-lg py-2.5 sm:py-3 w-full shadow" onClick={() => navigate('/hoteldetails')}>
+      <button 
+        className="bg-gray-100 text-gray-400 text-base sm:text-lg font-medium rounded-lg py-2.5 sm:py-3 w-full shadow" 
+        onClick={() => hotelId ? navigate(`/hoteldetails?id=${hotelId}`) : navigate('/home')}
+      >
         Cancel
       </button>
     </div>

@@ -2,6 +2,14 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from '../services/authService';
 import { hotelService } from '../services/hotelService';
+import bedroom from "../assets/Details/ic_bedroom.png";
+import livingroom from "../assets/Details/ic_livingroom.png";
+import bathroom from "../assets/Details/bathroom.png";
+import diningroom from "../assets/Details/ic_diningroom.png";
+import wifi from "../assets/Details/ic_wifi.png";
+import unit from "../assets/Details/ic_ac.png";
+import fridge from "../assets/Details/ic_kulkas.png";
+import tv from "../assets/Details/ic_tv.png";
 
 const RegisterHotel = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +29,14 @@ const RegisterHotel = () => {
     address: "",
     images: null,
     documents: null,
-    facilities: ""
+    bedrooms: 1,
+    livingrooms: 1,
+    bathrooms: 1,
+    diningrooms: 1,
+    wifi: "10 mbp/s",
+    unitsReady: 1,
+    refrigerator: 1,
+    television: 1
   });
   const [userErrors, setUserErrors] = useState({});
   const [hotelErrors, setHotelErrors] = useState({});
@@ -44,7 +59,14 @@ const RegisterHotel = () => {
     if (!hotelForm.address) errors.address = "Address is required";
     if (!hotelForm.images) errors.images = "Images are required";
     if (!hotelForm.documents) errors.documents = "Documents are required";
-    if (!hotelForm.facilities) errors.facilities = "Facilities are required";
+    if (!hotelForm.bedrooms) errors.bedrooms = "Bedrooms are required";
+    if (!hotelForm.livingrooms) errors.livingrooms = "Living rooms are required";
+    if (!hotelForm.bathrooms) errors.bathrooms = "Bathrooms are required";
+    if (!hotelForm.diningrooms) errors.diningrooms = "Dining rooms are required";
+    if (!hotelForm.wifi) errors.wifi = "WiFi speed is required";
+    if (!hotelForm.unitsReady) errors.unitsReady = "Units ready is required";
+    if (!hotelForm.refrigerator) errors.refrigerator = "Refrigerator is required";
+    if (!hotelForm.television) errors.television = "Television is required";
     return errors;
   }
 
@@ -79,6 +101,16 @@ const RegisterHotel = () => {
         });
 
         // Then create the hotel with the logged-in user
+        const facilities = {
+          bedrooms: hotelForm.bedrooms,
+          livingrooms: hotelForm.livingrooms,
+          bathrooms: hotelForm.bathrooms,
+          diningrooms: hotelForm.diningrooms,
+          wifi: hotelForm.wifi,
+          unitsReady: hotelForm.unitsReady,
+          refrigerator: hotelForm.refrigerator,
+          television: hotelForm.television
+        };
         const hotelData = {
           name: hotelForm.hotelName,
           location: userForm.country,
@@ -86,10 +118,10 @@ const RegisterHotel = () => {
           registrationNo: hotelForm.regNo,
           ownerNIC: userForm.nic,
           price: 200, // Default price
-          description: hotelForm.facilities,
+          description: '',
           images: hotelForm.images ? [hotelForm.images] : [],
           documents: hotelForm.documents ? [hotelForm.documents] : [],
-          facilities: hotelForm.facilities
+          facilities
         };
 
         await hotelService.createHotel(hotelData);
@@ -215,7 +247,64 @@ const RegisterHotel = () => {
               {hotelErrors.documents && <span className="text-red-500 text-xs">{hotelErrors.documents}</span>}
 
               <label className="font-semibold">Facilities</label>
-              <input type="text" name="facilities" value={hotelForm.facilities} onChange={handleHotelChange} placeholder="Describe" className="border rounded-md px-4 py-2 outline-none" />
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-2">
+                <div className="flex flex-col items-center">
+                  <label className="flex flex-col items-center text-sm font-medium mb-1">
+                    <img src={bedroom} alt="Bedroom" className="w-8 h-8 mb-1" />
+                    <span>Bedrooms</span>
+                  </label>
+                  <input type="number" min="0" name="bedrooms" value={hotelForm.bedrooms} onChange={handleHotelChange} className="border rounded-md px-2 py-2 outline-none w-24 text-center" />
+                </div>
+                <div className="flex flex-col items-center">
+                  <label className="flex flex-col items-center text-sm font-medium mb-1">
+                    <img src={livingroom} alt="Living Room" className="w-8 h-8 mb-1" />
+                    <span>Living Rooms</span>
+                  </label>
+                  <input type="number" min="0" name="livingrooms" value={hotelForm.livingrooms} onChange={handleHotelChange} className="border rounded-md px-2 py-2 outline-none w-24 text-center" />
+                </div>
+                <div className="flex flex-col items-center">
+                  <label className="flex flex-col items-center text-sm font-medium mb-1">
+                    <img src={bathroom} alt="Bathroom" className="w-8 h-8 mb-1" />
+                    <span>Bathrooms</span>
+                  </label>
+                  <input type="number" min="0" name="bathrooms" value={hotelForm.bathrooms} onChange={handleHotelChange} className="border rounded-md px-2 py-2 outline-none w-24 text-center" />
+                </div>
+                <div className="flex flex-col items-center">
+                  <label className="flex flex-col items-center text-sm font-medium mb-1">
+                    <img src={diningroom} alt="Dining Room" className="w-8 h-8 mb-1" />
+                    <span>Dining Rooms</span>
+                  </label>
+                  <input type="number" min="0" name="diningrooms" value={hotelForm.diningrooms} onChange={handleHotelChange} className="border rounded-md px-2 py-2 outline-none w-24 text-center" />
+                </div>
+                <div className="flex flex-col items-center">
+                  <label className="flex flex-col items-center text-sm font-medium mb-1">
+                    <img src={wifi} alt="WiFi" className="w-8 h-8 mb-1" />
+                    <span>WiFi Speed</span>
+                  </label>
+                  <input type="text" name="wifi" value={hotelForm.wifi} onChange={handleHotelChange} className="border rounded-md px-2 py-2 outline-none w-24 text-center" placeholder="e.g. 10 mbp/s" />
+                </div>
+                <div className="flex flex-col items-center">
+                  <label className="flex flex-col items-center text-sm font-medium mb-1">
+                    <img src={unit} alt="Unit Ready" className="w-8 h-8 mb-1" />
+                    <span>Units Ready</span>
+                  </label>
+                  <input type="number" min="0" name="unitsReady" value={hotelForm.unitsReady} onChange={handleHotelChange} className="border rounded-md px-2 py-2 outline-none w-24 text-center" />
+                </div>
+                <div className="flex flex-col items-center">
+                  <label className="flex flex-col items-center text-sm font-medium mb-1">
+                    <img src={fridge} alt="Refrigerator" className="w-8 h-8 mb-1" />
+                    <span>Refrigerator</span>
+                  </label>
+                  <input type="number" min="0" name="refrigerator" value={hotelForm.refrigerator} onChange={handleHotelChange} className="border rounded-md px-2 py-2 outline-none w-24 text-center" />
+                </div>
+                <div className="flex flex-col items-center">
+                  <label className="flex flex-col items-center text-sm font-medium mb-1">
+                    <img src={tv} alt="Television" className="w-8 h-8 mb-1" />
+                    <span>Television</span>
+                  </label>
+                  <input type="number" min="0" name="television" value={hotelForm.television} onChange={handleHotelChange} className="border rounded-md px-2 py-2 outline-none w-24 text-center" />
+                </div>
+              </div>
               {hotelErrors.facilities && <span className="text-red-500 text-xs">{hotelErrors.facilities}</span>}
               {hotelErrors.submit && <div className="text-red-500 text-sm mt-2">{hotelErrors.submit}</div>}
 

@@ -73,7 +73,7 @@ exports.getBooking = async (req, res) => {
 // @access  Private
 exports.createBooking = async (req, res) => {
   try {
-    const { hotel, checkInDate, days, paymentDetails } = req.body;
+    const { hotel, checkInDate, checkOutDate, days, paymentDetails } = req.body;
 
     // Check if hotel exists
     const hotelData = await Hotel.findById(hotel);
@@ -84,16 +84,27 @@ exports.createBooking = async (req, res) => {
       });
     }
 
-    // Calculate total price
+    // Calculate total price and initial payment
     const totalPrice = hotelData.price * days;
+    const initialPayment = Math.round(totalPrice / 2);
+
+    // Calculate check-out date if not provided
+    let calculatedCheckOutDate = checkOutDate;
+    if (!calculatedCheckOutDate && checkInDate && days) {
+      const checkOut = new Date(checkInDate);
+      checkOut.setDate(checkOut.getDate() + days);
+      calculatedCheckOutDate = checkOut;
+    }
 
     // Create booking
     const booking = await Booking.create({
       user: req.user.id,
       hotel,
       checkInDate,
+      checkOutDate: calculatedCheckOutDate,
       days,
       totalPrice,
+      initialPayment,
       paymentDetails,
       status: 'confirmed'
     });

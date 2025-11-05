@@ -13,6 +13,7 @@ const sampleHotels = [
     address: "123 Beach Road, Galle",
     description: "A beautiful beachfront property with stunning ocean views. Perfect for families and couples looking for a relaxing getaway.",
     price: 50,
+    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-1.png",
     isMostPicked: true,
     isPopular: false,
     facilities: {
@@ -55,6 +56,7 @@ const sampleHotels = [
     address: "456 City Center, Colombo",
     description: "Luxury resort in the heart of Colombo with world-class amenities and services.",
     price: 120,
+    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-2.png",
     isMostPicked: true,
     isPopular: true,
     facilities: {
@@ -92,6 +94,7 @@ const sampleHotels = [
     address: "789 Hill View, Kandy",
     description: "Peaceful hill country retreat surrounded by lush tea plantations.",
     price: 75,
+    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-3.png",
     isMostPicked: true,
     isPopular: false,
     facilities: {
@@ -129,6 +132,7 @@ const sampleHotels = [
     address: "321 Beach Front, Hikkaduwa",
     description: "Cozy beachside accommodation perfect for surfers and beach lovers.",
     price: 45,
+    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-4.png",
     isMostPicked: true,
     isPopular: true,
     facilities: {
@@ -166,6 +170,7 @@ const sampleHotels = [
     address: "555 Mountain Road, Nuwara Eliya",
     description: "Cool climate mountain lodge with breathtaking views and cozy fireplaces.",
     price: 65,
+    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-5.png",
     isMostPicked: true,
     isPopular: true,
     facilities: {
@@ -195,6 +200,138 @@ const sampleHotels = [
         popular: true
       }
     ],
+    status: 'approved'
+  },
+  {
+    name: "Top View",
+    location: "Hikkaduwe, Sri Lanka",
+    address: "789 Beach Road, Hikkaduwe",
+    description: "Beautiful property with panoramic ocean views and modern amenities.",
+    price: 55,
+    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Top%20View.png",
+    isMostPicked: false,
+    isPopular: true,
+    facilities: {
+      bedrooms: 2,
+      livingrooms: 1,
+      bathrooms: 2,
+      diningrooms: 1,
+      wifi: "50 mbp/s",
+      unitsReady: 4,
+      refrigerator: 1,
+      television: 2
+    },
+    treasures: [],
+    status: 'approved'
+  },
+  {
+    name: "Wodden Pit",
+    location: "Ambalangode, Sri Lanka",
+    address: "234 Coastal Road, Ambalangode",
+    description: "Charming wooden cottage with traditional Sri Lankan architecture.",
+    price: 40,
+    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Wodden%20Pit.png",
+    isMostPicked: false,
+    isPopular: true,
+    facilities: {
+      bedrooms: 1,
+      livingrooms: 1,
+      bathrooms: 1,
+      diningrooms: 1,
+      wifi: "30 mbp/s",
+      unitsReady: 3,
+      refrigerator: 1,
+      television: 1
+    },
+    treasures: [],
+    status: 'approved'
+  },
+  {
+    name: "Boutiqe",
+    location: "Kandy, Sri Lanka",
+    address: "567 Temple Street, Kandy",
+    description: "Boutique hotel in the cultural heart of Sri Lanka.",
+    price: 80,
+    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Boutiqe.png",
+    isMostPicked: false,
+    isPopular: true,
+    facilities: {
+      bedrooms: 2,
+      livingrooms: 1,
+      bathrooms: 2,
+      diningrooms: 1,
+      wifi: "60 mbp/s",
+      unitsReady: 5,
+      refrigerator: 1,
+      television: 2
+    },
+    treasures: [],
+    status: 'approved'
+  },
+  {
+    name: "Modern",
+    location: "Nuwereilya, Sri Lanka",
+    address: "890 Hill Station Road, Nuwara Eliya",
+    description: "Contemporary design meets mountain tranquility.",
+    price: 70,
+    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Modern.png",
+    isMostPicked: false,
+    isPopular: true,
+    facilities: {
+      bedrooms: 2,
+      livingrooms: 1,
+      bathrooms: 2,
+      diningrooms: 1,
+      wifi: "70 mbp/s",
+      unitsReady: 6,
+      refrigerator: 1,
+      television: 2
+    },
+    treasures: [],
+    status: 'approved'
+  },
+  {
+    name: "Silver Rain",
+    location: "Dehiwala, Sri Lanka",
+    address: "345 Marine Drive, Dehiwala",
+    description: "Elegant seaside property with modern comforts.",
+    price: 60,
+    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Silver%20Rain.png",
+    isMostPicked: false,
+    isPopular: true,
+    facilities: {
+      bedrooms: 2,
+      livingrooms: 1,
+      bathrooms: 2,
+      diningrooms: 1,
+      wifi: "45 mbp/s",
+      unitsReady: 7,
+      refrigerator: 1,
+      television: 2
+    },
+    treasures: [],
+    status: 'approved'
+  },
+  {
+    name: "Cashville",
+    location: "Ampara, Sri Lanka",
+    address: "678 Lake View, Ampara",
+    description: "Peaceful lakeside retreat surrounded by nature.",
+    price: 50,
+    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Cashville.png",
+    isMostPicked: false,
+    isPopular: true,
+    facilities: {
+      bedrooms: 2,
+      livingrooms: 1,
+      bathrooms: 2,
+      diningrooms: 1,
+      wifi: "35 mbp/s",
+      unitsReady: 4,
+      refrigerator: 1,
+      television: 1
+    },
+    treasures: [],
     status: 'approved'
   }
 ];

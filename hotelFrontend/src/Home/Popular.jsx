@@ -1,69 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { hotelService } from "../services/hotelService";
-import shangriLa from "../assets/location/Shangri-La.png";
-import topView from "../assets/location/Top View.png";
-import greenVilla from "../assets/location/Green Villa.png";
-import woddenPit from "../assets/location/Wodden Pit.png";
-import boutiqe from "../assets/location/Boutiqe.png";
-import modern from "../assets/location/Modern.png";
-import silverRain from "../assets/location/Silver Rain.png";
-import cashville from "../assets/location/Cashville.png";
-
-
-const fallbackPlaces = [
-	{
-		name: "Shangri-La",
-		location: "Colombo, Sri Lanka",
-		image: shangriLa,
-		popular: true,
-	},
-	{
-		name: "Top View",
-		location: "Hikkaduwe, Sri Lanka",
-		image: topView,
-		popular: false,
-	},
-	{
-		name: "Green Villa",
-		location: "Kandy, Sri Lanka",
-		image: greenVilla,
-		popular: false,
-	},
-	{
-		name: "Wodden Pit",
-		location: "Ambalangode, Sri Lanka",
-		image: woddenPit,
-		popular: false,
-	},
-	{
-		name: "Boutiqe",
-		location: "Kandy, Sri Lanka",
-		image: boutiqe,
-		popular: false,
-	},
-	{
-		name: "Modern",
-		location: "Nuwereilya, Sri Lanka",
-		image: modern,
-		popular: false,
-	},
-	{
-		name: "Silver Rain",
-		location: "Dehiwala, Sri Lanka",
-		image: silverRain,
-		popular: false,
-	},
-	{
-		name: "Cashville",
-		location: "Ampara, Sri Lanka",
-		image: cashville,
-		popular: true,
-	},
-];
+import location1 from "../assets/location/pic-1.png";
 
 const Popular = () => {
-	const [places, setPlaces] = useState(fallbackPlaces);
+	const [places, setPlaces] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const navigate = useNavigate();
 
@@ -72,26 +13,19 @@ const Popular = () => {
 			try {
 				const response = await hotelService.getHotels({ popular: true });
 				if (response.data && response.data.length > 0) {
-					// Combine popular hotels from API with non-popular from fallback
-					const popularHotels = response.data.map(hotel => ({
+					const popularHotels = response.data.slice(0, 8).map(hotel => ({
 						id: hotel._id,
 						name: hotel.name,
 						location: hotel.location,
-						image: hotel.mainImage ? `http://localhost:5000/uploads/${hotel.mainImage}` : shangriLa,
+						image: hotel.mainImage 
+							? (hotel.mainImage.startsWith('http') ? hotel.mainImage : `http://localhost:5000/uploads/${hotel.mainImage}`)
+							: location1,
 						popular: hotel.isPopular
 					}));
-					
-					// If we have less than 8, fill with fallback
-					if (popularHotels.length < 8) {
-						const combined = [...popularHotels, ...fallbackPlaces.slice(popularHotels.length)];
-						setPlaces(combined.slice(0, 8));
-					} else {
-						setPlaces(popularHotels.slice(0, 8));
-					}
+					setPlaces(popularHotels);
 				}
 			} catch (error) {
 				console.error('Error fetching popular hotels:', error);
-				// Keep using fallback data
 			} finally {
 				setLoading(false);
 			}
@@ -107,7 +41,11 @@ const Popular = () => {
 	};
 
 	if (loading) {
-		return <div className="mt-12 mb-12 text-center">Loading...</div>;
+		return <div className="mt-12 mb-12 text-center">Loading popular hotels...</div>;
+	}
+
+	if (!places || places.length === 0) {
+		return <div className="mt-12 mb-12 text-center">No popular hotels available at the moment.</div>;
 	}
 
 	return (

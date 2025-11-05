@@ -50,7 +50,10 @@ const Payment = () => {
       const bookingData = {
         hotel: hotelId,
         checkInDate,
+        checkOutDate,
         days,
+        totalPrice,
+        initialPayment: Math.round(totalPrice / 2),
         paymentDetails: {
           cardNumber: paymentData.cardNumber.slice(-4), // Only store last 4 digits
           bank: paymentData.bank,
@@ -184,7 +187,12 @@ const Payment = () => {
         >
           {loading ? 'Processing...' : 'Pay Now'}
         </button>
-        <button className="bg-gray-100 text-gray-400 text-base sm:text-lg font-medium rounded-lg py-2.5 sm:py-3 w-full shadow" onClick={() => navigate("/booking")}>Cancel</button>
+        <button 
+          className="bg-gray-100 text-gray-400 text-base sm:text-lg font-medium rounded-lg py-2.5 sm:py-3 w-full shadow" 
+          onClick={() => hotelId ? navigate(`/booking?hotelId=${hotelId}`) : navigate("/home")}
+        >
+          Cancel
+        </button>
       </div>
     </div>
   );

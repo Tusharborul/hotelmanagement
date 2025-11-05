@@ -80,9 +80,8 @@ exports.createHotel = async (req, res) => {
     } = req.body;
 
     // Handle file uploads
-    const images = req.files?.images ? req.files.images.map(file => file.filename) : [];
+    const mainImage = req.files?.images ? req.files.images[0].filename : '';
     const documents = req.files?.documents ? req.files.documents.map(file => file.filename) : [];
-    const mainImage = images[0] || '';
 
     // Create hotel
     const hotel = await Hotel.create({
@@ -94,7 +93,6 @@ exports.createHotel = async (req, res) => {
       facilities: facilities ? JSON.parse(facilities) : {},
       registrationNo,
       ownerNIC,
-      images,
       mainImage,
       documents,
       owner: req.user.id,

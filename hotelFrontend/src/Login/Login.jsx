@@ -28,8 +28,16 @@ const Login = () => {
       setLoading(true);
       try {
         await authService.login({ username, password });
-        // Redirect to home after successful login
-        navigate('/home');
+        
+        // Check if there's a redirect URL stored
+        const redirectUrl = localStorage.getItem('redirectAfterLogin');
+        if (redirectUrl) {
+          localStorage.removeItem('redirectAfterLogin');
+          navigate(redirectUrl);
+        } else {
+          // Default redirect to home
+          navigate('/home');
+        }
       } catch (error) {
         setErrors({
           submit: error.response?.data?.message || 'Login failed. Please try again.'
