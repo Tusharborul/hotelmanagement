@@ -41,6 +41,29 @@ const bookingSchema = new mongoose.Schema({
     enum: ['pending', 'confirmed', 'cancelled', 'completed'],
     default: 'pending'
   },
+  cancelledAt: {
+    type: Date
+  },
+  cancelledBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  refundAmount: {
+    type: Number,
+    default: 0
+  },
+  refundStatus: {
+    type: String,
+    enum: ['pending', 'issued', 'none'],
+    default: 'none'
+  },
+  refundedAt: {
+    type: Date
+  },
+  refundedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -49,12 +72,27 @@ const bookingSchema = new mongoose.Schema({
 
 // Calculate check-out date and days if not provided
 bookingSchema.pre('save', function(next) {
+  // Normalize check-in/check-out times to 10:00 AM (local server time)
+  if (this.checkInDate) {
+    const ci = new Date(this.checkInDate);
+    ci.setHours(10, 0, 0, 0);
+    this.checkInDate = ci;
+  }
+
+  if (this.checkOutDate) {
+    const co = new Date(this.checkOutDate);
+    co.setHours(10, 0, 0, 0);
+    this.checkOutDate = co;
+  }
+
+  // Calculate check-out date and normalize to 10:00 AM if not provided
   if (this.checkInDate && this.days && !this.checkOutDate) {
     const checkOut = new Date(this.checkInDate);
     checkOut.setDate(checkOut.getDate() + this.days);
+    checkOut.setHours(10, 0, 0, 0);
     this.checkOutDate = checkOut;
   }
-  
+
   if (!this.initialPayment && this.totalPrice) {
     this.initialPayment = Math.round(this.totalPrice / 2);
   }

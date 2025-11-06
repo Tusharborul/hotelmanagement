@@ -11,6 +11,25 @@ import Hotel from './Register/RegisterHotel.jsx';
 import Login from './Login/Login.jsx';  
 import CompleteHotelRegister from './Register/CompleteHotelRegister.jsx';
 import RegisterSucess from './Register/RegisterSucess.jsx';
+import AdminDashboard from './Dashboard/AdminDashboard.jsx';
+import OwnerDashboard from './Dashboard/OwnerDashboard.jsx';
+import UserDashboard from './Dashboard/UserDashboard.jsx';
+// Admin pages
+import AdminUsers from './Dashboard/Admin/Users.jsx';
+import AdminOwners from './Dashboard/Admin/Owners.jsx';
+import AdminHotels from './Dashboard/Admin/Hotels.jsx';
+import AdminBookingDetails from './Dashboard/Admin/BookingDetails.jsx';
+import AdminRefunds from './Dashboard/Admin/Refunds.jsx';
+// Owner pages
+import OwnerObjectives from './Dashboard/Owner/Objectives.jsx';
+import OwnerBookings from './Dashboard/Owner/Bookings.jsx';
+import OwnerPhotos from './Dashboard/Owner/Photos.jsx';
+import OwnerTreasures from './Dashboard/Owner/Treasures.jsx';
+// ...existing code...
+// User pages
+import UserBookings from './Dashboard/User/Bookings.jsx';
+import UserRefunds from './Dashboard/User/Refunds.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 function App() {
   return (
     <Router>
@@ -28,6 +47,87 @@ function App() {
          <Route path="/login" element={<Login />} />
           <Route path="/completehotelregister" element={<CompleteHotelRegister />} />
           <Route path="/registersucess" element={<RegisterSucess />} />
+          {/* Dashboards */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute roles={["user","admin","hotelOwner"]}>
+              <UserDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/admin" element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/admin/users" element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminUsers />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/admin/owners" element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminOwners />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/admin/hotels" element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminHotels />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/admin/bookings" element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminBookingDetails />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/admin/refunds" element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminRefunds />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/owner" element={
+            <ProtectedRoute roles={["hotelOwner","admin"]}>
+              <OwnerDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/owner/objectives" element={
+            <ProtectedRoute roles={["hotelOwner","admin"]}>
+              <OwnerObjectives />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/owner/bookings" element={
+            <ProtectedRoute roles={["hotelOwner","admin"]}>
+              <OwnerBookings />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/owner/photos" element={
+            <ProtectedRoute roles={["hotelOwner","admin"]}>
+              <OwnerPhotos />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/owner/treasures" element={
+            <ProtectedRoute roles={["hotelOwner","admin"]}>
+              <OwnerTreasures />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/owner/photos" element={
+            <ProtectedRoute roles={["hotelOwner","admin"]}>
+              <OwnerPhotos />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/owner/treasures" element={
+            <ProtectedRoute roles={["hotelOwner","admin"]}>
+              <OwnerTreasures />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/bookings" element={
+            <ProtectedRoute roles={["user","admin","hotelOwner"]}>
+              <UserBookings />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/refunds" element={
+            <ProtectedRoute roles={["user","admin","hotelOwner"]}>
+              <UserRefunds />
+            </ProtectedRoute>
+          } />
       </Routes>
     </Router>
   );

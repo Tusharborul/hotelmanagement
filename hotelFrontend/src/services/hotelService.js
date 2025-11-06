@@ -72,5 +72,61 @@ export const hotelService = {
   addReview: async (hotelId, reviewData) => {
     const response = await api.post(`/hotels/${hotelId}/reviews`, reviewData);
     return response.data;
+  },
+
+  // Owner's hotels
+  getMyHotels: async () => {
+    const response = await api.get('/hotels/owner/mine');
+    return response.data;
+  },
+
+  // Photos management
+  getPhotos: async (hotelId) => {
+    const res = await api.get(`/hotels/${hotelId}/photos`);
+    return res.data;
+  },
+  updateMainImage: async (hotelId, file) => {
+    const fd = new FormData();
+    fd.append('image', file);
+    const res = await api.put(`/hotels/${hotelId}/main-image`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data;
+  },
+  addImages: async (hotelId, files) => {
+    const fd = new FormData();
+    Array.from(files).forEach(f => fd.append('images', f));
+    const res = await api.post(`/hotels/${hotelId}/images`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data;
+  },
+  deleteImage: async (hotelId, filename) => {
+    const res = await api.delete(`/hotels/${hotelId}/images/${encodeURIComponent(filename)}`);
+    return res.data;
+  },
+
+  // Treasures management
+  getTreasures: async (hotelId) => {
+    const res = await api.get(`/hotels/${hotelId}/treasures`);
+    return res.data;
+  },
+  addTreasure: async (hotelId, { title, subtitle, popular, image }) => {
+    const fd = new FormData();
+    fd.append('title', title);
+    fd.append('subtitle', subtitle);
+    if (typeof popular !== 'undefined') fd.append('popular', Boolean(popular));
+    if (image) fd.append('image', image);
+    const res = await api.post(`/hotels/${hotelId}/treasures`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data;
+  },
+  updateTreasure: async (hotelId, treasureId, { title, subtitle, popular, image }) => {
+    const fd = new FormData();
+    if (typeof title !== 'undefined') fd.append('title', title);
+    if (typeof subtitle !== 'undefined') fd.append('subtitle', subtitle);
+    if (typeof popular !== 'undefined') fd.append('popular', Boolean(popular));
+    if (image) fd.append('image', image);
+    const res = await api.put(`/hotels/${hotelId}/treasures/${treasureId}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data;
+  },
+  deleteTreasure: async (hotelId, treasureId) => {
+    const res = await api.delete(`/hotels/${hotelId}/treasures/${treasureId}`);
+    return res.data;
   }
 };

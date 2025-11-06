@@ -1,0 +1,131 @@
+const User = require('../models/User');
+const Booking = require('../models/Booking');
+const Hotel = require('../models/Hotel');
+
+// Helper for pagination
+const paginate = async (modelQuery, page = 1, limit = 20) => {
+  const skip = (page - 1) * limit;
+  const [data, total] = await Promise.all([
+    modelQuery.skip(skip).limit(limit),
+    modelQuery.model.countDocuments(modelQuery.getQuery())
+  ]);
+  return { data, total, page, pages: Math.ceil(total / limit), limit };
+};
+
+// GET /api/admin/users?role=user|hotelOwner|admin&page=&limit=
+exports.getUsers = async (req, res) => {
+  try {
+    const role = req.query.role;
+    const page = parseInt(req.query.page || '1');
+    const limit = parseInt(req.query.limit || '20');
+    let query = User.find(role ? { role } : {} ).sort({ createdAt: -1 });
+    const result = await paginate(query, page, limit);
+    res.status(200).json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// PUT /api/admin/users/:id
+exports.updateUser = async (req, res) => {
+  try {
+    const fields = {};
+    ['name','username','email','role','phone','country'].forEach(k=>{
+      if (req.body[k] !== undefined) fields[k] = req.body[k];
+    });
+    const user = await User.findByIdAndUpdate(req.params.id, fields, { new: true, runValidators: true });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.status(200).json({ success: true, data: user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// DELETE /api/admin/users/:id
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.status(200).json({ success: true, data: {} });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// GET /api/admin/owners - list hotel owners with hotel status
+exports.getOwners = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page || '1');
+    const limit = parseInt(req.query.limit || '20');
+    const skip = (page - 1) * limit;
+
+    const pipeline = [
+      { $match: { role: 'hotelOwner' } },
+      { $lookup: { from: 'hotels', localField: '_id', foreignField: 'owner', as: 'hotels' } },
+      { $project: { username: 1, name:1, createdAt:1, hotelCount: { $size: '$hotels' }, statuses: '$hotels.status' } },
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit }
+    ];
+    const data = await User.aggregate(pipeline);
+    const total = await User.countDocuments({ role: 'hotelOwner' });
+    res.status(200).json({ success: true, data, total, page, pages: Math.ceil(total/limit), limit });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// PUT /api/admin/hotels/:id/status - update hotel status (pending/approved/rejected)
+exports.updateHotelStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const hotel = await Hotel.findByIdAndUpdate(req.params.id, { status }, { new: true, runValidators: true });
+    if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
+    res.status(200).json({ success: true, data: hotel });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// GET /api/admin/hotels - list hotels for admin review
+exports.getHotelsForAdmin = async (req, res) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+    const queryObj = {};
+    if (status) queryObj.status = status;
+    const q = Hotel.find(queryObj)
+      .populate('owner', 'name email username')
+      .sort({ createdAt: -1 });
+    const result = await paginate(q, parseInt(page), parseInt(limit));
+    res.status(200).json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// GET /api/admin/bookings?start=YYYY-MM-DD&end=YYYY-MM-DD
+exports.getBookingsByDate = async (req, res) => {
+  try {
+    const { start, end, page = 1, limit = 20 } = req.query;
+    const query = {};
+    if (start || end) {
+      query.createdAt = {};
+      if (start) query.createdAt.$gte = new Date(start);
+      if (end) {
+        const d = new Date(end);
+        d.setHours(23,59,59,999);
+        query.createdAt.$lte = d;
+      }
+    }
+    const q = Booking.find(query)
+      .populate('user','name username')
+      .populate('hotel','name location price')
+      .populate('cancelledBy', 'name email')
+      .populate('refundedBy', 'name email')
+      .sort({ createdAt: -1 });
+    const result = await paginate(q, parseInt(page), parseInt(limit));
+    res.status(200).json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

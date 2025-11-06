@@ -11,6 +11,7 @@ dotenv.config();
 const userRoutes = require('./routes/userRoutes');
 const hotelRoutes = require('./routes/hotelRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 // Initialize app
 const app = express();
@@ -18,6 +19,20 @@ const app = express();
 // Body parser middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Request logger middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  if (req.url.includes('treasure')) {
+    console.log('TREASURE REQUEST DETAILS:', {
+      method: req.method,
+      url: req.url,
+      params: req.params,
+      headers: req.headers.authorization ? 'Has Auth' : 'No Auth'
+    });
+  }
+  next();
+});
 
 // Enable CORS
 app.use(cors({
@@ -32,6 +47,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/users', userRoutes);
 app.use('/api/hotels', hotelRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Root route
 app.get('/', (req, res) => {

@@ -36,5 +36,12 @@ export const bookingService = {
   getHotelBookings: async (hotelId) => {
     const response = await api.get(`/bookings/hotel/${hotelId}`);
     return response.data;
+  },
+
+  // Admin date-wise bookings
+  getAdminBookings: async (params) => {
+    const search = new URLSearchParams(params || {});
+    const response = await api.get(`/admin/bookings?${search.toString()}`);
+    return response.data;
   }
 };
