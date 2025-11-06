@@ -50,7 +50,7 @@ const SearchBar = () => {
   };
 
   return (
-  <form onSubmit={onSearch} className="mt-40 p-10 w-full bg-[#eaf0ff] rounded-[45px] flex flex-col lg:flex-row items-center justify-between shadow-sm py-4 lg:py-6">
+  <form onSubmit={onSearch} className="mt-10 mb-10 p-10 w-full bg-[#eaf0ff] rounded-[45px] flex flex-col lg:flex-row items-center justify-between shadow-sm py-4 lg:py-6">
       {/* Check Available (date) */}
       <div className="flex flex-col w-full lg:w-auto mb-3 lg:mb-0">
         <div className="flex items-center bg-white rounded-xl px-4 py-3 shadow-sm">

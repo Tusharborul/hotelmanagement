@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { hotelService } from "../services/hotelService";
-import Header from "../head";
-import SearchBar from "./SearchBar";
+import { hotelService } from "../../services/hotelService";
+import Layout from "../components/Layout";
+import SearchBar from "../../Home/SearchBar";
 
 const Hotels = () => {
   const navigate = useNavigate();
@@ -66,20 +66,17 @@ const Hotels = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="flex items-center justify-center h-96">
+      <Layout role="user" title="Hello, User" subtitle="Hotels">
+        <div className="flex items-center justify-center h-48 py-12">
           <div className="text-xl text-gray-600">Loading hotels...</div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+ 
+  <Layout role="user" title="Hello, User" subtitle="Hotels">
         {/* Search Info */}
         {/* <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -198,17 +195,8 @@ const Hotels = () => {
           </div>
         )}
 
-        {/* Back Button */}
-        <div className="mt-8 text-center">
-          <button
-            onClick={() => navigate("/home")}
-            className="text-blue-600 hover:text-blue-700 font-semibold"
-          >
-            ← Back to Home
-          </button>
-        </div>
-      </div>
-    </div>
+       
+      </Layout>
   );
 };
 

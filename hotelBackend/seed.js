@@ -339,7 +339,8 @@ const sampleHotels = [
 const seedDatabase = async () => {
   try {
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI, {
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/lankastay';
+    await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
@@ -359,6 +360,8 @@ const seedDatabase = async () => {
         role: 'admin'
       });
       console.log('Created admin user');
+    } else {
+      console.log('Admin user already exists');
     }
 
     // Create a dummy hotel owner user if doesn't exist
@@ -375,20 +378,45 @@ const seedDatabase = async () => {
         role: 'hotelOwner'
       });
       console.log('Created hotel owner user');
+    } else {
+      console.log('Hotel owner already exists');
     }
 
-    // Clear existing hotels (optional - comment out if you want to keep existing data)
-    await Hotel.deleteMany({});
-    console.log('Cleared existing hotels');
+    // Create a regular test user for quick testing
+    let testUser = await User.findOne({ username: 'testuser' });
+    if (!testUser) {
+      testUser = await User.create({
+        name: 'Test User',
+        email: 'testuser@example.com',
+        phone: '0770000000',
+        countryCode: '+94',
+        country: 'Sri Lanka',
+        username: 'testuser',
+        password: 'test123',
+        role: 'user'
+      });
+      console.log('Created test user');
+    } else {
+      console.log('Test user already exists');
+    }
+
+    // Clear existing hotels if CLEAR_DB env var is set to 'true'
+    if ((process.env.CLEAR_DB || '').toLowerCase() === 'true') {
+      await Hotel.deleteMany({});
+      console.log('Cleared existing hotels');
+    } else {
+      console.log('Preserving existing hotels (set CLEAR_DB=true to clear)');
+    }
 
     // Add hotels with the hotel owner as owner
     for (const hotelData of sampleHotels) {
       const existingHotel = await Hotel.findOne({ name: hotelData.name });
       if (!existingHotel) {
+        const regNo = `REG-${Date.now().toString(36).toUpperCase().slice(-8)}`;
         await Hotel.create({
           ...hotelData,
           owner: hotelOwner._id,
-          registrationNo: `REG-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+          registrationNo: regNo
         });
         console.log(`Added hotel: ${hotelData.name}`);
       } else {

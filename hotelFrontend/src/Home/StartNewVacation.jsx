@@ -5,7 +5,7 @@ import treasureIcon from '../assets/Logos/treasure.png';
 import citiesIcon from '../assets/Logos/cities.png';
 
 const StartNewVacation = () => (
-  <div className="pt-20 flex flex-col lg:flex-row bg-white gap-6 lg:gap-8 items-center box-border">
+  <div className="mb-30 pt-20 flex flex-col lg:flex-row bg-white gap-6 lg:gap-8 items-center box-border">
     {/* Left Side */}
     <div className="flex-1 flex flex-col justify-center items-start text-left">
       <h1 className="text-2xl sm:text-3xl lg:text-[42px] font-bold text-[#152C5B] leading-tight mb-4">Forget Busy Work,<br className="hidden sm:block" />Start Next Vacation</h1>

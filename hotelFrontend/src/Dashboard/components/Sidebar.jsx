@@ -27,6 +27,7 @@ const itemsByRole = {
   ],
   user: [
     { label: 'Dashboard', to: '/dashboard', icon: '📊' },
+     { label: 'Explore', to: '/dashboard/hotels', icon: '🏨' },
     { label: 'Bookings', to: '/dashboard/bookings', icon: '📅' },
     { label: 'Refunds', to: '/dashboard/refunds', icon: '💰' },
     { label: 'Photos', to: '/dashboard/owner/photos', icon: '📷' },
