@@ -24,7 +24,8 @@ exports.getHotels = async (req, res) => {
       query.location = { $regex: location, $options: 'i' };
     }
 
-    const hotels = await Hotel.find(query).populate('owner', 'name email');
+  // use .lean() to return plain objects (safer for serialization) and reduce memory
+  const hotels = await Hotel.find(query).populate('owner', 'name email').lean();
 
     res.status(200).json({
       success: true,
@@ -32,6 +33,8 @@ exports.getHotels = async (req, res) => {
       data: hotels
     });
   } catch (error) {
+    // Log full error for debugging in server logs
+    console.error('Error in getHotels:', error);
     // Return 400 for validation errors to make client handling clearer
     const statusCode = (error && error.name === 'ValidationError') ? 400 : 500;
     res.status(statusCode).json({
