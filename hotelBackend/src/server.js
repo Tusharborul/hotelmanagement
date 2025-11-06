@@ -58,17 +58,31 @@ app.get('/', (req, res) => {
   });
 });
 
-// Database connection
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
+// Database connection with retry/backoff
+const connectDB = async (retries = 5, backoff = 2000) => {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    console.error('MONGODB_URI is not set. Aborting.');
     process.exit(1);
+  }
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const conn = await mongoose.connect(uri);
+      console.log(`MongoDB Connected: ${conn.connection.host}`);
+      return;
+    } catch (error) {
+      console.error(`MongoDB connection attempt ${attempt} failed: ${error.message}`);
+      if (attempt < retries) {
+        const wait = backoff * attempt;
+        console.log(`Retrying in ${wait}ms...`);
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((res) => setTimeout(res, wait));
+      } else {
+        console.error('All MongoDB connection attempts failed. Exiting.');
+        process.exit(1);
+      }
+    }
   }
 };
 
