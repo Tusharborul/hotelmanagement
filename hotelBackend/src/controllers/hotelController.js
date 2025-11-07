@@ -98,9 +98,9 @@ exports.createHotel = async (req, res) => {
       ownerNIC
     } = req.body;
 
-    // Handle file uploads
-    const mainImage = req.files?.images ? req.files.images[0].filename : '';
-    const documents = req.files?.documents ? req.files.documents.map(file => file.filename) : [];
+  // Handle file uploads (Cloudinary stores full CDN URL in file.path)
+  const mainImage = req.files?.images ? req.files.images[0].path : '';
+  const documents = req.files?.documents ? req.files.documents.map(file => file.filename) : [];
 
     // Create hotel
     const hotel = await Hotel.create({
@@ -223,13 +223,9 @@ exports.setMainImage = async (req, res) => {
 
     if (!req.file) return res.status(400).json({ success: false, message: 'Image file is required' });
 
-    // Optionally remove old main image file
-    if (hotel.mainImage) {
-      const oldPath = path.join(__dirname, '../../uploads', hotel.mainImage);
-      fs.promises.unlink(oldPath).catch(() => {});
-    }
-
-    hotel.mainImage = req.file.filename;
+    // Cloudinary returns the public CDN URL in req.file.path
+    // We don't remove files from local disk anymore
+    hotel.mainImage = req.file.path;
     await hotel.save();
     return res.status(200).json({ success: true, data: hotel });
   } catch (error) {
@@ -249,10 +245,10 @@ exports.addImages = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Not authorized' });
     }
 
-    const files = (req.files || []).map(f => f.filename);
-    if (!files.length) return res.status(400).json({ success: false, message: 'No images uploaded' });
+  const files = (req.files || []).map(f => f.path);
+  if (!files.length) return res.status(400).json({ success: false, message: 'No images uploaded' });
 
-    hotel.images = [...hotel.images, ...files];
+  hotel.images = [...(hotel.images || []), ...files];
     await hotel.save();
     return res.status(200).json({ success: true, data: hotel });
   } catch (error) {
@@ -272,16 +268,15 @@ exports.deleteImage = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Not authorized' });
     }
 
-    const { filename } = req.params;
-    hotel.images = hotel.images.filter(img => img !== filename);
-    // Also clear mainImage if this file was used as main
-    if (hotel.mainImage === filename) hotel.mainImage = '';
-    await hotel.save();
+  const { filename } = req.params;
+  // filename is expected to be the stored URL or identifier. Remove matching entries.
+  hotel.images = (hotel.images || []).filter(img => img !== filename);
+  // Also clear mainImage if this file was used as main
+  if (hotel.mainImage === filename) hotel.mainImage = '';
+  await hotel.save();
 
-    const filePath = path.join(__dirname, '../../uploads', filename);
-    fs.promises.unlink(filePath).catch(() => {});
-
-    return res.status(200).json({ success: true, data: hotel });
+  // Note: Cloudinary deletion (remote) can be implemented if you store public_id.
+  return res.status(200).json({ success: true, data: hotel });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -306,7 +301,7 @@ exports.addTreasure = async (req, res) => {
 
     const { title, subtitle, popular } = req.body;
     if (!title || !subtitle) return res.status(400).json({ success: false, message: 'title and subtitle required' });
-    const image = req.file ? req.file.filename : undefined;
+  const image = req.file ? req.file.path : undefined;
     const treasure = { title, subtitle, popular: popular === 'true' || popular === true, image };
     hotel.treasures.push(treasure);
     await hotel.save();
@@ -341,11 +336,8 @@ exports.updateTreasure = async (req, res) => {
     if (subtitle !== undefined) t.subtitle = subtitle;
     if (popular !== undefined) t.popular = (popular === 'true' || popular === true);
     if (req.file) {
-      if (t.image) {
-        const oldPath = path.join(__dirname, '../../uploads', t.image);
-        fs.promises.unlink(oldPath).catch(() => {});
-      }
-      t.image = req.file.filename;
+      // Replace image URL with the new Cloudinary URL
+      t.image = req.file.path;
     }
 
     await hotel.save();
@@ -388,10 +380,8 @@ exports.deleteTreasure = async (req, res) => {
     }
     
     console.log('Treasure found! Title:', t.title);
-    if (t.image) {
-      const imgPath = path.join(__dirname, '../../uploads', t.image);
-      fs.promises.unlink(imgPath).catch(() => {});
-    }
+    // If images are stored in Cloudinary, remove locally stored file logic.
+    // Remote deletion requires Cloudinary public_id which isn't tracked here.
     t.deleteOne();
     await hotel.save();
     console.log('Treasure deleted successfully');
@@ -429,9 +419,9 @@ exports.updateMainImage = async (req, res) => {
     if (hotel.owner.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(401).json({ success: false, message: 'Not authorized' });
     }
-    const filename = req.file ? req.file.filename : null;
-    if (!filename) return res.status(400).json({ success: false, message: 'Image file is required' });
-    hotel.mainImage = filename;
+  const filename = req.file ? req.file.path : null;
+  if (!filename) return res.status(400).json({ success: false, message: 'Image file is required' });
+  hotel.mainImage = filename;
     await hotel.save();
     return res.status(200).json({ success: true, data: { mainImage: hotel.mainImage } });
   } catch (error) {
@@ -449,9 +439,9 @@ exports.addHotelImages = async (req, res) => {
     if (hotel.owner.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(401).json({ success: false, message: 'Not authorized' });
     }
-    const files = req.files || [];
-    const filenames = files.map(f => f.filename);
-    hotel.images = [...(hotel.images || []), ...filenames];
+  const files = req.files || [];
+  const filenames = files.map(f => f.path);
+  hotel.images = [...(hotel.images || []), ...filenames];
     await hotel.save();
     return res.status(201).json({ success: true, data: hotel.images });
   } catch (error) {

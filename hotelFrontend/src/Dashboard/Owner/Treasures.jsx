@@ -80,7 +80,11 @@ export default function OwnerTreasures() {
     }
   };
 
-  const img = (f) => f ? `${serverBase}/uploads/${f}` : '';
+  const img = (f) => {
+    if (!f) return '';
+    if (f.startsWith('http')) return f;
+    return `${serverBase}/uploads/${f}`;
+  };
 
   return (
     <Layout role="owner" title="Hello, Owner" subtitle="Treasures">
