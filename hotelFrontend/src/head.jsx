@@ -5,6 +5,8 @@ import { authService } from "./services/authService";
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(authService.isAuthenticated());
+  // store current user object so we can check role presence
+  const [currentUser, setCurrentUser] = useState(authService.getCurrentUser());
   const navigate = useNavigate();
 
   const handleHotelsClick = (e) => {
@@ -34,6 +36,7 @@ const Header = () => {
     if (!user) return navigate('/login');
     if (user.role === 'admin') return navigate('/dashboard/admin');
     if (user.role === 'hotelOwner') return navigate('/dashboard/owner');
+    if (user.role === 'user') return navigate('/dashboard/hotels');
     return navigate('/dashboard');
   };
 
@@ -41,6 +44,7 @@ const Header = () => {
   React.useEffect(() => {
     const checkAuth = () => {
       setIsLoggedIn(authService.isAuthenticated());
+      setCurrentUser(authService.getCurrentUser());
     };
     
     checkAuth();
@@ -86,7 +90,7 @@ const Header = () => {
             <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition">Contact</a>
             
           </nav>
-          {isLoggedIn && (
+          {currentUser && currentUser.role && (
             <button
               className="text-blue-600 border border-blue-600 font-semibold rounded-lg px-5 py-2 shadow-sm hover:bg-blue-50 transition focus:outline-none"
               onClick={goToDashboard}
@@ -122,7 +126,7 @@ const Header = () => {
 
         {/* Mobile Menu */}
         {menuOpen && (
-          <div className="fixed inset-0 w-full h-full bg-white shadow-lg z-50 flex flex-col items-center py-6 px-6 lg:hidden overflow-hidden">
+          <div className="fixed inset-0 w-full h-full bg-white shadow-lg z-50 flex flex-col lg:hidden overflow-auto pt-6 px-6">
             {/* Logo at top */}
             <div className="w-full flex items-center justify-between mb-8">
               <div className="text-[22px] sm:text-[26px] font-medium flex items-center">
@@ -139,21 +143,23 @@ const Header = () => {
                 </svg>
               </button>
             </div>
-            <nav className="flex flex-col gap-5 font-[Poppins] items-center mt-10">
-              <a href="/home" className="text-[#3252DF] text-[18px]" onClick={() => setMenuOpen(false)}>Home</a>
-              <a href="#" onClick={(e) => { handleHotelsClick(e); setMenuOpen(false); }} className="text-[#152C5B] hover:text-[#3252DF] transition cursor-pointer">Hotels</a>
-              <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition" onClick={() => setMenuOpen(false)}>Rooms</a>
-              <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition" onClick={() => setMenuOpen(false)}>About</a>
-              <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition" onClick={() => setMenuOpen(false)}>Contact</a>
+            <nav className="flex flex-col gap-4 font-[Poppins] w-full mt-4">
+              <a href="/home" className="text-[#3252DF] text-[18px] w-full text-left" onClick={() => setMenuOpen(false)}>Home</a>
+              <a href="#" onClick={(e) => { handleHotelsClick(e); setMenuOpen(false); }} className="text-[#152C5B] hover:text-[#3252DF] transition cursor-pointer w-full text-left">Hotels</a>
+              <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition w-full text-left" onClick={() => setMenuOpen(false)}>Rooms</a>
+              <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition w-full text-left" onClick={() => setMenuOpen(false)}>About</a>
+              <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition w-full text-left" onClick={() => setMenuOpen(false)}>Contact</a>
+              {currentUser && currentUser.role && (
                 <button
-              className="text-blue-600 border border-blue-600 font-semibold rounded-lg px-5 py-2 shadow-sm hover:bg-blue-50 transition focus:outline-none"
-              onClick={goToDashboard}
-            >
-              Dashboard
-            </button>
+                  className="text-blue-600 border border-blue-600 font-semibold rounded-lg px-5 py-2 shadow-sm hover:bg-blue-50 transition focus:outline-none w-full text-left"
+                  onClick={() => { setMenuOpen(false); goToDashboard(); }}
+                >
+                  Dashboard
+                </button>
+              )}
             </nav>
             <button
-              className="bg-blue-600 text-white font-semibold rounded-lg px-8 py-2 mt-10 shadow-lg hover:bg-blue-700 transition focus:outline-none"
+              className="bg-blue-600 text-white font-semibold rounded-lg px-8 py-2 mt-6 shadow-lg hover:bg-blue-700 transition focus:outline-none w-full max-w-sm"
               onClick={() => {
                 setMenuOpen(false);
                 handleAuthClick();

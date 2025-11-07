@@ -137,50 +137,50 @@ export default function OwnerObjectives() {
 
   return (
     <Layout role="owner" title="Hello, Owner" subtitle="Objectives">
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="font-semibold">Your Properties</div>
-          <div className="flex items-center gap-2">
+      <div className="bg-white rounded-lg shadow p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+          <div className="font-semibold text-lg">Your Properties</div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             {!adding ? (
-              <button className="px-3 py-1 bg-green-600 text-white rounded" onClick={startAdd}>Add Hotel</button>
+              <button className="px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition w-full sm:w-auto" onClick={startAdd}>Add Hotel</button>
             ) : (
-              <div className="flex gap-2">
-                <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={saveAdd}>Create</button>
-                <button className="px-3 py-1 border rounded" onClick={cancelAdd}>Cancel</button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <button className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition flex-1 sm:flex-none" onClick={saveAdd}>Create</button>
+                <button className="px-4 py-2 border rounded text-sm hover:bg-gray-50 transition flex-1 sm:flex-none" onClick={cancelAdd}>Cancel</button>
               </div>
             )}
           </div>
         </div>
         {adding && (
-          <div className="mb-4 border p-4 rounded">
-            <div className="text-sm font-medium mb-2">Create new hotel</div>
+          <div className="mb-6 border rounded-lg p-4 bg-gray-50">
+            <div className="text-sm font-semibold mb-4">Create new hotel</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Hotel name</label>
-                <input className="border px-2 py-2 w-full" placeholder="e.g. Ocean View Apartments" value={addForm.name} onChange={(e)=>setAddForm(f=>({ ...f, name: e.target.value }))} />
+                <label className="block text-xs text-gray-600 mb-1 font-medium">Hotel name</label>
+                <input className="border rounded px-3 py-2 w-full text-sm" placeholder="e.g. Ocean View Apartments" value={addForm.name} onChange={(e)=>setAddForm(f=>({ ...f, name: e.target.value }))} />
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Location</label>
-                <input className="border px-2 py-2 w-full" placeholder="City, Country or address" value={addForm.location} onChange={(e)=>setAddForm(f=>({ ...f, location: e.target.value }))} />
+                <label className="block text-xs text-gray-600 mb-1 font-medium">Location</label>
+                <input className="border rounded px-3 py-2 w-full text-sm" placeholder="City, Country or address" value={addForm.location} onChange={(e)=>setAddForm(f=>({ ...f, location: e.target.value }))} />
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Address</label>
-                <input className="border px-2 py-2 w-full" placeholder="Street address, building or detailed address" value={addForm.address || ''} onChange={(e)=>setAddForm(f=>({ ...f, address: e.target.value }))} />
+                <label className="block text-xs text-gray-600 mb-1 font-medium">Address</label>
+                <input className="border rounded px-3 py-2 w-full text-sm" placeholder="Street address, building or detailed address" value={addForm.address || ''} onChange={(e)=>setAddForm(f=>({ ...f, address: e.target.value }))} />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1 font-medium">Price per night (USD)</label>
+                <input className="border rounded px-3 py-2 w-full text-sm" type="number" min={0} placeholder="e.g. 120" value={addForm.price || ''} onChange={(e)=>setAddForm(f=>({ ...f, price: e.target.value }))} />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs text-gray-600 mb-1">Description</label>
-                <textarea className="border px-2 py-2 w-full" rows={3} placeholder="Short description for guests" value={addForm.description} onChange={(e)=>setAddForm(f=>({ ...f, description: e.target.value }))} />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Price per night (USD)</label>
-                <input className="border px-2 py-2 w-full" type="number" min={0} placeholder="e.g. 120" value={addForm.price || ''} onChange={(e)=>setAddForm(f=>({ ...f, price: e.target.value }))} />
+                <label className="block text-xs text-gray-600 mb-1 font-medium">Description</label>
+                <textarea className="border rounded px-3 py-2 w-full text-sm" rows={3} placeholder="Short description for guests" value={addForm.description} onChange={(e)=>setAddForm(f=>({ ...f, description: e.target.value }))} />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs text-gray-600 mb-1">Images</label>
-                <div className="flex items-center gap-3">
-                  <label className="inline-block px-3 py-2 bg-white border rounded cursor-pointer text-sm">Select images
+                <label className="block text-xs text-gray-600 mb-1 font-medium">Images</label>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <label className="inline-block px-4 py-2 bg-white border rounded cursor-pointer text-sm hover:bg-gray-50 transition w-full sm:w-auto text-center">Select images
                     <input type="file" multiple accept="image/*" onChange={(e)=>{
                       const files = e.target.files ? Array.from(e.target.files) : [];
                       setAddForm(f=>({ ...f, images: files }));
@@ -191,15 +191,15 @@ export default function OwnerObjectives() {
                 <div className="text-xs text-gray-500 mt-1">You can upload multiple images. Larger images may take a few seconds to upload.</div>
 
                 {addPreviews.length > 0 && (
-                  <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                     {addPreviews.map((p, idx) => (
-                      <div key={idx} className="border rounded overflow-hidden relative">
+                      <div key={idx} className="border rounded overflow-hidden relative bg-white">
                         <img src={p.url} alt={p.name} className="w-full h-20 object-cover" />
                         <button onClick={()=>{
                           // remove file at idx
                           setAddForm(f=>({ ...f, images: (f.images || []).filter((_,i)=>i!==idx) }));
-                        }} className="absolute top-1 right-1 bg-white/80 text-red-600 px-1 rounded text-xs">Remove</button>
-                        <div className="text-xs p-1 truncate" title={p.name}>{p.name}</div>
+                        }} className="absolute top-1 right-1 bg-white/90 text-red-600 px-1.5 py-0.5 rounded text-xs hover:bg-white shadow">×</button>
+                        <div className="text-xs p-1 truncate bg-gray-50" title={p.name}>{p.name}</div>
                       </div>
                     ))}
                   </div>
@@ -207,39 +207,39 @@ export default function OwnerObjectives() {
               </div>
 
               <div className="md:col-span-2 mt-2">
-                <div className="text-sm font-medium mb-2">Facilities</div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="text-sm font-semibold mb-3">Facilities</div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Bedrooms</label>
-                    <input className="border px-2 py-1 w-full" type="number" min={0} value={addForm.facilities.bedrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, bedrooms: Number(e.target.value) } }))} />
+                    <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0} value={addForm.facilities.bedrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, bedrooms: Number(e.target.value) } }))} />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Bathrooms</label>
-                    <input className="border px-2 py-1 w-full" type="number" min={0} value={addForm.facilities.bathrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, bathrooms: Number(e.target.value) } }))} />
+                    <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0} value={addForm.facilities.bathrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, bathrooms: Number(e.target.value) } }))} />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Living rooms</label>
-                    <input className="border px-2 py-1 w-full" type="number" min={0} value={addForm.facilities.livingrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, livingrooms: Number(e.target.value) } }))} />
+                    <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0} value={addForm.facilities.livingrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, livingrooms: Number(e.target.value) } }))} />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Dining rooms</label>
-                    <input className="border px-2 py-1 w-full" type="number" min={0} value={addForm.facilities.diningrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, diningrooms: Number(e.target.value) } }))} />
+                    <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0} value={addForm.facilities.diningrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, diningrooms: Number(e.target.value) } }))} />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">WiFi (label)</label>
-                    <input className="border px-2 py-1 w-full" value={addForm.facilities.wifi} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, wifi: e.target.value } }))} />
+                    <input className="border rounded px-2 py-1.5 w-full text-sm" value={addForm.facilities.wifi} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, wifi: e.target.value } }))} />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Units ready</label>
-                    <input className="border px-2 py-1 w-full" type="number" min={0} value={addForm.facilities.unitsReady} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, unitsReady: Number(e.target.value) } }))} />
+                    <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0} value={addForm.facilities.unitsReady} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, unitsReady: Number(e.target.value) } }))} />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Refrigerator (count)</label>
-                    <input className="border px-2 py-1 w-full" type="number" min={0} value={addForm.facilities.refrigerator} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, refrigerator: Number(e.target.value) } }))} />
+                    <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0} value={addForm.facilities.refrigerator} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, refrigerator: Number(e.target.value) } }))} />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Television (count)</label>
-                    <input className="border px-2 py-1 w-full" type="number" min={0} value={addForm.facilities.television} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, television: Number(e.target.value) } }))} />
+                    <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0} value={addForm.facilities.television} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, television: Number(e.target.value) } }))} />
                   </div>
                 </div>
               </div>
@@ -249,75 +249,75 @@ export default function OwnerObjectives() {
         {loading ? (
           <div className="text-gray-500">Loading...</div>
         ) : hotels.length === 0 ? (
-          <div className="text-gray-500">No hotels yet.</div>
+          <div className="text-gray-500 text-center py-8">No hotels yet.</div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {hotels.map(h => (
-              <div key={h._id} className="border rounded-lg p-4 flex flex-col">
-                <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="font-medium">{h.name || 'Untitled'}</div>
-                      <span className={`text-xs px-2 py-1 rounded ${h.status === 'approved' ? 'bg-green-100 text-green-800' : h.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>{h.status || 'pending'}</span>
+              <div key={h._id} className="border rounded-lg p-4 flex flex-col hover:shadow-md transition">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="font-medium text-sm">{h.name || 'Untitled'}</div>
+                      <span className={`text-xs px-2 py-0.5 rounded ${h.status === 'approved' ? 'bg-green-100 text-green-700' : h.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{h.status || 'pending'}</span>
                     </div>
                     <div className="text-xs text-gray-500">{h.createdAt ? new Date(h.createdAt).toLocaleDateString() : ''}</div>
                   </div>
 
-                <div className="h-36 bg-gray-100 rounded overflow-hidden mb-3">
+                <div className="h-32 sm:h-36 bg-gray-100 rounded overflow-hidden mb-3">
                   {h.mainImage ? (
                     <img src={h.mainImage.startsWith('http') ? h.mainImage : `http://localhost:5000/uploads/${h.mainImage}`} alt={h.name} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">No image</div>
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">No image</div>
                   )}
                 </div>
 
-                <div className="text-sm text-gray-700 mb-3">{h.description ? (h.description.length > 140 ? h.description.slice(0,140)+'...' : h.description) : '-'}</div>
+                <div className="text-sm text-gray-700 mb-3 line-clamp-3">{h.description ? (h.description.length > 140 ? h.description.slice(0,140)+'...' : h.description) : '-'}</div>
 
                 {editId === h._id ? (
                   <div className="space-y-2">
-                    <input className="border px-2 py-1 w-full" value={form.name} onChange={(e)=>setForm(f=>({ ...f, name: e.target.value }))} />
-                    <input className="border px-2 py-1 w-full" value={form.location} onChange={(e)=>setForm(f=>({ ...f, location: e.target.value }))} />
-                    <textarea className="border px-2 py-1 w-full" rows={3} value={form.description} onChange={(e)=>setForm(f=>({ ...f, description: e.target.value }))} />
+                    <input className="border rounded px-3 py-2 w-full text-sm" placeholder="Hotel name" value={form.name} onChange={(e)=>setForm(f=>({ ...f, name: e.target.value }))} />
+                    <input className="border rounded px-3 py-2 w-full text-sm" placeholder="Location" value={form.location} onChange={(e)=>setForm(f=>({ ...f, location: e.target.value }))} />
+                    <textarea className="border rounded px-3 py-2 w-full text-sm" rows={3} placeholder="Description" value={form.description} onChange={(e)=>setForm(f=>({ ...f, description: e.target.value }))} />
 
                     <div className="grid grid-cols-2 gap-2">
                       <label className="text-xs">Bedrooms
-                        <input className="border px-2 py-1 w-full mt-1" type="number" min={0} value={form.facilities.bedrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, bedrooms: e.target.value } }))} />
+                        <input className="border rounded px-2 py-1.5 w-full mt-1 text-sm" type="number" min={0} value={form.facilities.bedrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, bedrooms: e.target.value } }))} />
                       </label>
                       <label className="text-xs">Bathrooms
-                        <input className="border px-2 py-1 w-full mt-1" type="number" min={0} value={form.facilities.bathrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, bathrooms: e.target.value } }))} />
+                        <input className="border rounded px-2 py-1.5 w-full mt-1 text-sm" type="number" min={0} value={form.facilities.bathrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, bathrooms: e.target.value } }))} />
                       </label>
                       <label className="text-xs">Living rooms
-                        <input className="border px-2 py-1 w-full mt-1" type="number" min={0} value={form.facilities.livingrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, livingrooms: e.target.value } }))} />
+                        <input className="border rounded px-2 py-1.5 w-full mt-1 text-sm" type="number" min={0} value={form.facilities.livingrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, livingrooms: e.target.value } }))} />
                       </label>
                       <label className="text-xs">Dining rooms
-                        <input className="border px-2 py-1 w-full mt-1" type="number" min={0} value={form.facilities.diningrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, diningrooms: e.target.value } }))} />
+                        <input className="border rounded px-2 py-1.5 w-full mt-1 text-sm" type="number" min={0} value={form.facilities.diningrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, diningrooms: e.target.value } }))} />
                       </label>
                       <label className="text-xs">WiFi
-                        <input className="border px-2 py-1 w-full mt-1" value={form.facilities.wifi} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, wifi: e.target.value } }))} />
+                        <input className="border rounded px-2 py-1.5 w-full mt-1 text-sm" value={form.facilities.wifi} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, wifi: e.target.value } }))} />
                       </label>
                       <label className="text-xs">Units ready
-                        <input className="border px-2 py-1 w-full mt-1" type="number" min={0} value={form.facilities.unitsReady} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, unitsReady: e.target.value } }))} />
+                        <input className="border rounded px-2 py-1.5 w-full mt-1 text-sm" type="number" min={0} value={form.facilities.unitsReady} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, unitsReady: e.target.value } }))} />
                       </label>
                       <label className="text-xs">Refrigerator
-                        <input className="border px-2 py-1 w-full mt-1" type="number" min={0} value={form.facilities.refrigerator} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, refrigerator: e.target.value } }))} />
+                        <input className="border rounded px-2 py-1.5 w-full mt-1 text-sm" type="number" min={0} value={form.facilities.refrigerator} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, refrigerator: e.target.value } }))} />
                       </label>
                       <label className="text-xs">Television
-                        <input className="border px-2 py-1 w-full mt-1" type="number" min={0} value={form.facilities.television} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, television: e.target.value } }))} />
+                        <input className="border rounded px-2 py-1.5 w-full mt-1 text-sm" type="number" min={0} value={form.facilities.television} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, television: e.target.value } }))} />
                       </label>
                     </div>
 
-                    <div className="flex gap-2">
-                      <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={()=>saveEdit(h._id)}>Save</button>
-                      <button className="px-3 py-1 border rounded" onClick={()=>setEditId(null)}>Cancel</button>
+                    <div className="flex gap-2 pt-2">
+                      <button className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition flex-1" onClick={()=>saveEdit(h._id)}>Save</button>
+                      <button className="px-4 py-2 border rounded text-sm hover:bg-gray-50 transition flex-1" onClick={()=>setEditId(null)}>Cancel</button>
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-auto flex items-center justify-between">
-                    <div className="text-sm text-gray-500">
+                  <div className="mt-auto">
+                    <div className="text-xs text-gray-500 mb-3">
                       Bedrooms: {h.facilities?.bedrooms ?? '-'} • Baths: {h.facilities?.bathrooms ?? '-'}
                     </div>
                     <div className="flex gap-2">
-                      <button className="px-3 py-1 border rounded text-sm" onClick={()=>startEdit(h)}>Edit</button>
-                      <button className="px-3 py-1 border rounded text-sm" onClick={()=>remove(h._id)}>Delete</button>
+                      <button className="px-3 py-1.5 border rounded text-sm hover:bg-gray-50 transition flex-1" onClick={()=>startEdit(h)}>Edit</button>
+                      <button className="px-3 py-1.5 border rounded text-sm text-red-600 hover:bg-red-50 transition flex-1" onClick={()=>remove(h._id)}>Delete</button>
                     </div>
                   </div>
                 )}

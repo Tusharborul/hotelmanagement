@@ -53,29 +53,30 @@ export default function OwnerPhotos() {
 
   return (
     <Layout role="owner" title="Hello, Owner" subtitle="Photos">
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="mb-4 flex items-center gap-3">
-          <label className="mr-2">Hotel:</label>
-          <select className="border px-2 py-1" value={selected} onChange={(e)=>setSelected(e.target.value)}>
-            {hotels.map(h => <option key={h._id} value={h._id}>{h.name} — {h.location}</option>)}
+      <div className="bg-white rounded-lg shadow p-4 md:p-6">
+        <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <label className="text-sm text-gray-600 font-medium">Hotel:</label>
+          <select className="border rounded px-3 py-2 w-full sm:w-64 lg:w-80 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value={selected} onChange={(e)=>setSelected(e.target.value)}>
+            <option value="">Select a hotel</option>
+            {hotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
           </select>
         </div>
 
         {!selectedHotel ? (
-          <div>No hotel selected.</div>
+          <div className="text-gray-500 text-center py-8">No hotel selected.</div>
         ) : (
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-6">
             <section>
-              <div className="font-semibold mb-2">Main Image</div>
-              <div className="flex items-center gap-4">
-                <div className="w-64 h-40 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+              <div className="font-semibold mb-3 text-lg">Main Image</div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="w-full sm:w-64 h-40 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
                   {selectedHotel.mainImage ? (
                     <img src={imageUrl(selectedHotel.mainImage)} alt="Main" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-gray-400">No image</span>
                   )}
                 </div>
-                <label className="border px-3 py-2 rounded cursor-pointer bg-blue-600 text-white">
+                <label className="border px-4 py-2 rounded cursor-pointer bg-blue-600 text-white text-sm hover:bg-blue-700 transition w-full sm:w-auto text-center">
                   {mainUploading ? 'Uploading...' : 'Replace main image'}
                   <input type="file" accept="image/*" disabled={mainUploading} onChange={onUploadMain} className="hidden" />
                 </label>
@@ -83,19 +84,19 @@ export default function OwnerPhotos() {
             </section>
 
             <section>
-              <div className="font-semibold mb-2">Gallery Images</div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="font-semibold mb-3 text-lg">Gallery Images</div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {(selectedHotel.images || []).map((img) => (
                   <div key={img} className="relative group">
-                    <img src={imageUrl(img)} alt="Gallery" className="w-full h-40 object-cover rounded" />
-                    <button onClick={()=>onDeleteImage(img)} className="absolute top-2 right-2 bg-white/80 hover:bg-white text-red-600 border px-2 py-0.5 rounded">Delete</button>
+                    <img src={imageUrl(img)} alt="Gallery" className="w-full h-32 sm:h-40 object-cover rounded" />
+                    <button onClick={()=>onDeleteImage(img)} className="absolute top-2 right-2 bg-white/90 hover:bg-white text-red-600 border px-2 py-1 rounded text-xs sm:text-sm shadow">Delete</button>
                   </div>
                 ))}
                 {(!selectedHotel.images || selectedHotel.images.length === 0) && (
-                  <div className="text-gray-400">No gallery images</div>
+                  <div className="text-gray-400 col-span-2">No gallery images</div>
                 )}
               </div>
-              <label className="mt-3 inline-block border px-3 py-2 rounded cursor-pointer bg-blue-50">
+              <label className="mt-4 inline-block border px-4 py-2 rounded cursor-pointer bg-blue-50 hover:bg-blue-100 transition text-sm">
                 {galleryUploading ? 'Uploading...' : 'Add images'}
                 <input type="file" accept="image/*" multiple disabled={galleryUploading} onChange={onUploadGallery} className="hidden" />
               </label>

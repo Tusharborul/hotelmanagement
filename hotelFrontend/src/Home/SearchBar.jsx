@@ -75,7 +75,7 @@ const SearchBar = () => {
             <img src={person} alt="Person" width={24} height={24} />
           </span>
           <label htmlFor="persons" className="font-semibold text-black mr-3">Person</label>
-          <select id="persons" value={persons} onChange={(e) => setPersons(Number(e.target.value))} className="text-sm bg-transparent outline-none">
+          <select id="persons" value={persons} onChange={(e) => setPersons(Number(e.target.value))} className="text-sm bg-transparent outline-none focus:outline-none focus:ring-0 cursor-pointer">
             <option value={1}>1</option>
             <option value={2}>2</option>
             <option value={3}>3</option>
@@ -91,7 +91,7 @@ const SearchBar = () => {
           <span className="mr-3">
             <img src={location} alt="Location" width={24} height={24} />
           </span>
-          <select value={locationValue} onChange={(e) => setLocationValue(e.target.value)} className="text-sm bg-transparent outline-none">
+          <select value={locationValue} onChange={(e) => setLocationValue(e.target.value)} className="text-sm bg-transparent outline-none focus:outline-none focus:ring-0 cursor-pointer flex-1">
             <option value="" disabled>Select location</option>
             {locations.map((loc) => (
               <option key={loc} value={loc}>{loc}</option>

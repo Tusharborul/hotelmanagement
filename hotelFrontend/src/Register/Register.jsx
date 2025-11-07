@@ -85,7 +85,7 @@ const Register = () => {
           <div>
             <label className="text-[16px] font-medium mb-1 block" htmlFor="phone">Phone No</label>
             <div className="flex">
-              <select id="countryCode" value={form.countryCode} onChange={handleChange} className="h-9 rounded-l-md border border-r-0 border-gray-300 bg-white text-sm px-2 focus:outline-none">
+              <select id="countryCode" value={form.countryCode} onChange={handleChange} className="h-9 rounded-l-md border border-r-0 border-gray-300 bg-white text-sm px-2 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                 <option value="+94">+94 (LK)</option>
                 <option value="+1">+1 (US)</option>
                 <option value="+44">+44 (UK)</option>

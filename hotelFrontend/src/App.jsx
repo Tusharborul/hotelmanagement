@@ -25,6 +25,7 @@ import OwnerObjectives from './Dashboard/Owner/Objectives.jsx';
 import OwnerBookings from './Dashboard/Owner/Bookings.jsx';
 import OwnerPhotos from './Dashboard/Owner/Photos.jsx';
 import OwnerTreasures from './Dashboard/Owner/Treasures.jsx';
+import OwnerRefunds from './Dashboard/Owner/Refunds.jsx';
 // ...existing code...
 // User pages
 import UserBookings from './Dashboard/User/Bookings.jsx';
@@ -107,6 +108,11 @@ function App() {
           <Route path="/dashboard/owner/treasures" element={
             <ProtectedRoute roles={["hotelOwner","admin"]}>
               <OwnerTreasures />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/owner/refunds" element={
+            <ProtectedRoute roles={["hotelOwner","admin"]}>
+              <OwnerRefunds />
             </ProtectedRoute>
           } />
           <Route path="/dashboard/owner/photos" element={

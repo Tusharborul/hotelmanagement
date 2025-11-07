@@ -29,14 +29,24 @@ const Login = () => {
       try {
         await authService.login({ username, password });
         
-        // Check if there's a redirect URL stored
+        // Check if there's a redirect URL stored (explicit flow)
         const redirectUrl = localStorage.getItem('redirectAfterLogin');
         if (redirectUrl) {
           localStorage.removeItem('redirectAfterLogin');
           navigate(redirectUrl);
         } else {
-          // Default redirect to home
-          navigate('/home');
+          // Default role-aware redirect: users -> /dashboard/hotels, admins -> /dashboard/admin,
+          // hotel owners -> /dashboard/owner, others -> /dashboard
+          const user = authService.getCurrentUser();
+          if (user && user.role === 'user') {
+            navigate('/dashboard/hotels');
+          } else if (user && (user.role === 'admin' || user.role === 'administrator')) {
+            navigate('/dashboard/admin');
+          } else if (user && (user.role === 'hotelOwner' || user.role === 'owner')) {
+            navigate('/dashboard/owner');
+          } else {
+            navigate('/dashboard');
+          }
         }
       } catch (error) {
         setErrors({

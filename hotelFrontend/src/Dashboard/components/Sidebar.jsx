@@ -20,14 +20,15 @@ const itemsByRole = {
     { label: 'Bookings', to: '/dashboard/owner/bookings', icon: '📅' },
     { label: 'Photos', to: '/dashboard/owner/photos', icon: '📷' },
     { label: 'Treasures', to: '/dashboard/owner/treasures', icon: '💎' },
-    { label: 'Refunds', to: '#', icon: '💰' },
+    { label: 'Refunds', to: '/dashboard/owner/refunds', icon: '💰' },
     // { label: 'Message', to: '#', icon: '💬' },
     // { label: 'Help', to: '#', icon: '❓' },
     // { label: 'Setting', to: '#', icon: '⚙️' },
   ],
   user: [
-    { label: 'Dashboard', to: '/dashboard', icon: '📊' },
+   
      { label: 'Explore', to: '/dashboard/hotels', icon: '🏨' },
+      { label: 'Dashboard', to: '/dashboard', icon: '📊' },
     { label: 'Bookings', to: '/dashboard/bookings', icon: '📅' },
     { label: 'Refunds', to: '/dashboard/refunds', icon: '💰' },
     // { label: 'Photos', to: '/dashboard/owner/photos', icon: '📷' },
@@ -40,7 +41,9 @@ const itemsByRole = {
 export default function Sidebar({ role = 'user', isOpen, onClose }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const items = itemsByRole[role] || itemsByRole.user;
+  // normalize role keys: backend may use 'hotelOwner' while Sidebar keys use 'owner'
+  const normalizedRole = role === 'hotelOwner' ? 'owner' : role;
+  const items = itemsByRole[normalizedRole] || itemsByRole.user;
 
   const handleLogout = () => {
     authService.logout();
@@ -51,10 +54,10 @@ export default function Sidebar({ role = 'user', isOpen, onClose }) {
     <>
       {/* Sidebar */}
       <aside className={`
-        fixed lg:static inset-y-0 left-0 z-30
+        fixed inset-y-0 left-0 z-30
         w-64 lg:w-72 xl:w-80
         bg-white border-r border-gray-200 shadow-lg lg:shadow-none
-        flex flex-col
+        flex flex-col overflow-hidden
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
@@ -76,7 +79,7 @@ export default function Sidebar({ role = 'user', isOpen, onClose }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 lg:p-6 overflow-y-auto">
+        <nav className="flex-1 p-4 lg:p-6">
           <div className="space-y-1">
             {items.map((it) => {
               const isActive = location.pathname === it.to;

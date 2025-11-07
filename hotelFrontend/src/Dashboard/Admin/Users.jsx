@@ -29,39 +29,74 @@ export default function AdminUsers() {
 
   return (
     <Layout role="admin" title="Hello, Admin" subtitle="Users">
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="font-semibold mb-4">Users (role: user)</div>
-        {loading ? 'Loading...' : (
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b"><th className="py-2">Username</th><th className="py-2">Created</th><th className="py-2">Action</th></tr>
-            </thead>
-            <tbody>
+      <div className="bg-white rounded-lg shadow p-4 md:p-6">
+        <div className="font-semibold mb-4 text-lg">Users (role: user)</div>
+        {loading ? (
+          <div className="text-gray-500">Loading...</div>
+        ) : (
+          <div className="space-y-3">
+            {/* Mobile card view */}
+            <div className="block md:hidden space-y-3">
               {users.map(u => (
-                <tr key={u._id} className="border-b">
-                  <td className="py-2">
+                <div key={u._id} className="border rounded-lg p-3 space-y-2">
+                  <div>
+                    <span className="text-xs text-gray-500">Username:</span>
                     {editRow===u._id ? (
-                      <input className="border px-2 py-1" value={username} onChange={(e)=>setUsername(e.target.value)} />
-                    ) : u.username}
-                  </td>
-                  <td className="py-2">{new Date(u.createdAt).toLocaleDateString()}</td>
-                  <td className="py-2 flex gap-2">
-                    {editRow===u._id ? (
-                      <button className="px-2 py-1 bg-blue-600 text-white rounded" onClick={()=>saveEdit(u._id)}>Save</button>
+                      <input className="border rounded px-2 py-1 w-full mt-1 text-sm" value={username} onChange={(e)=>setUsername(e.target.value)} />
                     ) : (
-                      <button className="px-2 py-1 border rounded" onClick={()=>startEdit(u)}>Edit</button>
+                      <div className="font-medium">{u.username}</div>
                     )}
-                    <button className="px-2 py-1 border rounded" onClick={()=>remove(u._id)}>Delete</button>
-                  </td>
-                </tr>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500">Created:</span>
+                    <div className="text-sm">{new Date(u.createdAt).toLocaleDateString()}</div>
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    {editRow===u._id ? (
+                      <button className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm flex-1" onClick={()=>saveEdit(u._id)}>Save</button>
+                    ) : (
+                      <button className="px-3 py-1.5 border rounded text-sm flex-1" onClick={()=>startEdit(u)}>Edit</button>
+                    )}
+                    <button className="px-3 py-1.5 border rounded text-red-600 text-sm flex-1" onClick={()=>remove(u._id)}>Delete</button>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Desktop table view */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b"><th className="py-2">Username</th><th className="py-2">Created</th><th className="py-2">Action</th></tr>
+                </thead>
+                <tbody>
+                  {users.map(u => (
+                    <tr key={u._id} className="border-b">
+                      <td className="py-2">
+                        {editRow===u._id ? (
+                          <input className="border px-2 py-1 rounded" value={username} onChange={(e)=>setUsername(e.target.value)} />
+                        ) : u.username}
+                      </td>
+                      <td className="py-2">{new Date(u.createdAt).toLocaleDateString()}</td>
+                      <td className="py-2 flex gap-2">
+                        {editRow===u._id ? (
+                          <button className="px-2 py-1 bg-blue-600 text-white rounded" onClick={()=>saveEdit(u._id)}>Save</button>
+                        ) : (
+                          <button className="px-2 py-1 border rounded" onClick={()=>startEdit(u)}>Edit</button>
+                        )}
+                        <button className="px-2 py-1 border rounded text-red-600" onClick={()=>remove(u._id)}>Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
-        <div className="flex justify-between mt-4">
-          <button disabled={page<=1} onClick={()=>load(page-1)} className="border px-3 py-1 rounded disabled:opacity-50">Prev</button>
-          <div>Page {page} / {Math.max(1, Math.ceil(total/limit))}</div>
-          <button disabled={page>=Math.ceil(total/limit)} onClick={()=>load(page+1)} className="border px-3 py-1 rounded disabled:opacity-50">Next</button>
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
+          <button disabled={page<=1} onClick={()=>load(page-1)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Prev</button>
+          <div className="text-sm">Page {page} / {Math.max(1, Math.ceil(total/limit))}</div>
+          <button disabled={page>=Math.ceil(total/limit)} onClick={()=>load(page+1)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Next</button>
         </div>
       </div>
     </Layout>

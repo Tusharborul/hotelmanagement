@@ -2,6 +2,17 @@ const User = require('../models/User');
 const Booking = require('../models/Booking');
 const Hotel = require('../models/Hotel');
 
+// Parse a YYYY-MM-DD string into a Date at local 00:00:00 (start) or 23:59:59.999 (end)
+const parseDateOnly = (s, endOfDay = false) => {
+  if (!s) return null;
+  // expect YYYY-MM-DD
+  const parts = s.split('-').map((p) => Number(p));
+  if (parts.length !== 3 || parts.some(isNaN)) return null;
+  const [y, m, d] = parts;
+  if (endOfDay) return new Date(y, m - 1, d, 23, 59, 59, 999);
+  return new Date(y, m - 1, d, 0, 0, 0, 0);
+};
+
 // Helper for pagination
 const paginate = async (modelQuery, page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
@@ -103,26 +114,36 @@ exports.getHotelsForAdmin = async (req, res) => {
   }
 };
 
-// GET /api/admin/bookings?start=YYYY-MM-DD&end=YYYY-MM-DD
+// GET /api/admin/bookings?start=YYYY-MM-DD&end=YYYY-MM-DD&field=created|checkin
+// field=checkin will filter by booking.checkInDate instead of booking.createdAt
 exports.getBookingsByDate = async (req, res) => {
   try {
-    const { start, end, page = 1, limit = 20 } = req.query;
+    const { start, end, page = 1, limit = 20, field } = req.query;
     const query = {};
+
+    // determine which date field to filter: createdAt (default) or checkInDate
+    const dateField = field === 'checkin' ? 'checkInDate' : 'createdAt';
+
+    // Only apply a date range filter if start or end provided. Parse YYYY-MM-DD safely.
     if (start || end) {
-      query.createdAt = {};
-      if (start) query.createdAt.$gte = new Date(start);
-      if (end) {
-        const d = new Date(end);
-        d.setHours(23,59,59,999);
-        query.createdAt.$lte = d;
+      const sDate = start ? parseDateOnly(start, false) : null;
+      const eDate = end ? parseDateOnly(end, true) : null;
+      // If parsing failed, return bad request
+      if ((start && !sDate) || (end && !eDate)) {
+        return res.status(400).json({ success: false, message: 'Invalid date format. Use YYYY-MM-DD for start and end.' });
       }
+      query[dateField] = {};
+      if (sDate) query[dateField].$gte = sDate;
+      if (eDate) query[dateField].$lte = eDate;
     }
+
     const q = Booking.find(query)
       .populate('user','name username')
       .populate('hotel','name location price')
       .populate('cancelledBy', 'name email')
       .populate('refundedBy', 'name email')
-      .sort({ createdAt: -1 });
+      // sort by the chosen date field so results match the filter ordering
+      .sort({ [dateField]: -1 });
     const result = await paginate(q, parseInt(page), parseInt(limit));
     res.status(200).json({ success: true, ...result });
   } catch (err) {

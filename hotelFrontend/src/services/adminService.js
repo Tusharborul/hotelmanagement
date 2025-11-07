@@ -32,10 +32,11 @@ export const adminService = {
     const res = await api.put(`/admin/hotels/${hotelId}/status`, { status });
     return res.data;
   },
-  getBookings: async ({ start, end, page=1, limit=20 } = {}) => {
+  getBookings: async ({ start, end, page=1, limit=20, field } = {}) => {
     const params = new URLSearchParams();
     if (start) params.append('start', start);
     if (end) params.append('end', end);
+    if (field) params.append('field', field);
     params.append('page', page);
     params.append('limit', limit);
     const res = await api.get(`/admin/bookings?${params.toString()}`);
