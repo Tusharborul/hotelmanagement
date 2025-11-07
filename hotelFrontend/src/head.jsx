@@ -84,6 +84,7 @@ const Header = () => {
             <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition">Rooms</a>
             <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition">About</a>
             <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition">Contact</a>
+            
           </nav>
           {isLoggedIn && (
             <button
@@ -144,6 +145,12 @@ const Header = () => {
               <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition" onClick={() => setMenuOpen(false)}>Rooms</a>
               <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition" onClick={() => setMenuOpen(false)}>About</a>
               <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition" onClick={() => setMenuOpen(false)}>Contact</a>
+                <button
+              className="text-blue-600 border border-blue-600 font-semibold rounded-lg px-5 py-2 shadow-sm hover:bg-blue-50 transition focus:outline-none"
+              onClick={goToDashboard}
+            >
+              Dashboard
+            </button>
             </nav>
             <button
               className="bg-blue-600 text-white font-semibold rounded-lg px-8 py-2 mt-10 shadow-lg hover:bg-blue-700 transition focus:outline-none"
