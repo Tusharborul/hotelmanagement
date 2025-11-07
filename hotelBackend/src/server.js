@@ -58,9 +58,16 @@ app.get('/', (req, res) => {
   });
 });
 
+// Lightweight health endpoint (no DB query)
+app.get('/healthz', (req, res) => {
+  const state = mongoose.connection.readyState; // 0=disconnected, 1=connected, 2=connecting, 3=disconnecting
+  const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  res.json({ ok: true, uptime: process.uptime(), db: states[state] || 'unknown' });
+});
+
 // Database connection with retry/backoff
 const connectDB = async (retries = 5, backoff = 2000) => {
-  const uri = process.env.MONGODB_URI;
+  const uri = process.env.MONGODB_URI || process.env.MONGO_URI || process.env.DATABASE_URL;
   if (!uri) {
     console.error('MONGODB_URI is not set. Aborting.');
     process.exit(1);
@@ -68,7 +75,9 @@ const connectDB = async (retries = 5, backoff = 2000) => {
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      const conn = await mongoose.connect(uri);
+      const conn = await mongoose.connect(uri, {
+        serverSelectionTimeoutMS: 8000,
+      });
       console.log(`MongoDB Connected: ${conn.connection.host}`);
       return;
     } catch (error) {
