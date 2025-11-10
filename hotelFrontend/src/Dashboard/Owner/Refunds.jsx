@@ -44,7 +44,7 @@ export default function OwnerRefunds() {
 				<div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
 					<div className="w-full sm:w-auto">
 						<label className="text-sm text-gray-600 block mb-1">Hotel</label>
-						<select value={selected} onChange={(e)=>setSelected(e.target.value)} className="border rounded px-3 py-2 w-full sm:w-64 lg:w-80 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+						<select  name="selected" value={selected} onChange={(e)=>setSelected(e.target.value)} className="border rounded px-3 py-2 w-full sm:w-64 lg:w-80 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
 							<option value="">Select a hotel</option>
 							{hotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
 						</select>

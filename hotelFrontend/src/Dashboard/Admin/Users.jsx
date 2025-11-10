@@ -42,7 +42,7 @@ export default function AdminUsers() {
                   <div>
                     <span className="text-xs text-gray-500">Username:</span>
                     {editRow===u._id ? (
-                      <input className="border rounded px-2 py-1 w-full mt-1 text-sm" value={username} onChange={(e)=>setUsername(e.target.value)} />
+                      <input className="border rounded px-2 py-1 w-full mt-1 text-sm"  name="username" value={username} onChange={(e)=>setUsername(e.target.value)} />
                     ) : (
                       <div className="font-medium">{u.username}</div>
                     )}
@@ -74,7 +74,7 @@ export default function AdminUsers() {
                     <tr key={u._id} className="border-b">
                       <td className="py-2">
                         {editRow===u._id ? (
-                          <input className="border px-2 py-1 rounded" value={username} onChange={(e)=>setUsername(e.target.value)} />
+                          <input className="border px-2 py-1 rounded"  name="username" value={username} onChange={(e)=>setUsername(e.target.value)} />
                         ) : u.username}
                       </td>
                       <td className="py-2">{new Date(u.createdAt).toLocaleDateString()}</td>

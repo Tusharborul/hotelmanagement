@@ -51,7 +51,7 @@ export default function AdminOwners() {
                   <div>
                     <span className="text-xs text-gray-500">Username:</span>
                     {editId===o._id ? (
-                      <input className="border rounded px-2 py-1 w-full mt-1 text-sm" value={username} onChange={(e)=>setUsername(e.target.value)} />
+                      <input className="border rounded px-2 py-1 w-full mt-1 text-sm"  name="username" value={username} onChange={(e)=>setUsername(e.target.value)} />
                     ) : (
                       <div className="font-medium">{o.username}</div>
                     )}
@@ -59,7 +59,7 @@ export default function AdminOwners() {
                   <div>
                     <span className="text-xs text-gray-500">Status:</span>
                     {editId===o._id ? (
-                      <select className="border rounded px-3 py-2 w-full mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value={status} onChange={(e)=>setStatus(e.target.value)}>
+                      <select className="border rounded px-3 py-2 w-full mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"  name="status" value={status} onChange={(e)=>setStatus(e.target.value)}>
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
@@ -103,12 +103,12 @@ export default function AdminOwners() {
                     <tr key={o._id} className="border-b">
                       <td className="py-2">
                         {editId===o._id ? (
-                          <input className="border px-2 py-1 rounded" value={username} onChange={(e)=>setUsername(e.target.value)} />
+                          <input className="border px-2 py-1 rounded"  name="username" value={username} onChange={(e)=>setUsername(e.target.value)} />
                         ) : o.username}
                       </td>
                       <td className="py-2">
                         {editId===o._id ? (
-                          <select className="border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value={status} onChange={(e)=>setStatus(e.target.value)}>
+                          <select className="border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"  name="status" value={status} onChange={(e)=>setStatus(e.target.value)}>
                             <option value="pending">Pending</option>
                             <option value="approved">Approved</option>
                             <option value="rejected">Rejected</option>

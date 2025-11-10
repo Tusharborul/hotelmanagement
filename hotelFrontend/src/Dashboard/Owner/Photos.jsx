@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Layout from '../components/Layout';
 import { hotelService } from '../../services/hotelService';
+import getImageUrl from '../../utils/getImageUrl';
 
 export default function OwnerPhotos() {
   const [hotels, setHotels] = useState([]);
@@ -22,7 +23,7 @@ export default function OwnerPhotos() {
 
   useEffect(()=>{ load(); }, []);
 
-  const imageUrl = (filename) => filename?.startsWith('http') ? filename : (filename ? `http://localhost:5000/uploads/${filename}` : '');
+  // use shared helper
 
   const onUploadMain = async (e) => {
     const file = e.target.files?.[0];
@@ -46,9 +47,20 @@ export default function OwnerPhotos() {
 
   const onDeleteImage = async (filename) => {
     if (!selected) return;
+    if (!filename) {
+      // Defensive: prevent calling delete with empty filename which causes 404
+      alert('Unable to delete: no image identifier available for this image.');
+      return;
+    }
     if (!confirm('Delete this image?')) return;
-    await hotelService.deleteImage(selected, filename);
-    await load();
+    try {
+      await hotelService.deleteImage(selected, filename);
+      await load();
+    } catch (err) {
+      console.error('Failed to delete image', err);
+      alert('Failed to delete image: ' + (err?.response?.data?.message || err?.message));
+      await load();
+    }
   };
 
   return (
@@ -56,7 +68,7 @@ export default function OwnerPhotos() {
       <div className="bg-white rounded-lg shadow p-4 md:p-6">
         <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
           <label className="text-sm text-gray-600 font-medium">Hotel:</label>
-          <select className="border rounded px-3 py-2 w-full sm:w-64 lg:w-80 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value={selected} onChange={(e)=>setSelected(e.target.value)}>
+          <select className="border rounded px-3 py-2 w-full sm:w-64 lg:w-80 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"  name="selected" value={selected} onChange={(e)=>setSelected(e.target.value)}>
             <option value="">Select a hotel</option>
             {hotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
           </select>
@@ -71,14 +83,14 @@ export default function OwnerPhotos() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="w-full sm:w-64 h-40 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
                   {selectedHotel.mainImage ? (
-                    <img src={imageUrl(selectedHotel.mainImage)} alt="Main" className="w-full h-full object-cover" />
+                    <img src={getImageUrl(selectedHotel.mainImage)} alt="Main" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-gray-400">No image</span>
                   )}
                 </div>
                 <label className="border px-4 py-2 rounded cursor-pointer bg-blue-600 text-white text-sm hover:bg-blue-700 transition w-full sm:w-auto text-center">
                   {mainUploading ? 'Uploading...' : 'Replace main image'}
-                  <input type="file" accept="image/*" disabled={mainUploading} onChange={onUploadMain} className="hidden" />
+                  <input id="mainImage" name="mainImage" type="file" accept="image/*" disabled={mainUploading} onChange={onUploadMain} className="hidden" />
                 </label>
               </div>
             </section>
@@ -86,19 +98,26 @@ export default function OwnerPhotos() {
             <section>
               <div className="font-semibold mb-3 text-lg">Gallery Images</div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {(selectedHotel.images || []).map((img) => (
-                  <div key={img} className="relative group">
-                    <img src={imageUrl(img)} alt="Gallery" className="w-full h-32 sm:h-40 object-cover rounded" />
-                    <button onClick={()=>onDeleteImage(img)} className="absolute top-2 right-2 bg-white/90 hover:bg-white text-red-600 border px-2 py-1 rounded text-xs sm:text-sm shadow">Delete</button>
-                  </div>
-                ))}
+                {(selectedHotel.images || []).map((img, idx) => {
+                  const computedId = (typeof img === 'object' && img !== null) ? (img.public_id || img.url) : img;
+                  const key = (typeof img === 'object' && img !== null) ? (img.public_id || img.url || idx) : (img || idx);
+                  const hasId = !!computedId;
+                  return (
+                    <div key={key} className="relative group">
+                      <img src={getImageUrl(img)} alt="Gallery" className="w-full h-32 sm:h-40 object-cover rounded" />
+                      <button onClick={()=>onDeleteImage(computedId)} disabled={!hasId} title={!hasId ? 'No identifier available' : 'Delete'} className={`absolute top-2 right-2 bg-white/90 hover:bg-white text-red-600 border px-2 py-1 rounded text-xs sm:text-sm shadow ${!hasId ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        Delete
+                      </button>
+                    </div>
+                  );
+                })}
                 {(!selectedHotel.images || selectedHotel.images.length === 0) && (
                   <div className="text-gray-400 col-span-2">No gallery images</div>
                 )}
               </div>
               <label className="mt-4 inline-block border px-4 py-2 rounded cursor-pointer bg-blue-50 hover:bg-blue-100 transition text-sm">
                 {galleryUploading ? 'Uploading...' : 'Add images'}
-                <input type="file" accept="image/*" multiple disabled={galleryUploading} onChange={onUploadGallery} className="hidden" />
+                <input id="galleryImages" name="images" type="file" accept="image/*" multiple disabled={galleryUploading} onChange={onUploadGallery} className="hidden" />
               </label>
             </section>
           </div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Layout from "./components/Layout";
 import { hotelService } from "../services/hotelService";
 import { bookingService } from "../services/bookingService";
+import getImageUrl from '../utils/getImageUrl';
 
 const normalizeList = (res) => {
   if (!res) return [];
@@ -94,7 +95,7 @@ const OwnerDashboard = () => {
 
                   <div className="h-36 bg-gray-100 rounded overflow-hidden mb-3">
                     {h.mainImage ? (
-                      <img src={h.mainImage.startsWith('http') ? h.mainImage : `http://localhost:5000/uploads/${h.mainImage}`} alt={h.name} className="w-full h-full object-cover" />
+                        <img src={getImageUrl(h.mainImage)} alt={h.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400">No image</div>
                     )}

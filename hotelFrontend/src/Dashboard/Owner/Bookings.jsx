@@ -93,7 +93,7 @@ export default function OwnerBookings() {
               <label className="block text-sm text-gray-600 mb-1 font-medium">Select Hotel</label>
               <select
                 className="border rounded-md px-3 py-2 w-full h-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={selected}
+                 name="selected" value={selected}
                 onChange={(e)=>setSelected(e.target.value)}
               >
                 <option value="">All Hotels</option>
@@ -106,7 +106,7 @@ export default function OwnerBookings() {
               <input
                 type="date"
                 className="border rounded-md px-3 py-2 w-full h-10 text-sm"
-                value={date}
+                 name="date" value={date}
                 onChange={(e)=>setDate(e.target.value)}
               />
             </div>

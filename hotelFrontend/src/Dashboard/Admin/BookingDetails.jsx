@@ -44,15 +44,15 @@ export default function AdminBookingDetails() {
         <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 mb-4">
           <div className="w-full sm:w-auto">
             <label className="text-sm text-gray-600 block mb-1">Start</label>
-            <input type="date" className="border rounded px-3 py-1.5 w-full text-sm" value={start} onChange={(e)=>setStart(e.target.value)} />
+            <input type="date" className="border rounded px-3 py-1.5 w-full text-sm"  name="start" value={start} onChange={(e)=>setStart(e.target.value)} />
           </div>
           <div className="w-full sm:w-auto">
             <label className="text-sm text-gray-600 block mb-1">End</label>
-            <input type="date" className="border rounded px-3 py-1.5 w-full text-sm" value={end} onChange={(e)=>setEnd(e.target.value)} />
+            <input type="date" className="border rounded px-3 py-1.5 w-full text-sm"  name="end" value={end} onChange={(e)=>setEnd(e.target.value)} />
           </div>
           <div className="w-full sm:w-auto">
             <label className="text-sm text-gray-600 block mb-1">Filter by</label>
-            <select value={field} onChange={(e)=>setField(e.target.value)} className="border rounded px-3 py-1.5 w-full text-sm">
+            <select  name="field" value={field} onChange={(e)=>setField(e.target.value)} className="border rounded px-3 py-1.5 w-full text-sm">
               <option value="created">Created</option>
               <option value="checkin">Check-in</option>
             </select>

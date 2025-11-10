@@ -23,10 +23,12 @@ const hotelSchema = new mongoose.Schema({
     required: [true, 'Please provide price per night']
   },
   images: [{
-    type: String
+    url: { type: String },
+    public_id: { type: String }
   }],
   mainImage: {
-    type: String
+    url: { type: String },
+    public_id: { type: String }
   },
   facilities: {
     bedrooms: { type: Number, default: 1 },
@@ -89,7 +91,8 @@ const hotelSchema = new mongoose.Schema({
       required: true
     },
     image: {
-      type: String
+      url: { type: String },
+      public_id: { type: String }
     },
     popular: {
       type: Boolean,

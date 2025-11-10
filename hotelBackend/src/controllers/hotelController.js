@@ -2,6 +2,7 @@ const Hotel = require('../models/Hotel');
 const User = require('../models/User');
 const fs = require('fs');
 const path = require('path');
+const { v2: cloudinary } = require('cloudinary');
 
 // @desc    Get all hotels
 // @route   GET /api/hotels
@@ -25,13 +26,17 @@ exports.getHotels = async (req, res) => {
     }
 
   // use .lean() to return plain objects (safer for serialization) and reduce memory
-  const hotels = await Hotel.find(query).populate('owner', 'name email').lean();
+  let hotels = await Hotel.find(query).populate('owner', 'name email').lean();
 
-    res.status(200).json({
-      success: true,
-      count: hotels.length,
-      data: hotels
+    // Normalize images/mainImage to URL strings for frontend compatibility
+    hotels = hotels.map(h => {
+      const copy = { ...h };
+      if (copy.mainImage && typeof copy.mainImage === 'object') copy.mainImage = copy.mainImage.url || '';
+      if (Array.isArray(copy.images)) copy.images = copy.images.map(img => (typeof img === 'object' ? img.url || '' : img));
+      return copy;
     });
+
+    res.status(200).json({ success: true, count: hotels.length, data: hotels });
   } catch (error) {
     // Log full error for debugging in server logs
     console.error('Error in getHotels:', error);
@@ -49,7 +54,8 @@ exports.getHotels = async (req, res) => {
 // @access  Public
 exports.getHotel = async (req, res) => {
   try {
-    const hotel = await Hotel.findById(req.params.id).populate('owner', 'name email phone');
+  const hotelDoc = await Hotel.findById(req.params.id).populate('owner', 'name email phone');
+  const hotel = hotelDoc ? hotelDoc.toObject() : null;
 
     if (!hotel) {
       return res.status(404).json({
@@ -58,10 +64,11 @@ exports.getHotel = async (req, res) => {
       });
     }
 
-    res.status(200).json({
-      success: true,
-      data: hotel
-    });
+    if (hotel) {
+      if (hotel.mainImage && typeof hotel.mainImage === 'object') hotel.mainImage = hotel.mainImage.url || '';
+      if (Array.isArray(hotel.images)) hotel.images = hotel.images.map(img => (typeof img === 'object' ? img.url || '' : img));
+    }
+    res.status(200).json({ success: true, data: hotel });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -75,7 +82,13 @@ exports.getHotel = async (req, res) => {
 // @access  Private (Hotel Owner)
 exports.getMyHotels = async (req, res) => {
   try {
-    const hotels = await Hotel.find({ owner: req.user.id });
+    let hotels = await Hotel.find({ owner: req.user.id }).lean();
+    hotels = hotels.map(h => {
+      const copy = { ...h };
+      if (copy.mainImage && typeof copy.mainImage === 'object') copy.mainImage = copy.mainImage.url || '';
+      if (Array.isArray(copy.images)) copy.images = copy.images.map(img => (typeof img === 'object' ? img.url || '' : img));
+      return copy;
+    });
     res.status(200).json({ success: true, count: hotels.length, data: hotels });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -98,8 +111,8 @@ exports.createHotel = async (req, res) => {
       ownerNIC
     } = req.body;
 
-  // Handle file uploads (Cloudinary stores full CDN URL in file.path)
-  const mainImage = req.files?.images ? req.files.images[0].path : '';
+  // Handle file uploads (Cloudinary stores full CDN URL in file.path and public_id in file.filename)
+  const mainImage = req.files?.images ? { url: req.files.images[0].path, public_id: req.files.images[0].filename } : null;
   const documents = req.files?.documents ? req.files.documents.map(file => file.filename) : [];
 
     // Create hotel
@@ -223,9 +236,17 @@ exports.setMainImage = async (req, res) => {
 
     if (!req.file) return res.status(400).json({ success: false, message: 'Image file is required' });
 
-    // Cloudinary returns the public CDN URL in req.file.path
-    // We don't remove files from local disk anymore
-    hotel.mainImage = req.file.path;
+      // Cloudinary returns the public CDN URL in req.file.path and public_id in req.file.filename
+      // Save both so we can remove remote images later
+      // Remove old mainImage from Cloudinary if present
+      try {
+        if (hotel.mainImage && hotel.mainImage.public_id) {
+          await cloudinary.uploader.destroy(hotel.mainImage.public_id);
+        }
+      } catch (err) {
+        console.error('Error destroying previous main image:', err);
+      }
+      hotel.mainImage = { url: req.file.path, public_id: req.file.filename };
     await hotel.save();
     return res.status(200).json({ success: true, data: hotel });
   } catch (error) {
@@ -245,7 +266,7 @@ exports.addImages = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Not authorized' });
     }
 
-  const files = (req.files || []).map(f => f.path);
+  const files = (req.files || []).map(f => ({ url: f.path, public_id: f.filename }));
   if (!files.length) return res.status(400).json({ success: false, message: 'No images uploaded' });
 
   hotel.images = [...(hotel.images || []), ...files];
@@ -268,14 +289,46 @@ exports.deleteImage = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Not authorized' });
     }
 
-  const { filename } = req.params;
-  // filename is expected to be the stored URL or identifier. Remove matching entries.
-  hotel.images = (hotel.images || []).filter(img => img !== filename);
-  // Also clear mainImage if this file was used as main
-  if (hotel.mainImage === filename) hotel.mainImage = '';
-  await hotel.save();
+  const { filename } = req.params; // could be index, url, or public_id
 
-  // Note: Cloudinary deletion (remote) can be implemented if you store public_id.
+  const tryDestroy = async (public_id) => {
+    try {
+      if (public_id) await cloudinary.uploader.destroy(public_id);
+    } catch (err) {
+      console.error('Cloudinary destroy error:', err);
+    }
+  };
+
+  // If filename looks like an integer index, remove by index
+  const idx = parseInt(filename, 10);
+  if (!Number.isNaN(idx)) {
+    if (idx >= 0 && idx < (hotel.images || []).length) {
+      const removed = hotel.images.splice(idx, 1)[0];
+      if (removed && removed.public_id) await tryDestroy(removed.public_id);
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid image index' });
+    }
+  } else {
+    // Otherwise try to match by url or public_id
+    const images = hotel.images || [];
+    const matchIndex = images.findIndex(img => img.url === filename || img.public_id === filename);
+    if (matchIndex !== -1) {
+      const removed = images.splice(matchIndex, 1)[0];
+      if (removed && removed.public_id) await tryDestroy(removed.public_id);
+      hotel.images = images;
+    } else {
+      // No match, just filter out any strings equal to filename (backwards compatibility)
+      hotel.images = images.filter(img => img.url !== filename && img.public_id !== filename && img !== filename);
+    }
+  }
+
+  // Also clear mainImage if this file was used as main (match by url or public_id)
+  if (hotel.mainImage && (hotel.mainImage.url === filename || hotel.mainImage.public_id === filename || hotel.mainImage === filename)) {
+    if (hotel.mainImage.public_id) await tryDestroy(hotel.mainImage.public_id);
+    hotel.mainImage = { url: '', public_id: '' };
+  }
+
+  await hotel.save();
   return res.status(200).json({ success: true, data: hotel });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -301,7 +354,7 @@ exports.addTreasure = async (req, res) => {
 
     const { title, subtitle, popular } = req.body;
     if (!title || !subtitle) return res.status(400).json({ success: false, message: 'title and subtitle required' });
-  const image = req.file ? req.file.path : undefined;
+  const image = req.file ? { url: req.file.path, public_id: req.file.filename } : undefined;
     const treasure = { title, subtitle, popular: popular === 'true' || popular === true, image };
     hotel.treasures.push(treasure);
     await hotel.save();
@@ -336,8 +389,15 @@ exports.updateTreasure = async (req, res) => {
     if (subtitle !== undefined) t.subtitle = subtitle;
     if (popular !== undefined) t.popular = (popular === 'true' || popular === true);
     if (req.file) {
-      // Replace image URL with the new Cloudinary URL
-      t.image = req.file.path;
+      // Replace image with new Cloudinary object; if previous image had public_id, remove it
+      try {
+        if (t.image && t.image.public_id) {
+          await cloudinary.uploader.destroy(t.image.public_id);
+        }
+      } catch (err) {
+        console.error('Error removing old treasure image from Cloudinary', err);
+      }
+      t.image = { url: req.file.path, public_id: req.file.filename };
     }
 
     await hotel.save();
@@ -380,8 +440,14 @@ exports.deleteTreasure = async (req, res) => {
     }
     
     console.log('Treasure found! Title:', t.title);
-    // If images are stored in Cloudinary, remove locally stored file logic.
-    // Remote deletion requires Cloudinary public_id which isn't tracked here.
+    // If images are stored in Cloudinary, remove remote resource if we have public_id
+    try {
+      if (t.image && t.image.public_id) {
+        await cloudinary.uploader.destroy(t.image.public_id);
+      }
+    } catch (err) {
+      console.error('Error deleting treasure image from Cloudinary', err);
+    }
     t.deleteOne();
     await hotel.save();
     console.log('Treasure deleted successfully');
@@ -403,7 +469,10 @@ exports.getHotelPhotos = async (req, res) => {
     if (hotel.owner.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(401).json({ success: false, message: 'Not authorized' });
     }
-    return res.status(200).json({ success: true, data: { mainImage: hotel.mainImage, images: hotel.images || [] } });
+  // Normalize to URL strings for compatibility
+  const mainImage = hotel.mainImage && typeof hotel.mainImage === 'object' ? hotel.mainImage.url || '' : (hotel.mainImage || '');
+  const images = (hotel.images || []).map(img => (typeof img === 'object' ? img.url || '' : img));
+  return res.status(200).json({ success: true, data: { mainImage, images } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -419,9 +488,17 @@ exports.updateMainImage = async (req, res) => {
     if (hotel.owner.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(401).json({ success: false, message: 'Not authorized' });
     }
-  const filename = req.file ? req.file.path : null;
-  if (!filename) return res.status(400).json({ success: false, message: 'Image file is required' });
-  hotel.mainImage = filename;
+  const uploaded = req.file ? { url: req.file.path, public_id: req.file.filename } : null;
+  if (!uploaded) return res.status(400).json({ success: false, message: 'Image file is required' });
+  // remove previous main image from Cloudinary if present
+  try {
+    if (hotel.mainImage && hotel.mainImage.public_id) {
+      await cloudinary.uploader.destroy(hotel.mainImage.public_id);
+    }
+  } catch (err) {
+    console.error('Error destroying previous main image in updateMainImage:', err);
+  }
+  hotel.mainImage = uploaded;
     await hotel.save();
     return res.status(200).json({ success: true, data: { mainImage: hotel.mainImage } });
   } catch (error) {
@@ -440,8 +517,9 @@ exports.addHotelImages = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Not authorized' });
     }
   const files = req.files || [];
-  const filenames = files.map(f => f.path);
-  hotel.images = [...(hotel.images || []), ...filenames];
+  const fileObjs = files.map(f => ({ url: f.path, public_id: f.filename }));
+  if (!fileObjs.length) return res.status(400).json({ success: false, message: 'No images uploaded' });
+  hotel.images = [...(hotel.images || []), ...fileObjs];
     await hotel.save();
     return res.status(201).json({ success: true, data: hotel.images });
   } catch (error) {
@@ -463,7 +541,12 @@ exports.deleteHotelImage = async (req, res) => {
     if (Number.isNaN(idx) || idx < 0 || idx >= (hotel.images || []).length) {
       return res.status(400).json({ success: false, message: 'Invalid image index' });
     }
-    hotel.images.splice(idx, 1);
+    const removed = hotel.images.splice(idx, 1)[0];
+    try {
+      if (removed && removed.public_id) await cloudinary.uploader.destroy(removed.public_id);
+    } catch (err) {
+      console.error('Error destroying cloudinary image on deleteHotelImage:', err);
+    }
     await hotel.save();
     return res.status(200).json({ success: true, data: hotel.images });
   } catch (error) {

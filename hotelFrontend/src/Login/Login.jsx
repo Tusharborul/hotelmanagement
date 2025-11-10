@@ -67,13 +67,13 @@ const Login = () => {
           <h2 className="text-[32px] font-bold mb-2 text-center">Login Account</h2>
           <div>
             <label className="text-[16px] font-medium mb-1 block" htmlFor="username">Username</label>
-            <input value={username} onChange={(e) => setUsername(e.target.value)} className="w-full h-9 rounded-md border border-gray-300 px-3 py-1 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" id="username" type="text" placeholder="Username" />
+            <input  name="username" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full h-9 rounded-md border border-gray-300 px-3 py-1 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" id="username" type="text" placeholder="Username" />
             {errors.username && <div className="text-red-500 text-xs mt-1">{errors.username}</div>}
           </div>
           <div>
             <label className="text-[16px] font-medium mb-1 block" htmlFor="password">Password</label>
             <div className="relative">
-              <input value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-9 rounded-md border border-gray-300 px-3 py-1 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10" id="password" type={showPassword ? "text" : "password"} placeholder="6+ characters" />
+              <input  name="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-9 rounded-md border border-gray-300 px-3 py-1 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10" id="password" type={showPassword ? "text" : "password"} placeholder="6+ characters" />
               <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer flex items-center" style={{height: '100%'}} onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? (
                   // Eye icon (visible)

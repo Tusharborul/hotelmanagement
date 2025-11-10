@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { hotelService } from "../services/hotelService";
 import location1 from "../assets/location/pic-1.png";
+import getImageUrl from '../utils/getImageUrl';
 
 const Popular = () => {
 	const [places, setPlaces] = useState([]);
@@ -17,9 +18,7 @@ const Popular = () => {
 						id: hotel._id,
 						name: hotel.name,
 						location: hotel.location,
-						image: hotel.mainImage 
-							? (hotel.mainImage.startsWith('http') ? hotel.mainImage : `http://localhost:5000/uploads/${hotel.mainImage}`)
-							: location1,
+						image: hotel.mainImage ? getImageUrl(hotel.mainImage, location1) : location1,
 						popular: hotel.isPopular
 					}));
 					setPlaces(popularHotels);

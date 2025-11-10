@@ -13,7 +13,7 @@ const sampleHotels = [
     address: "123 Beach Road, Galle",
     description: "A beautiful beachfront property with stunning ocean views. Perfect for families and couples looking for a relaxing getaway.",
     price: 50,
-    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-1.png",
+  mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-1.png", public_id: null },
     isMostPicked: true,
     isPopular: false,
     facilities: {
@@ -30,22 +30,26 @@ const sampleHotels = [
       {
         title: "Green Lake",
         subtitle: "Nature",
-        popular: false
+        popular: false,
+        image: null
       },
       {
         title: "Dog Clubs",
         subtitle: "Pool",
-        popular: false
+        popular: false,
+        image: null
       },
       {
         title: "Labour and Wait",
         subtitle: "Shopping",
-        popular: true
+        popular: true,
+        image: null
       },
       {
         title: "Snorkeling",
         subtitle: "Beach",
-        popular: false
+        popular: false,
+        image: null
       }
     ],
     status: 'approved'
@@ -56,7 +60,7 @@ const sampleHotels = [
     address: "456 City Center, Colombo",
     description: "Luxury resort in the heart of Colombo with world-class amenities and services.",
     price: 120,
-    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-2.png",
+  mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-2.png", public_id: null },
     isMostPicked: true,
     isPopular: true,
     facilities: {
@@ -73,17 +77,20 @@ const sampleHotels = [
       {
         title: "City Center Mall",
         subtitle: "Shopping",
-        popular: true
+        popular: true,
+        image: null
       },
       {
         title: "Spa & Wellness",
         subtitle: "Relaxation",
-        popular: false
+        popular: false,
+        image: null
       },
       {
         title: "Rooftop Bar",
         subtitle: "Dining",
-        popular: true
+        popular: true,
+        image: null
       }
     ],
     status: 'approved'
@@ -94,7 +101,7 @@ const sampleHotels = [
     address: "789 Hill View, Kandy",
     description: "Peaceful hill country retreat surrounded by lush tea plantations.",
     price: 75,
-    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-3.png",
+  mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-3.png", public_id: null },
     isMostPicked: true,
     isPopular: false,
     facilities: {
@@ -111,17 +118,20 @@ const sampleHotels = [
       {
         title: "Tea Plantation Tours",
         subtitle: "Nature",
-        popular: true
+        popular: true,
+        image: null
       },
       {
         title: "Temple of the Tooth",
         subtitle: "Culture",
-        popular: true
+        popular: true,
+        image: null
       },
       {
         title: "Botanical Gardens",
         subtitle: "Nature",
-        popular: false
+        popular: false,
+        image: null
       }
     ],
     status: 'approved'
@@ -132,7 +142,7 @@ const sampleHotels = [
     address: "321 Beach Front, Hikkaduwa",
     description: "Cozy beachside accommodation perfect for surfers and beach lovers.",
     price: 45,
-    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-4.png",
+  mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-4.png", public_id: null },
     isMostPicked: true,
     isPopular: true,
     facilities: {
@@ -149,17 +159,20 @@ const sampleHotels = [
       {
         title: "Surf School",
         subtitle: "Beach",
-        popular: true
+        popular: true,
+        image: null
       },
       {
         title: "Turtle Hatchery",
         subtitle: "Nature",
-        popular: true
+        popular: true,
+        image: null
       },
       {
         title: "Coral Reef Diving",
         subtitle: "Beach",
-        popular: false
+        popular: false,
+        image: null
       }
     ],
     status: 'approved'
@@ -170,7 +183,7 @@ const sampleHotels = [
     address: "555 Mountain Road, Nuwara Eliya",
     description: "Cool climate mountain lodge with breathtaking views and cozy fireplaces.",
     price: 65,
-    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-5.png",
+  mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-5.png", public_id: null },
     isMostPicked: true,
     isPopular: true,
     facilities: {
@@ -187,17 +200,20 @@ const sampleHotels = [
       {
         title: "Horton Plains",
         subtitle: "Nature",
-        popular: true
+        popular: true,
+        image: null
       },
       {
         title: "Gregory Lake",
         subtitle: "Nature",
-        popular: false
+        popular: false,
+        image: null
       },
       {
         title: "Strawberry Farms",
         subtitle: "Experience",
-        popular: true
+        popular: true,
+        image: null
       }
     ],
     status: 'approved'
@@ -208,9 +224,9 @@ const sampleHotels = [
     address: "789 Beach Road, Hikkaduwe",
     description: "Beautiful property with panoramic ocean views and modern amenities.",
     price: 55,
-    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Top%20View.png",
-    isMostPicked: false,
-    isPopular: true,
+  mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Top%20View.png", public_id: null },
+  isMostPicked: false,
+  isPopular: true,
     facilities: {
       bedrooms: 2,
       livingrooms: 1,
@@ -230,7 +246,7 @@ const sampleHotels = [
     address: "234 Coastal Road, Ambalangode",
     description: "Charming wooden cottage with traditional Sri Lankan architecture.",
     price: 40,
-    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Wodden%20Pit.png",
+  mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Wodden%20Pit.png", public_id: null },
     isMostPicked: false,
     isPopular: true,
     facilities: {
@@ -252,7 +268,7 @@ const sampleHotels = [
     address: "567 Temple Street, Kandy",
     description: "Boutique hotel in the cultural heart of Sri Lanka.",
     price: 80,
-    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Boutiqe.png",
+  mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Boutiqe.png", public_id: null },
     isMostPicked: false,
     isPopular: true,
     facilities: {
@@ -274,7 +290,7 @@ const sampleHotels = [
     address: "890 Hill Station Road, Nuwara Eliya",
     description: "Contemporary design meets mountain tranquility.",
     price: 70,
-    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Modern.png",
+  mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Modern.png", public_id: null },
     isMostPicked: false,
     isPopular: true,
     facilities: {
@@ -296,7 +312,7 @@ const sampleHotels = [
     address: "345 Marine Drive, Dehiwala",
     description: "Elegant seaside property with modern comforts.",
     price: 60,
-    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Silver%20Rain.png",
+  mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Silver%20Rain.png", public_id: null },
     isMostPicked: false,
     isPopular: true,
     facilities: {
@@ -318,7 +334,7 @@ const sampleHotels = [
     address: "678 Lake View, Ampara",
     description: "Peaceful lakeside retreat surrounded by nature.",
     price: 50,
-    mainImage:"https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Cashville.png",
+  mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Cashville.png", public_id: null },
     isMostPicked: false,
     isPopular: true,
     facilities: {

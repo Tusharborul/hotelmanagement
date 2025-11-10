@@ -1,5 +1,6 @@
 import React from "react";
 import pic1 from "../assets/treasure/pic.png";
+import getImageUrl from '../utils/getImageUrl';
 
 const Treasure = ({ hotel }) => {
     // Use treasures from hotel data if available, otherwise show empty
@@ -17,7 +18,7 @@ const Treasure = ({ hotel }) => {
                     <div key={idx} className="flex flex-col items-center lg:items-start">
                         <div className="relative">
                             <img 
-                                src={item.image ? (item.image.startsWith('http') ? item.image : `http://localhost:5000/uploads/${item.image}`) : pic1} 
+                                src={ item.image ? getImageUrl(item.image, pic1) : pic1 } 
                                 alt={item.title} 
                                 className="rounded-2xl object-cover w-[263px] h-[180px]" 
                             />

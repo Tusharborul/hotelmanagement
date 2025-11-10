@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { hotelService } from "../../services/hotelService";
 import Layout from "../components/Layout";
 import SearchBar from "../../Home/SearchBar";
+import getImageUrl from '../../utils/getImageUrl';
 
 const Hotels = () => {
   const navigate = useNavigate();
@@ -52,13 +53,7 @@ const Hotels = () => {
     setFilteredHotels(filtered);
   };
 
-  const getImageUrl = (imageUrl) => {
-    if (!imageUrl) return "";
-    if (imageUrl.startsWith("http")) {
-      return imageUrl;
-    }
-    return `http://localhost:5000/uploads/${imageUrl}`;
-  };
+  // use shared helper
 
   const handleHotelClick = (hotelId) => {
     navigate(`/hoteldetails?id=${hotelId}`);

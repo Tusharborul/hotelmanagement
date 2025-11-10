@@ -2,21 +2,17 @@ import React from "react";
 import pic1 from "../assets/Home/Rectangle 5.png";
 import pic2 from "../assets/Home/bedroom.png";
 import pic3 from "../assets/Home/washroom.png";
+import getImageUrl from '../utils/getImageUrl';
 
 const Photos = ({ hotel }) => {
     if (!hotel) {
         return null;
     }
 
-    // Handle image URLs - check if they start with http (external) or need localhost prefix
-    const getImageUrl = (imageUrl) => {
-        if (!imageUrl) return pic1;
-        return imageUrl.startsWith('http') ? imageUrl : `http://localhost:5000/uploads/${imageUrl}`;
-    };
-
-    const mainImage = hotel.mainImage ? getImageUrl(hotel.mainImage) : pic1;
-    const image2 = hotel.images && hotel.images[0] ? getImageUrl(hotel.images[0]) : pic2;
-    const image3 = hotel.images && hotel.images[1] ? getImageUrl(hotel.images[1]) : pic3;
+    // Use shared helper that supports string or object image entries
+    const mainImage = hotel.mainImage ? getImageUrl(hotel.mainImage, pic1) : pic1;
+    const image2 = hotel.images && hotel.images[0] ? getImageUrl(hotel.images[0], pic2) : pic2;
+    const image3 = hotel.images && hotel.images[1] ? getImageUrl(hotel.images[1], pic3) : pic3;
 
     return (
         <div className="w-full flex flex-col ">

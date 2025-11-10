@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import placeImg from "../assets/location/Shangri-La.png"; // Use your actual image path
 import { hotelService } from "../services/hotelService";
 import { authService } from "../services/authService";
+import getImageUrl from '../utils/getImageUrl';
 
 const Booking = () => {
   const navigate = useNavigate();
@@ -50,12 +51,7 @@ const Booking = () => {
     fetchHotel();
   }, [hotelId, navigate]);
 
-  const getImageUrl = (imageUrl) => {
-    if (!imageUrl) return placeImg;
-    return imageUrl.startsWith('http') ? imageUrl : `http://localhost:5000/uploads/${imageUrl}`;
-  };
-
-  const hotelImage = hotel?.mainImage ? getImageUrl(hotel.mainImage) : placeImg;
+  const hotelImage = hotel?.mainImage ? getImageUrl(hotel.mainImage, placeImg) : placeImg;
   const hotelName = hotel?.name;
   const hotelLocation = hotel?.location;
   
@@ -182,7 +178,7 @@ const Booking = () => {
             <input
               type="date"
             className="text-[#1a237e] font-medium bg-white border-none outline-none px-2 py-1 rounded"
-              value={checkInDate}
+               name="checkInDate" value={checkInDate}
               min={new Date().toISOString().split('T')[0]}
               onChange={e => setCheckInDate(e.target.value)}
             />

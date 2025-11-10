@@ -45,7 +45,7 @@ export default function AdminHotels(){
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <label className="text-sm text-gray-600">Filter:</label>
             <select 
-              value={filter} 
+               name="filter" value={filter} 
               onChange={(e)=>{ setFilter(e.target.value); load(1, e.target.value); }} 
               className="border rounded px-3 py-2 text-sm w-full sm:w-48 lg:w-56 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >

@@ -60,7 +60,7 @@ const SearchBar = () => {
           <input
             aria-label="Check Available Date"
             type="date"
-            value={date}
+             name="date" value={date}
             onChange={(e) => setDate(e.target.value)}
             className="bg-transparent outline-none text-sm"
           />
@@ -91,7 +91,7 @@ const SearchBar = () => {
           <span className="mr-3">
             <img src={location} alt="Location" width={24} height={24} />
           </span>
-          <select value={locationValue} onChange={(e) => setLocationValue(e.target.value)} className="text-sm bg-transparent outline-none focus:outline-none focus:ring-0 cursor-pointer flex-1">
+          <select  name="locationValue" value={locationValue} onChange={(e) => setLocationValue(e.target.value)} className="text-sm bg-transparent outline-none focus:outline-none focus:ring-0 cursor-pointer flex-1">
             <option value="" disabled>Select location</option>
             {locations.map((loc) => (
               <option key={loc} value={loc}>{loc}</option>
