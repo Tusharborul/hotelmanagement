@@ -12,11 +12,13 @@ export default function OwnerObjectives() {
   const [adding, setAdding] = useState(false);
   const [addForm, setAddForm] = useState({
     name: '', location: '', description: '', images: null,
+    dailyCapacity: 0,
     facilities: { bedrooms:1, livingrooms:1, bathrooms:1, diningrooms:1, wifi:'10 mbp/s', unitsReady:1, refrigerator:1, television:1 }
   });
   const [addPreviews, setAddPreviews] = useState([]);
   const [form, setForm] = useState({
     name: '', location: '', description: '',
+    dailyCapacity: 0,
     facilities: { bedrooms:1, livingrooms:1, bathrooms:1, diningrooms:1, wifi:'10 mbp/s', unitsReady:1, refrigerator:1, television:1 }
   });
   // modal state
@@ -49,13 +51,15 @@ export default function OwnerObjectives() {
         refrigerator: h.facilities?.refrigerator ?? 1,
         television: h.facilities?.television ?? 1,
       }
+      ,
+      dailyCapacity: h.dailyCapacity ?? 0
     });
     setShowEditModal(true);
   };
 
   const startAdd = () => {
     setShowAddModal(true);
-    setAddForm({ name:'', location:'', description:'', images: null, facilities: { bedrooms:1, livingrooms:1, bathrooms:1, diningrooms:1, wifi:'10 mbp/s', unitsReady:1, refrigerator:1, television:1 } });
+    setAddForm({ name:'', location:'', description:'', images: null, dailyCapacity: 0, facilities: { bedrooms:1, livingrooms:1, bathrooms:1, diningrooms:1, wifi:'10 mbp/s', unitsReady:1, refrigerator:1, television:1 } });
   };
 
   const cancelAdd = () => { setAdding(false); };
@@ -82,6 +86,7 @@ export default function OwnerObjectives() {
         address: addForm.address,
         price: Number(addForm.price) || 0,
         description: addForm.description,
+        dailyCapacity: Number(addForm.dailyCapacity) || 0,
         facilities: {
           bedrooms: Number(addForm.facilities.bedrooms) || 0,
           livingrooms: Number(addForm.facilities.livingrooms) || 0,
@@ -121,6 +126,7 @@ export default function OwnerObjectives() {
       name: form.name,
       location: form.location,
       description: form.description,
+      dailyCapacity: Number(form.dailyCapacity) || 0,
       facilities: {
         bedrooms: Number(form.facilities.bedrooms),
         livingrooms: Number(form.facilities.livingrooms),
@@ -173,6 +179,10 @@ export default function OwnerObjectives() {
             <div>
               <label className="block text-xs text-gray-600 mb-1 font-medium">Price per night (USD)</label>
               <input id="addForm_price" name="price" className="border rounded px-3 py-2 w-full text-sm" type="number" min={0} placeholder="e.g. 120" value={addForm.price || ''} onChange={(e)=>setAddForm(f=>({ ...f, price: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1 font-medium">Daily capacity (0 = unlimited)</label>
+              <input id="addForm_dailyCapacity" name="dailyCapacity" className="border rounded px-3 py-2 w-full text-sm" type="number" min={0} placeholder="e.g. 5" value={addForm.dailyCapacity || 0} onChange={(e)=>setAddForm(f=>({ ...f, dailyCapacity: Number(e.target.value) }))} />
             </div>
 
             <div className="md:col-span-2">
@@ -266,6 +276,10 @@ export default function OwnerObjectives() {
             <div className="md:col-span-2">
               <label className="block text-xs text-gray-600 mb-1 font-medium">Description</label>
               <textarea className="border rounded px-3 py-2 w-full text-sm" rows={3} placeholder="Short description for guests"  name="description" value={form.description} onChange={(e)=>setForm(f=>({ ...f, description: e.target.value }))} />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs text-gray-600 mb-1 font-medium">Daily capacity (0 = unlimited)</label>
+              <input id="form_dailyCapacity" name="dailyCapacity" className="border rounded px-3 py-2 w-full text-sm" type="number" min={0} placeholder="e.g. 5" value={form.dailyCapacity || 0} onChange={(e)=>setForm(f=>({ ...f, dailyCapacity: Number(e.target.value) }))} />
             </div>
             <div className="md:col-span-2 mt-2">
               <div className="text-sm font-semibold mb-3">Facilities</div>

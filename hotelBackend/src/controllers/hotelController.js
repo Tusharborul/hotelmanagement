@@ -77,6 +77,51 @@ exports.getHotel = async (req, res) => {
   }
 };
 
+// @desc    Check hotel availability for a given check-in and length
+// @route   GET /api/hotels/:id/availability
+// @access  Public
+exports.checkAvailability = async (req, res) => {
+  try {
+    const hotel = await Hotel.findById(req.params.id);
+    if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
+
+    const { checkInDate, days } = req.query;
+    if (!checkInDate || !days) return res.status(400).json({ success: false, message: 'checkInDate and days are required' });
+
+    const start = new Date(checkInDate);
+    start.setHours(10,0,0,0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + Number(days));
+    end.setHours(10,0,0,0);
+
+    // If no capacity set, always available
+    if (!hotel.dailyCapacity || hotel.dailyCapacity <= 0) {
+      return res.status(200).json({ success: true, data: { available: true } });
+    }
+
+    // iterate each night
+    for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+      const day = new Date(d);
+      day.setHours(10,0,0,0);
+      const existingCount = await require('../models/Booking').countDocuments({
+        hotel: hotel._id,
+        status: 'confirmed',
+        checkInDate: { $lte: day },
+        checkOutDate: { $gt: day }
+      });
+      if (existingCount >= hotel.dailyCapacity) {
+        const msgDate = day.toISOString().split('T')[0];
+        return res.status(200).json({ success: true, data: { available: false, date: msgDate } });
+      }
+    }
+
+    return res.status(200).json({ success: true, data: { available: true } });
+  } catch (err) {
+    console.error('Error in checkAvailability:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // @desc    Get hotels for current owner
 // @route   GET /api/hotels/mine
 // @access  Private (Hotel Owner)
@@ -106,6 +151,7 @@ exports.createHotel = async (req, res) => {
       address,
       description,
       price,
+      dailyCapacity,
       facilities,
       registrationNo,
       ownerNIC
@@ -122,6 +168,7 @@ exports.createHotel = async (req, res) => {
       address,
       description,
       price,
+      dailyCapacity: Number(dailyCapacity) || 0,
       facilities: facilities ? JSON.parse(facilities) : {},
       registrationNo,
       ownerNIC,

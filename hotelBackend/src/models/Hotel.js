@@ -22,6 +22,12 @@ const hotelSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Please provide price per night']
   },
+  // per-day capacity: 0 means unlimited
+  dailyCapacity: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
   images: [{
     url: { type: String },
     public_id: { type: String }

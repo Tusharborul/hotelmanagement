@@ -20,6 +20,7 @@ const Booking = () => {
   
   const [hotel, setHotel] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   
   // Price per day (can be dynamic or fetched from API)
   const pricePerDay = hotel?.price || 200;
@@ -200,19 +201,52 @@ const Booking = () => {
     <div className="flex flex-col items-center w-full max-w-xs mx-auto gap-3 sm:gap-4 mb-8">
       <button
         className="bg-[#0057FF] text-white text-base sm:text-lg font-medium rounded-lg py-2.5 sm:py-3 w-full shadow hover:bg-[#003bb3] transition"
-        onClick={() => navigate('/payment', {
-          state: {
-            days,
-            checkInDate,
-            totalPrice,
-            hotelId,
-            hotelName,
-            hotelLocation
+        onClick={async () => {
+          setError('');
+          try {
+            // Pre-check availability so users aren't surprised on payment page
+            const resp = await hotelService.checkAvailability(hotelId, checkInDate, days);
+            // hotelService returns the axios response data, but be defensive
+            const payload = resp?.data || resp;
+            if (payload && payload.available === false) {
+              const dates = payload.dates || (payload.date ? [payload.date] : []);
+              if (dates.length > 0) {
+                const formattedDates = dates.map(d => {
+                  const dt = new Date(d);
+                  const dd = String(dt.getDate()).padStart(2, '0');
+                  const mm = String(dt.getMonth() + 1).padStart(2, '0');
+                  const yyyy = dt.getFullYear();
+                  return `${dd}/${mm}/${yyyy}`;
+                });
+                let formatted;
+                if (formattedDates.length === 1) formatted = formattedDates[0];
+                else if (formattedDates.length === 2) formatted = `${formattedDates[0]} and ${formattedDates[1]}`;
+                else formatted = `${formattedDates.slice(0, -1).join(', ')} and ${formattedDates[formattedDates.length - 1]}`;
+                setError(`Hotel is fully booked for ${formatted}. Please select another day.`);
+                return;
+              }
+              setError('Hotel is not available for the selected stay. Please choose another date.');
+              return;
+            }
+            navigate('/payment', {
+              state: {
+                days,
+                checkInDate,
+                totalPrice,
+                hotelId,
+                hotelName,
+                hotelLocation
+              }
+            });
+          } catch (err) {
+            console.error('Availability check failed', err);
+            setError(err.response?.data?.message || 'Availability check failed. Please try again.');
           }
-        })}
+        }}
       >
         Book Now
       </button>
+      {error && <div className="text-red-500 mt-2">{error}</div>}
       <button 
         className="bg-gray-100 text-gray-400 text-base sm:text-lg font-medium rounded-lg py-2.5 sm:py-3 w-full shadow" 
         onClick={() => hotelId ? navigate(`/hoteldetails?id=${hotelId}`) : navigate('/home')}

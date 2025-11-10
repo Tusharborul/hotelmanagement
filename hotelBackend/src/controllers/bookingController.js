@@ -92,6 +92,7 @@ exports.createBooking = async (req, res) => {
       });
     }
 
+
     // Calculate total price and initial payment
     const totalPrice = hotelData.price * days;
     const initialPayment = Math.round(totalPrice / 2);
@@ -114,6 +115,39 @@ exports.createBooking = async (req, res) => {
       checkOut.setDate(checkOut.getDate() + days);
       checkOut.setHours(10, 0, 0, 0);
       calculatedCheckOutDate = checkOut.toISOString();
+    }
+
+    // Enforce per-day capacity across the whole stay (each night) when configured (>0)
+    try {
+      if (hotelData.dailyCapacity && hotelData.dailyCapacity > 0 && checkInDate && calculatedCheckOutDate) {
+        const start = new Date(checkInDate);
+        start.setHours(10, 0, 0, 0);
+        const end = new Date(calculatedCheckOutDate);
+        end.setHours(10, 0, 0, 0);
+
+        // iterate over each night: from start (inclusive) to end (exclusive)
+        for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+          const day = new Date(d);
+          day.setHours(10, 0, 0, 0);
+
+          // Count bookings that occupy this night: booking.checkInDate <= day < booking.checkOutDate
+          const existingCount = await Booking.countDocuments({
+            hotel: hotelData._id,
+            status: 'confirmed',
+            checkInDate: { $lte: day },
+            checkOutDate: { $gt: day }
+          });
+
+          if (existingCount >= hotelData.dailyCapacity) {
+            // Format date for message
+            const msgDate = day.toISOString().split('T')[0];
+            return res.status(409).json({ success: false, message: `Hotel is fully booked for ${msgDate}.` });
+          }
+        }
+      }
+    } catch (capErr) {
+      console.error('Capacity check error:', capErr);
+      // don't block booking on capacity-check error; allow create and log
     }
 
     // Create booking

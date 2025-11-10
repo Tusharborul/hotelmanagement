@@ -12,7 +12,8 @@ const {
   deleteImage,
   addTreasure,
   updateTreasure,
-  deleteTreasure
+  deleteTreasure,
+  checkAvailability
 } = require('../controllers/hotelController');
 const { protect, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -52,6 +53,9 @@ router.delete('/:id/treasures/:treasureId', (req, res, next) => {
 
 // Reviews
 router.post('/:id/reviews', protect, addReview);
+
+// Availability check (public)
+router.get('/:id/availability', checkAvailability);
 
 // Generic hotel CRUD - MUST be last to avoid capturing specific routes
 router

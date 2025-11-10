@@ -19,6 +19,15 @@ export const hotelService = {
     return response.data;
   },
 
+  // Check availability for a hotel given checkInDate and days
+  checkAvailability: async (id, checkInDate, days) => {
+    const params = new URLSearchParams();
+    params.append('checkInDate', checkInDate);
+    params.append('days', String(days));
+    const res = await api.get(`/hotels/${id}/availability?${params.toString()}`);
+    return res.data;
+  },
+
   // Create new hotel (with file upload)
   createHotel: async (hotelData) => {
     const formData = new FormData();
