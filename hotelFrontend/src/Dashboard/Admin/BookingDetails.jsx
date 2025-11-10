@@ -7,6 +7,8 @@ export default function AdminBookingDetails() {
   const [end, setEnd] = useState('');
   const [field, setField] = useState('created');
   const [data, setData] = useState([]);
+  const [hotels, setHotels] = useState([]);
+  const [selectedHotel, setSelectedHotel] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 20;
@@ -14,6 +16,11 @@ export default function AdminBookingDetails() {
   const load = async (p=1) => {
     const res = await adminService.getBookings({ start, end, page: p, limit, field: field === 'checkin' ? 'checkin' : undefined });
     let items = res.data || [];
+
+    // client-side hotel filter: if selectedHotel is empty -> all hotels
+    if (selectedHotel) {
+      items = (items || []).filter(b => (b.hotel && (b.hotel._id || b.hotel.id) === selectedHotel) || b.hotelId === selectedHotel);
+    }
 
     // Client-side fallback: if 'checkin' filter selected, ensure we filter by booking.checkInDate
     if (field === 'checkin' && (start || end)) {
@@ -30,11 +37,22 @@ export default function AdminBookingDetails() {
 
     setData(items);
     // If we performed client-side filtering, update total to the filtered count so pagination reflects results
-    setTotal((field === 'checkin' && (start || end)) ? items.length : res.total);
+    setTotal((field === 'checkin' && (start || end)) ? items.length : (selectedHotel ? items.length : res.total));
     setPage(res.page);
   };
 
-  useEffect(()=>{ load(1); }, []);
+  useEffect(()=>{ load(1); }, [selectedHotel]);
+
+  useEffect(()=>{
+    (async ()=>{
+      try {
+        const r = await adminService.getHotels({ page:1, limit: 1000 });
+        setHotels(r.data || []);
+        // default to All Hotels
+        setSelectedHotel('');
+      } catch (err) { console.warn('Failed to load hotels', err); }
+    })();
+  }, []);
 
 
 
@@ -55,6 +73,13 @@ export default function AdminBookingDetails() {
             <select  name="field" value={field} onChange={(e)=>setField(e.target.value)} className="border rounded px-3 py-1.5 w-full text-sm">
               <option value="created">Created</option>
               <option value="checkin">Check-in</option>
+            </select>
+          </div>
+          <div className="w-full sm:w-auto">
+            <label className="text-sm text-gray-600 block mb-1">Hotel</label>
+            <select name="hotel" value={selectedHotel} onChange={(e) => setSelectedHotel(e.target.value)} className="border rounded px-3 py-1.5 w-full text-sm">
+              <option value="">All Hotels</option>
+              {hotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
             </select>
           </div>
           <button className="px-4 py-2 bg-blue-600 text-white rounded w-full sm:w-auto text-sm" onClick={()=>load(1)}>Filter</button>

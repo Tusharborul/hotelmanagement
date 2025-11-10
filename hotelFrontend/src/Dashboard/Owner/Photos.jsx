@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Layout from '../components/Layout';
 import { hotelService } from '../../services/hotelService';
 import getImageUrl from '../../utils/getImageUrl';
+import { showToast } from '../../utils/toast';
 
 export default function OwnerPhotos() {
   const [hotels, setHotels] = useState([]);
@@ -49,16 +50,17 @@ export default function OwnerPhotos() {
     if (!selected) return;
     if (!filename) {
       // Defensive: prevent calling delete with empty filename which causes 404
-      alert('Unable to delete: no image identifier available for this image.');
+      showToast('Unable to delete: no image identifier available for this image.', 'warning');
       return;
     }
-    if (!confirm('Delete this image?')) return;
+  const { confirmAsync } = await import('../../utils/confirm');
+  if (!await confirmAsync('Delete this image?')) return;
     try {
       await hotelService.deleteImage(selected, filename);
       await load();
     } catch (err) {
       console.error('Failed to delete image', err);
-      alert('Failed to delete image: ' + (err?.response?.data?.message || err?.message));
+      showToast('Failed to delete image: ' + (err?.response?.data?.message || err?.message), 'error');
       await load();
     }
   };

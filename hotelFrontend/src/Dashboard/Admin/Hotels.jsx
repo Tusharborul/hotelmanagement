@@ -1,6 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import Layout from '../components/Layout';
 import { adminService } from '../../services/adminService';
+import { showToast } from '../../utils/toast';
+import Modal from '../../components/Modal';
 
 export default function AdminHotels(){
   const [hotels, setHotels] = useState([]);
@@ -26,16 +28,32 @@ export default function AdminHotels(){
 
   useEffect(()=>{ load(1); }, []);
 
-  const setStatus = async (hotelId, status) => {
-    if (!confirm(`Set status to ${status} for this hotel?`)) return;
-    try{
-      await adminService.updateHotelStatus(hotelId, status);
+  // Modal-driven status change
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusModalHotelId, setStatusModalHotelId] = useState(null);
+  const [statusModalStatus, setStatusModalStatus] = useState('pending');
+
+  const openStatusModal = (hotelId, currentStatus) => {
+    setStatusModalHotelId(hotelId);
+    setStatusModalStatus(currentStatus || 'pending');
+    setShowStatusModal(true);
+  };
+
+  const saveStatusFromModal = async () => {
+    if (!statusModalHotelId) return;
+    try {
+      await adminService.updateHotelStatus(statusModalHotelId, statusModalStatus);
+      setShowStatusModal(false);
+      setStatusModalHotelId(null);
       await load(page, filter);
-    }catch(err){
+    } catch (err) {
       console.error('Failed to update hotel status', err);
-      alert('Failed to update status');
+      showToast('Failed to update status', 'error');
     }
   };
+
+  // selected hotel for modal display
+  const selectedStatusHotel = hotels.find(h => h._id === statusModalHotelId) || null;
 
   return (
     <Layout role="admin" title="Hello, Admin" subtitle="Hotels">
@@ -61,6 +79,25 @@ export default function AdminHotels(){
           <div className="text-gray-500">Loading...</div>
         ) : (
           <div className="space-y-3">
+            {/* Status change modal */}
+            <Modal title="Change Hotel Status" open={showStatusModal} onClose={()=>{ setShowStatusModal(false); setStatusModalHotelId(null); }} size="md">
+              <div className="space-y-3">
+                <div>
+                  <div className="text-xs text-gray-500">Hotel:</div>
+                  <div className="font-medium">{selectedStatusHotel?.name || '-'}</div>
+                </div>
+                <div className="text-sm text-gray-700">Select new status for this hotel:</div>
+                <select className="border px-3 py-2 rounded w-full text-sm" value={statusModalStatus} onChange={(e)=>setStatusModalStatus(e.target.value)}>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <div className="flex gap-2 justify-end">
+                  <button className="px-4 py-2 border rounded" onClick={()=>{ setShowStatusModal(false); setStatusModalHotelId(null); }}>Cancel</button>
+                  <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={saveStatusFromModal}>Save</button>
+                </div>
+              </div>
+            </Modal>
             {/* Mobile card view */}
             <div className="block md:hidden space-y-3">
               {hotels.map(h => (
@@ -87,9 +124,7 @@ export default function AdminHotels(){
                     </span>
                   </div>
                   <div className="flex gap-2 pt-2">
-                    <button className="px-2 py-1.5 bg-yellow-400 text-black rounded text-xs flex-1" onClick={()=>setStatus(h._id, 'pending')}>Pending</button>
-                    <button className="px-2 py-1.5 bg-red-600 text-white rounded text-xs flex-1" onClick={()=>setStatus(h._id, 'rejected')}>Reject</button>
-                    <button className="px-2 py-1.5 bg-green-600 text-white rounded text-xs flex-1" onClick={()=>setStatus(h._id, 'approved')}>Approve</button>
+                    <button className="px-2 py-1.5 bg-yellow-400 text-black rounded text-xs flex-1" onClick={()=>openStatusModal(h._id, h.status)}>Change Status</button>
                   </div>
                 </div>
               ))}
@@ -111,9 +146,7 @@ export default function AdminHotels(){
                         <div className="flex items-center justify-between gap-2">
                           <span className={`text-xs px-2 py-1 rounded ${h.status === 'approved' ? 'bg-green-100 text-green-800' : h.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>{h.status}</span>
                           <div className="flex gap-2">
-                            <button className="px-2 py-1 bg-yellow-400 text-black rounded text-sm" onClick={()=>setStatus(h._id, 'pending')}>Pending</button>
-                            <button className="px-2 py-1 bg-red-600 text-white rounded text-sm" onClick={()=>setStatus(h._id, 'rejected')}>Reject</button>
-                            <button className="px-2 py-1 bg-green-600 text-white rounded text-sm" onClick={()=>setStatus(h._id, 'approved')}>Approve</button>
+                            <button className="px-2 py-1 bg-yellow-400 text-black rounded text-sm" onClick={()=>openStatusModal(h._id, h.status)}>Change Status</button>
                           </div>
                         </div>
                       </td>

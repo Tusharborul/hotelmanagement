@@ -15,28 +15,46 @@ export default function OwnerRefunds() {
 			const res = await hotelService.getMyHotels();
 			const list = res.data || [];
 			setHotels(list);
-			if (!selected && list[0]?._id) setSelected(list[0]._id);
+			// default to All Hotels: do not auto-select the first hotel
 		} catch (err) {
 			console.error('Failed to load hotels', err);
 		}
 	};
 
 	const loadRefunds = async (hotelId) => {
-		if (!hotelId) return setData([]);
-		setLoading(true);
-		try {
-			const res = await bookingService.getHotelBookings(hotelId);
-			const list = Array.isArray(res) ? res : (res?.data || []);
-			const refunds = list.filter(b => Number(b.refundAmount || 0) > 0 || (b.refundStatus && b.refundStatus !== 'none'));
-			setData(refunds);
-		} catch (err) {
-			console.error('Failed to load refunds for hotel', err);
-			setData([]);
-		} finally { setLoading(false); }
-	};
+			setLoading(true);
+			try {
+				if (!hotelId) {
+					// aggregate across all hotels
+					const all = [];
+					for (const h of (hotels || [])) {
+						try {
+							const res = await bookingService.getHotelBookings(h._id);
+							const list = Array.isArray(res) ? res : (res?.data || []);
+							const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: h._id, name: h.name }, hotelName: (b.hotel && b.hotel.name) || h.name }));
+							all.push(...mapped);
+						} catch (err) {
+							console.warn('Failed to load bookings for hotel', h._id, err);
+						}
+					}
+					const refunds = all.filter(b => Number(b.refundAmount || 0) > 0 || (b.refundStatus && b.refundStatus !== 'none'));
+					setData(refunds);
+				} else {
+					const res = await bookingService.getHotelBookings(hotelId);
+					const list = Array.isArray(res) ? res : (res?.data || []);
+					const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: hotelId, name: (hotels.find(x=>x._id===hotelId)?.name) || '' }, hotelName: (b.hotel && b.hotel.name) || (hotels.find(x=>x._id===hotelId)?.name) || '' }));
+					const refunds = mapped.filter(b => Number(b.refundAmount || 0) > 0 || (b.refundStatus && b.refundStatus !== 'none'));
+					setData(refunds);
+				}
+			} catch (err) {
+				console.error('Failed to load refunds for hotel', err);
+				setData([]);
+			} finally { setLoading(false); }
+		};
 
 	useEffect(()=>{ loadHotels(); }, []);
-	useEffect(()=>{ if (selected) loadRefunds(selected); }, [selected]);
+	// run refunds loader when selection or hotels list changes so default (empty selection) aggregates across hotels
+	useEffect(()=>{ loadRefunds(selected); }, [selected, hotels]);
 
 	return (
 		<Layout role="owner" title="Hello, Owner" subtitle="Refunds">
@@ -45,11 +63,12 @@ export default function OwnerRefunds() {
 					<div className="w-full sm:w-auto">
 						<label className="text-sm text-gray-600 block mb-1">Hotel</label>
 						<select  name="selected" value={selected} onChange={(e)=>setSelected(e.target.value)} className="border rounded px-3 py-2 w-full sm:w-64 lg:w-80 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-							<option value="">Select a hotel</option>
+							<option value="">All Hotels</option>
 							{hotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
 						</select>
 					</div>
-				</div>
+
+					</div>
 
 				{loading ? (
 					<div className="text-gray-500">Loading refunds...</div>
@@ -107,6 +126,7 @@ export default function OwnerRefunds() {
 								<thead>
 									<tr className="border-b">
 										<th className="py-2">User</th>
+										<th className="py-2">Hotel</th>
 										<th className="py-2">Check-in</th>
 										<th className="py-2">Total</th>
 										<th className="py-2">Refund Amount</th>
@@ -118,6 +138,7 @@ export default function OwnerRefunds() {
 									{data.map(b => (
 										<tr key={b._id} className="border-b">
 											<td className="py-2">{b.user?.name || b.user?.username}</td>
+											<td className="py-2">{b.hotel?.name || b.hotelName || '-'}</td>
 											<td className="py-2">{b.checkInDate ? new Date(b.checkInDate).toLocaleString() : '-'}</td>
 											<td className="py-2">${b.totalPrice}</td>
 											<td className="py-2">{b.refundAmount ? ('$' + Number(b.refundAmount).toFixed(2)) : '-'}</td>

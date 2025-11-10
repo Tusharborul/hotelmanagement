@@ -92,6 +92,35 @@ exports.updateHotelStatus = async (req, res) => {
     const { status } = req.body;
     const hotel = await Hotel.findByIdAndUpdate(req.params.id, { status }, { new: true, runValidators: true });
     if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
+
+    // If hotel is moved out of 'approved' state (e.g., rejected or pending), cancel & refund active bookings
+    try {
+      if (status !== 'approved') {
+        const Booking = require('../models/Booking');
+        const bookings = await Booking.find({ hotel: hotel._id, status: { $in: ['pending','confirmed'] } });
+        for (const b of bookings) {
+          b.status = 'cancelled';
+          b.cancelledAt = new Date();
+          b.cancelledBy = req.user.id; // admin
+          // Use short token to avoid exposing admin/owner names in cancellation reason
+          // tokens: 'user.near' (user), 'lankastay' (admin), 'hotel' (hotel owner)
+          b.cancellationReason = 'lankastay';
+          const refundAmount = b.initialPayment || 0;
+          b.refundAmount = refundAmount;
+          if (refundAmount > 0) {
+            b.refundStatus = 'issued';
+            b.refundedAt = new Date();
+            b.refundedBy = req.user.id;
+          } else {
+            b.refundStatus = 'none';
+          }
+          await b.save();
+          console.log(`[auto-refund][admin-status-change] booking=${b._id} status=${status} refund=${b.refundAmount} reason=${b.cancellationReason}`);
+        }
+      }
+    } catch (err) {
+      console.error('Error auto-refunding bookings during admin status change:', err);
+    }
     res.status(200).json({ success: true, data: hotel });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

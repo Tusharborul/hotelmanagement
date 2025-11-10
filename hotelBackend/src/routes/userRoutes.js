@@ -8,10 +8,12 @@ const {
 const { protect } = require('../middleware/auth');
 
 const router = express.Router();
+const upload = require('../middleware/upload');
 
 router.post('/register', register);
 router.post('/login', login);
 router.get('/me', protect, getMe);
-router.put('/me', protect, updateUser);
+// allow profile photo upload as `image` field (multipart/form-data)
+router.put('/me', protect, upload.single('image'), updateUser);
 
 module.exports = router;

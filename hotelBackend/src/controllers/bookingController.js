@@ -77,6 +77,10 @@ exports.getBooking = async (req, res) => {
 // @access  Private
 exports.createBooking = async (req, res) => {
   try {
+    // Prevent admins and hotel owners from creating bookings
+    if (req.user && (req.user.role === 'admin' || req.user.role === 'hotelOwner')) {
+      return res.status(403).json({ success: false, message: 'Admins and hotel owners are not allowed to create bookings.' });
+    }
     let { hotel, checkInDate, checkOutDate, days, paymentDetails } = req.body;
 
     // Check if hotel exists
@@ -238,6 +242,8 @@ exports.deleteBooking = async (req, res) => {
   booking.status = 'cancelled';
   booking.cancelledAt = new Date();
   booking.cancelledBy = req.user.id;
+  // Record cancellation reason without exposing actor names: user.near (user), lankastay (admin)
+  booking.cancellationReason = req.user.role === 'admin' ? 'lankastay' : 'user.near';
   // Calculate refund: policy = full initialPayment refund if cancelled >24h before check-in (or admin cancels)
   try {
     const now = Date.now();
@@ -257,7 +263,7 @@ exports.deleteBooking = async (req, res) => {
     await booking.save();
 
     console.log(`[booking-cancelled] user=${req.user.id} booking=${booking._id} cancelledAt=${booking.cancelledAt} refund=${booking.refundAmount}`);
-  } catch (err) {
+    } catch (err) {
     // If refund calc/save fails, still mark cancelled and continue
     console.error('[booking-cancel-error]', err);
     await booking.save();

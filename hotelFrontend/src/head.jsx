@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from 'react-router-dom';
 import { authService } from "./services/authService";
 
 const Header = () => {
@@ -8,6 +9,7 @@ const Header = () => {
   // store current user object so we can check role presence
   const [currentUser, setCurrentUser] = useState(authService.getCurrentUser());
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleHotelsClick = (e) => {
     e.preventDefault();
@@ -17,6 +19,15 @@ const Header = () => {
     } else {
       navigate('/home');
     }
+  };
+
+  const isActive = (name) => {
+    const path = location.pathname || '';
+    if (name === 'hotels') {
+      return path.startsWith('/hotels') || path.includes('hoteldetails');
+    }
+    if (name === 'home') return path === '/' || path === '/home';
+    return false;
   };
 
   const handleAuthClick = () => {
@@ -83,8 +94,8 @@ const Header = () => {
         {/* Desktop Nav */}
         <div className="hidden lg:flex items-center justify-start gap-10">
           <nav className="flex gap-4 sm:gap-6 lg:gap-8 font-[Poppins]">
-            <a href="/home" className="text-[#3252DF] text-[16px]">Home</a>
-            <a href="#" onClick={handleHotelsClick} className="text-[#152C5B] hover:text-[#3252DF] transition cursor-pointer">Hotels</a>
+            <a href="/home" className={`${isActive('home') ? 'text-[#3252DF] font-semibold' : 'text-[#152C5B]'} text-[16px]`}>Home</a>
+            <a href="#" onClick={handleHotelsClick} className={`${isActive('hotels') ? 'text-[#3252DF] font-semibold' : 'text-[#152C5B]'} hover:text-[#3252DF] transition cursor-pointer`}>Hotels</a>
             <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition">Rooms</a>
             <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition">About</a>
             <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition">Contact</a>

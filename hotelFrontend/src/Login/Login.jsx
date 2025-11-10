@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import LoginImg from '../assets/Login/login.png';
 import Lanka from "../Register/Lanka";
 import { authService } from '../services/authService';
@@ -98,7 +98,10 @@ const Login = () => {
           <button type="submit" disabled={loading} className="bg-[#0057FF] text-white text-base font-medium rounded-lg py-2 mt-2 mb-2 w-full shadow hover:bg-[#003bb3] transition disabled:opacity-50 disabled:cursor-not-allowed">
             {loading ? 'Logging in...' : 'Login'}
           </button>
-          <a href="register" className="text-black text-sm underline text-center">Create Account</a>
+          <div className="flex items-center justify-between w-full mt-2">
+            <Link to="/" className="text-sm text-gray-700 hover:underline text-alin">Home</Link>
+            <Link to="/register" className="text-black text-sm underline">Create Account</Link>
+          </div>
         </form>
       </div>
     </div>

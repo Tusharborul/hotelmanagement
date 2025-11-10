@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { adminService } from '../../services/adminService';
+import { showToast } from '../../utils/toast';
 
 export default function AdminRefunds() {
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
   const [field, setField] = useState('created');
+  const [hotels, setHotels] = useState([]);
+  const [selectedHotel, setSelectedHotel] = useState('');
   const [data, setData] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -32,6 +35,10 @@ export default function AdminRefunds() {
         });
       }
 
+      // if a hotel is selected, filter by hotel id (client-side)
+      if (selectedHotel) {
+        all = (all || []).filter(b => (b.hotel && (b.hotel._id || b.hotel.id) === selectedHotel) || b.hotelId === selectedHotel);
+      }
       // keep only bookings that have refunds (refundAmount > 0) or pending refunds
       const refunds = all.filter(b => Number(b.refundAmount || 0) > 0 || (b.refundStatus && b.refundStatus !== 'none'));
       setData(refunds);
@@ -46,15 +53,26 @@ export default function AdminRefunds() {
   };
 
   useEffect(() => { load(1); }, []);
+  useEffect(() => { load(1); }, [selectedHotel]);
+  useEffect(()=>{
+    (async ()=>{
+      try {
+        const res = await adminService.getHotels({ page:1, limit: 1000 });
+        setHotels(res.data || []);
+        // default to All Hotels when hotels are loaded
+        setSelectedHotel('');
+      } catch(e){ console.warn('Failed to load hotels for admin refunds', e); }
+    })();
+  }, []);
 
   const adminIssueRefund = async (bookingId) => {
     try {
       await adminService.issueRefund(bookingId);
       load(page);
-      alert('Refund issued');
+      showToast('Refund issued', 'success');
     } catch (err) {
       const msg = err?.response?.data?.message || 'Failed to issue refund';
-      alert(msg);
+      showToast(msg, 'error');
     }
   };
 
@@ -62,6 +80,13 @@ export default function AdminRefunds() {
     <Layout role="admin" title="Hello, Admin" subtitle="Refunds">
       <div className="bg-white rounded-lg shadow p-4 md:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 mb-4">
+          <div className="w-full sm:w-auto">
+            <label className="text-sm text-gray-600 block mb-1">Hotel</label>
+            <select name="selectedHotel" value={selectedHotel} onChange={(e)=>setSelectedHotel(e.target.value)} className="border rounded px-3 py-1.5 w-full text-sm">
+              <option value="">All Hotels</option>
+              {hotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
+            </select>
+          </div>
           <div className="w-full sm:w-auto">
             <label className="text-sm text-gray-600 block mb-1">Start</label>
             <input type="date" className="border rounded px-3 py-1.5 w-full text-sm"  name="start" value={start} onChange={(e) => setStart(e.target.value)} />
@@ -120,13 +145,13 @@ export default function AdminRefunds() {
                     <div className="text-sm font-semibold text-blue-600">{b.refundAmount ? ('$' + Number(b.refundAmount).toFixed(2)) : '-'}</div>
                   </div>
                   {b.refundStatus === 'pending' && (
-                    <button 
-                      className="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm mt-2" 
-                      onClick={async () => { if (confirm('Issue refund?')) { await adminIssueRefund(b._id); } }}
-                    >
-                      Issue Refund
-                    </button>
-                  )}
+                      <button 
+                        className="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm mt-2" 
+                        onClick={async () => { const { confirmAsync } = await import('../../utils/confirm'); if (await confirmAsync('Issue refund?')) { await adminIssueRefund(b._id); } }}
+                      >
+                        Issue Refund
+                      </button>
+                    )}
                 </div>
               ))}
             </div>
@@ -156,7 +181,7 @@ export default function AdminRefunds() {
                       <td className="py-2">{(b.refundStatus || 'none').charAt(0).toUpperCase() + (b.refundStatus || '').slice(1)}</td>
                       <td className="py-2">
                         {b.refundStatus === 'pending' ? (
-                          <button className="px-2 py-1 bg-blue-600 text-white rounded text-sm" onClick={async () => { if (confirm('Issue refund?')) { await adminIssueRefund(b._id); } }}>Issue</button>
+                          <button className="px-2 py-1 bg-blue-600 text-white rounded text-sm" onClick={async () => { const { confirmAsync } = await import('../../utils/confirm'); if (await confirmAsync('Issue refund?')) { await adminIssueRefund(b._id); } }}>Issue</button>
                         ) : (
                           <span className="text-sm text-gray-500">-</span>
                         )}

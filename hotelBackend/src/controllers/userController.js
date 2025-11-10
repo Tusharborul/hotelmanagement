@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const { sendTokenResponse } = require('../middleware/jwt');
+const { v2: cloudinary } = require('cloudinary');
 
 // @desc    Register user
 // @route   POST /api/users/register
@@ -104,12 +105,29 @@ exports.getMe = async (req, res) => {
 // @access  Private
 exports.updateUser = async (req, res) => {
   try {
+    // Collect fields to update from body
     const fieldsToUpdate = {
       name: req.body.name,
       email: req.body.email,
       phone: req.body.phone,
       country: req.body.country
     };
+
+    // Load existing user to check for previous avatar
+    const existingUser = await User.findById(req.user.id);
+
+    // If an image was uploaded by multer/cloudinary, req.file will contain path and filename
+    if (req.file) {
+      // Remove previous avatar from Cloudinary if present
+      try {
+        if (existingUser && existingUser.avatar && existingUser.avatar.public_id) {
+          await cloudinary.uploader.destroy(existingUser.avatar.public_id);
+        }
+      } catch (err) {
+        console.error('Error destroying previous avatar:', err);
+      }
+      fieldsToUpdate.avatar = { url: req.file.path, public_id: req.file.filename };
+    }
 
     const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
       new: true,

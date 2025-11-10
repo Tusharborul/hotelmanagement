@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { adminService } from '../../services/adminService';
+import Modal from '../../components/Modal';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -10,6 +11,7 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(false);
   const [editRow, setEditRow] = useState(null);
   const [username, setUsername] = useState('');
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const load = async (p=1) => {
     setLoading(true);
@@ -24,8 +26,9 @@ export default function AdminUsers() {
   useEffect(() => { load(1); }, []);
 
   const startEdit = (u) => { setEditRow(u._id); setUsername(u.username); };
-  const saveEdit = async (id) => { await adminService.updateUser(id, { username }); setEditRow(null); load(page); };
-  const remove = async (id) => { if (confirm('Delete user?')) { await adminService.deleteUser(id); load(page); } };
+  const startEditModal = (u) => { setEditRow(u._id); setUsername(u.username); setShowEditModal(true); };
+  const saveEdit = async (id) => { await adminService.updateUser(id, { username }); setEditRow(null); setShowEditModal(false); load(page); };
+  const remove = async (id) => { const { confirmAsync } = await import('../../utils/confirm'); if (await confirmAsync('Delete user?')) { await adminService.deleteUser(id); load(page); } };
 
   return (
     <Layout role="admin" title="Hello, Admin" subtitle="Users">
@@ -41,7 +44,7 @@ export default function AdminUsers() {
                 <div key={u._id} className="border rounded-lg p-3 space-y-2">
                   <div>
                     <span className="text-xs text-gray-500">Username:</span>
-                    {editRow===u._id ? (
+                    {editRow===u._id && !showEditModal ? (
                       <input className="border rounded px-2 py-1 w-full mt-1 text-sm"  name="username" value={username} onChange={(e)=>setUsername(e.target.value)} />
                     ) : (
                       <div className="font-medium">{u.username}</div>
@@ -52,10 +55,10 @@ export default function AdminUsers() {
                     <div className="text-sm">{new Date(u.createdAt).toLocaleDateString()}</div>
                   </div>
                   <div className="flex gap-2 pt-2">
-                    {editRow===u._id ? (
+                    {editRow===u._id && !showEditModal ? (
                       <button className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm flex-1" onClick={()=>saveEdit(u._id)}>Save</button>
                     ) : (
-                      <button className="px-3 py-1.5 border rounded text-sm flex-1" onClick={()=>startEdit(u)}>Edit</button>
+                      <button className="px-3 py-1.5 border rounded text-sm flex-1" onClick={()=>startEditModal(u)}>Edit</button>
                     )}
                     <button className="px-3 py-1.5 border rounded text-red-600 text-sm flex-1" onClick={()=>remove(u._id)}>Delete</button>
                   </div>
@@ -73,16 +76,16 @@ export default function AdminUsers() {
                   {users.map(u => (
                     <tr key={u._id} className="border-b">
                       <td className="py-2">
-                        {editRow===u._id ? (
+                        {editRow===u._id && !showEditModal ? (
                           <input className="border px-2 py-1 rounded"  name="username" value={username} onChange={(e)=>setUsername(e.target.value)} />
                         ) : u.username}
                       </td>
                       <td className="py-2">{new Date(u.createdAt).toLocaleDateString()}</td>
                       <td className="py-2 flex gap-2">
-                        {editRow===u._id ? (
+                        {editRow===u._id && !showEditModal ? (
                           <button className="px-2 py-1 bg-blue-600 text-white rounded" onClick={()=>saveEdit(u._id)}>Save</button>
                         ) : (
-                          <button className="px-2 py-1 border rounded" onClick={()=>startEdit(u)}>Edit</button>
+                          <button className="px-2 py-1 border rounded" onClick={()=>startEditModal(u)}>Edit</button>
                         )}
                         <button className="px-2 py-1 border rounded text-red-600" onClick={()=>remove(u._id)}>Delete</button>
                       </td>
@@ -99,6 +102,17 @@ export default function AdminUsers() {
           <button disabled={page>=Math.ceil(total/limit)} onClick={()=>load(page+1)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Next</button>
         </div>
       </div>
+      {/* Edit User Modal */}
+      <Modal title="Edit User" open={showEditModal} onClose={()=>{ setShowEditModal(false); setEditRow(null); }} size="md">
+        <div className="space-y-3">
+          <label className="text-xs text-gray-600">Username</label>
+          <input className="border rounded px-2 py-1 w-full text-sm" value={username} onChange={(e)=>setUsername(e.target.value)} />
+          <div className="flex gap-2 justify-end">
+            <button className="px-4 py-2 border rounded" onClick={()=>{ setShowEditModal(false); setEditRow(null); }}>Cancel</button>
+            <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={()=>saveEdit(editRow)}>Save</button>
+          </div>
+        </div>
+      </Modal>
     </Layout>
   );
 }

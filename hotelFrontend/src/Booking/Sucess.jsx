@@ -28,7 +28,7 @@ const Sucess = () => {
             <p className="text-[#3252DF] text-center mb-2 text-base sm:text-lg px-4">Please check your email & phone Message.<br />We have sent all the Information</p>
             <button
                 className="bg-[#0057FF] text-white text-base sm:text-lg font-medium rounded-lg py-2.5 sm:py-3 px-6 sm:px-8 shadow hover:bg-[#003bb3] transition mt-2"
-                onClick={() => navigate('/home')}
+                onClick={() => navigate('/dashboard/hotels')}
             >
                 Go to Dashboard
             </button>

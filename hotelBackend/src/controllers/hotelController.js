@@ -207,6 +207,32 @@ exports.deleteHotel = async (req, res) => {
       });
     }
 
+    // Before deleting the hotel, cancel and refund any active bookings for this hotel.
+    try {
+      const Booking = require('../models/Booking');
+      const bookings = await Booking.find({ hotel: hotel._id, status: { $in: ['pending','confirmed'] } });
+      for (const b of bookings) {
+        b.status = 'cancelled';
+        b.cancelledAt = new Date();
+        b.cancelledBy = req.user.id; // owner or admin who triggered deletion
+  b.cancellationReason = 'hotel';
+        // Refund full initial payment if present
+        const refundAmount = b.initialPayment || 0;
+        b.refundAmount = refundAmount;
+        if (refundAmount > 0) {
+          b.refundStatus = 'issued';
+          b.refundedAt = new Date();
+          b.refundedBy = req.user.id;
+        } else {
+          b.refundStatus = 'none';
+        }
+        await b.save();
+        console.log(`[auto-refund][hotel-delete] booking=${b._id} refund=${b.refundAmount}`);
+      }
+    } catch (err) {
+      console.error('Error auto-refunding bookings during hotel delete:', err);
+    }
+
     await hotel.deleteOne();
 
     res.status(200).json({

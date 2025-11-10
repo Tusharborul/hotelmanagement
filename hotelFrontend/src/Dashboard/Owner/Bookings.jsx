@@ -12,22 +12,23 @@ export default function OwnerBookings() {
   useEffect(()=>{ (async()=>{
     const res = await hotelService.getMyHotels();
     setHotels(res.data || []);
-    if (res.data?.[0]?._id) { setSelected(res.data[0]._id); }
+    // default to "All Hotels" (empty selection) instead of auto-selecting the first hotel
   })(); },[]);
 
   useEffect(()=>{ (async()=>{
-    if (!selected) return; 
     // load bookings for either selected hotel or all hotels
     const loadBookings = async () => {
       try {
         if (!selected) {
-          // aggregate bookings for all hotels
+          // aggregate bookings for all hotels and attach hotel info when missing
           const all = [];
           for (const h of (hotels || [])) {
             try {
               const r = await bookingService.getHotelBookings(h._id);
               const list = Array.isArray(r) ? r : (r?.data || []);
-              all.push(...list);
+              // ensure each booking has hotel info for display
+              const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: h._id, name: h.name }, hotelName: (b.hotel && b.hotel.name) || h.name }));
+              all.push(...mapped);
             } catch (err) {
               console.warn('Failed to load bookings for hotel', h._id, err);
             }
@@ -35,14 +36,17 @@ export default function OwnerBookings() {
           setBookings(filterByDate(all, date));
         } else {
           const r = await bookingService.getHotelBookings(selected);
-          const data = Array.isArray(r) ? r : (r?.data || []);
-          setBookings(filterByDate(data, date));
+          const list = Array.isArray(r) ? r : (r?.data || []);
+          // Attach hotel info for display when fetching for a single selected hotel
+          const hotelMeta = (hotels || []).find(h => h._id === selected) || { _id: selected, name: '' };
+          const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: hotelMeta._id, name: hotelMeta.name }, hotelName: (b.hotel && b.hotel.name) || hotelMeta.name }));
+          setBookings(filterByDate(mapped, date));
         }
       } catch (err) { console.error('Failed to load bookings', err); setBookings([]); }
     };
 
     loadBookings();
-  })(); }, [selected]);
+  })(); }, [selected, hotels]);
 
   // helper to filter list by date (if date provided)
   const filterByDate = (list, selectedDate) => {
@@ -65,17 +69,20 @@ export default function OwnerBookings() {
       // direct call for performance
       try {
         const r = await bookingService.getHotelBookings(selected);
-        const data = Array.isArray(r) ? r : (r?.data || []);
-        setBookings(filterByDate(data, date));
+        const list = Array.isArray(r) ? r : (r?.data || []);
+        const hotelMeta = (hotels || []).find(h => h._id === selected) || { _id: selected, name: '' };
+        const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: hotelMeta._id, name: hotelMeta.name }, hotelName: (b.hotel && b.hotel.name) || hotelMeta.name }));
+        setBookings(filterByDate(mapped, date));
       } catch (err) { console.error(err); }
     } else {
-      // aggregate
+      // aggregate and attach hotel info
       const all = [];
       for (const h of (hotels || [])) {
         try {
           const r = await bookingService.getHotelBookings(h._id);
           const list = Array.isArray(r) ? r : (r?.data || []);
-          all.push(...list);
+          const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: h._id, name: h.name }, hotelName: (b.hotel && b.hotel.name) || h.name }));
+          all.push(...mapped);
         } catch (err) { /* ignore per-hotel errors */ }
       }
       setBookings(filterByDate(all, date));
@@ -127,6 +134,10 @@ export default function OwnerBookings() {
                   <span className="text-xs text-gray-500">User:</span>
                   <div className="font-medium text-sm">{b.user?.name || b.user?.username}</div>
                 </div>
+                  <div>
+                    <span className="text-xs text-gray-500">Hotel:</span>
+                    <div className="text-sm">{b.hotel?.name || b.hotelName || '-'}</div>
+                  </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <span className="text-xs text-gray-500">Check-in:</span>
@@ -160,11 +171,12 @@ export default function OwnerBookings() {
           {/* Desktop table view */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left">
-              <thead><tr className="border-b"><th className="py-2">User</th><th className="py-2">Check-in</th><th className="py-2">Days</th><th className="py-2">Total</th><th className="py-2">Status</th></tr></thead>
+              <thead><tr className="border-b"><th className="py-2">User</th><th className="py-2">Hotel</th><th className="py-2">Check-in</th><th className="py-2">Days</th><th className="py-2">Total</th><th className="py-2">Status</th></tr></thead>
               <tbody>
                 {bookings.map(b => (
                   <tr key={b._id} className="border-b">
                     <td className="py-2">{b.user?.name || b.user?.username}</td>
+                    <td className="py-2">{b.hotel?.name || b.hotelName || '-'}</td>
                     <td className="py-2">{b.checkInDate ? new Date(b.checkInDate).toLocaleDateString() : '-'}</td>
                     <td className="py-2">{b.days}</td>
                     <td className="py-2">${b.totalPrice}</td>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Layout from "./components/Layout";
+import { showToast } from '../utils/toast';
 import { bookingService } from "../services/bookingService";
 
 const UserDashboard = () => {
@@ -74,8 +75,8 @@ const UserDashboard = () => {
     } catch (err) {
       console.error('Failed to cancel booking', err);
       // show server message when available
-      const msg = err?.response?.data?.message || 'Failed to cancel booking. Please try again.';
-      alert(msg);
+  const msg = err?.response?.data?.message || 'Failed to cancel booking. Please try again.';
+  showToast(msg, 'error');
     } finally {
       setCancelingIds((s) => s.filter((x) => x !== id));
     }
@@ -154,12 +155,15 @@ const UserDashboard = () => {
                           onClick={() => {
                             const id = b._id || b.id;
                             if (!isCancelable(b)) {
-                              alert('Bookings can only be cancelled at least 24 hours before check-in.');
+                              showToast('Bookings can only be cancelled at least 24 hours before check-in.', 'warning');
                               return;
                             }
-                            if (confirm('Are you sure you want to cancel this booking?')) {
-                              handleCancel(id);
-                            }
+                            (async ()=>{
+                              const { confirmAsync } = await import('../utils/confirm');
+                              if (await confirmAsync('Are you sure you want to cancel this booking?')) {
+                                handleCancel(id);
+                              }
+                            })();
                           }}
                           disabled={!isCancelable(b) || cancelingIds.includes(b._id || b.id)}
                         >

@@ -47,8 +47,30 @@ export const authService = {
 
   // Update user profile
   updateProfile: async (userData) => {
-    const response = await api.put('/users/me', userData);
-    if (response.data.data) {
+    // If a file is included, send multipart/form-data so backend (multer/cloudinary) can handle it
+    let response;
+    if (userData && (userData.photo instanceof File || userData.photo instanceof Blob)) {
+      const form = new FormData();
+      if (userData.name) form.append('name', userData.name);
+      if (userData.email) form.append('email', userData.email);
+      if (userData.phone) form.append('phone', userData.phone);
+      if (userData.country) form.append('country', userData.country);
+      // backend expects the image field as `image` (multer middleware used in routes)
+      form.append('image', userData.photo);
+      response = await api.put('/users/me', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    } else if (userData && userData.photo) {
+      // non-File photo (e.g., preview URL) - still attempt to send as form to be safe
+      const form = new FormData();
+      if (userData.name) form.append('name', userData.name);
+      if (userData.email) form.append('email', userData.email);
+      if (userData.phone) form.append('phone', userData.phone);
+      if (userData.country) form.append('country', userData.country);
+      form.append('image', userData.photo);
+      response = await api.put('/users/me', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    } else {
+      response = await api.put('/users/me', userData);
+    }
+    if (response.data && response.data.data) {
       const currentUser = authService.getCurrentUser();
       localStorage.setItem('user', JSON.stringify({ ...currentUser, ...response.data.data }));
     }

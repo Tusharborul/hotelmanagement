@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Layout from '../components/Layout';
 import { hotelService } from '../../services/hotelService';
 import getImageUrl from '../../utils/getImageUrl';
+import { showToast } from '../../utils/toast';
+import Modal from '../../components/Modal';
 
 export default function OwnerTreasures() {
   const [hotels, setHotels] = useState([]);
@@ -27,11 +29,15 @@ export default function OwnerTreasures() {
       }
     } catch (err) {
       console.error('Failed to load hotels:', err);
-      alert('Failed to load hotels: ' + (err?.response?.data?.message || err?.message));
+      showToast('Failed to load hotels: ' + (err?.response?.data?.message || err?.message), 'error');
     }
   };
 
   useEffect(()=>{ load(); }, []);
+
+  // modal state for add/edit
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const submitAdd = async (e) => {
     e.preventDefault();
@@ -48,9 +54,10 @@ export default function OwnerTreasures() {
       }
       setAddPreview(null);
       await load();
+      setShowAddModal(false);
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || 'Failed to add treasure';
-      alert(msg);
+      showToast(msg, 'error');
     } finally {
       setSaving(false);
     }
@@ -66,7 +73,8 @@ export default function OwnerTreasures() {
       try { URL.revokeObjectURL(editingPreview); } catch(e){}
     }
     setEditingPreview(null);
-    // do not move the UI; inline editing will appear where clicked
+    // open edit modal instead of inline editing
+    setShowEditModal(true);
   };
 
   const saveEdit = async (id) => {
@@ -83,9 +91,10 @@ export default function OwnerTreasures() {
       }
       setEditingPreview(null);
       await load();
+      setShowEditModal(false);
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || 'Failed to update treasure';
-      alert(msg);
+      showToast(msg, 'error');
       await load();
     } finally {
       setSaving(false);
@@ -94,14 +103,17 @@ export default function OwnerTreasures() {
 
   const remove = async (id) => {
     if (!selected) return;
-    if (!confirm('Delete this treasure?')) return;
+    // ask user via app confirm
+    const { confirmAsync } = await import('../../utils/confirm');
+    const ok = await confirmAsync('Delete this treasure?');
+    if (!ok) return;
     try {
       console.debug('Deleting treasure', { hotelId: selected, treasureId: id });
       await hotelService.deleteTreasure(selected, id);
       await load();
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || 'Failed to delete treasure';
-      alert(msg);
+      showToast(msg, 'error');
       await load();
     }
   };
@@ -153,6 +165,61 @@ export default function OwnerTreasures() {
   return (
     <Layout role="owner" title="Hello, Owner" subtitle="Treasures">
       <div className="bg-white rounded-lg shadow p-4 md:p-6">
+        {/* Add/Edit modals rendered at top-level of this card to avoid nesting issues */}
+        <Modal title="Add Treasure" open={showAddModal} onClose={()=>setShowAddModal(false)} size="md">
+          <form onSubmit={submitAdd} className="space-y-3">
+            <input className="border rounded w-full px-3 py-2 text-sm" placeholder="Title"  name="title" value={form.title} onChange={(e)=>setForm(f=>({ ...f, title: e.target.value }))} required />
+            <input className="border rounded w-full px-3 py-2 text-sm" placeholder="Subtitle"  name="subtitle" value={form.subtitle} onChange={(e)=>setForm(f=>({ ...f, subtitle: e.target.value }))} required />
+            <label className="flex items-center gap-2 text-sm">
+              <input name="popular" type="checkbox" checked={form.popular} onChange={(e)=>setForm(f=>({ ...f, popular: e.target.checked }))} /> Popular
+            </label>
+            <label className="inline-block border px-3 py-2 rounded cursor-pointer bg-gray-50 hover:bg-gray-100 transition text-sm">
+              {form.image ? 'Change Image' : 'Choose Image'}
+              <input name="image" type="file" accept="image/*" className="hidden" onChange={(e)=> setForm(f=>({ ...f, image: e.target.files?.[0] || null }))} />
+            </label>
+            {form.image && (
+              <div>
+                <div className="text-sm text-gray-600">Selected: {form.image.name}</div>
+                {addPreview && (
+                  <div className="mt-2">
+                    <img src={addPreview} alt={form.image.name} className="w-32 h-20 object-cover rounded border" />
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <button className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition w-full sm:w-auto" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Add Treasure'}</button>
+              <button type="button" className="px-4 py-2 border rounded text-sm" onClick={()=>setShowAddModal(false)}>Cancel</button>
+            </div>
+          </form>
+        </Modal>
+
+        <Modal title="Edit Treasure" open={showEditModal} onClose={() => { setShowEditModal(false); setEditId(null); setEditingForm({ title:'', subtitle:'', popular:false, image:null }); }} size="md">
+          <form className="space-y-3" onSubmit={(e)=>{ e.preventDefault(); saveEdit(editId); }}>
+            <div className="grid md:grid-cols-3 gap-3 items-center">
+              <input className="border rounded w-full px-3 py-2 text-sm" placeholder="Title"  name="title" value={editingForm.title} onChange={(e)=>setEditingForm(f=>({ ...f, title: e.target.value }))} required />
+              <input className="border rounded w-full px-3 py-2 text-sm" placeholder="Subtitle"  name="subtitle" value={editingForm.subtitle} onChange={(e)=>setEditingForm(f=>({ ...f, subtitle: e.target.value }))} required />
+              <div className="flex items-center gap-2">
+                <input name="popular" type="checkbox" checked={editingForm.popular} onChange={(e)=>setEditingForm(f=>({ ...f, popular: e.target.checked }))} /> <span className="text-sm">Popular</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="inline-block border px-3 py-2 rounded cursor-pointer bg-gray-50 hover:bg-gray-100 transition text-sm">
+                {editingForm.image ? 'Change Image' : 'Choose Image'}
+                <input name="image" type="file" accept="image/*" className="hidden" onChange={(e)=> setEditingForm(f=>({ ...f, image: e.target.files?.[0] || null }))} />
+              </label>
+              <div className="flex-1">
+                {editingPreview ? (
+                  <img src={editingPreview} alt={editingForm.title || 'preview'} className="w-28 h-16 object-cover rounded border" />
+                ) : null}
+              </div>
+              <div className="flex gap-2 ml-auto">
+                <button type="button" className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition" onClick={()=>saveEdit(editId)} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+                <button type="button" className="px-3 py-1.5 border rounded text-sm hover:bg-gray-50 transition" onClick={()=>{ setShowEditModal(false); setEditId(null); setEditingForm({ title:'', subtitle:'', popular:false, image:null }); }}>Cancel</button>
+              </div>
+            </div>
+          </form>
+        </Modal>
         <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
           <label className="text-sm text-gray-600 font-medium">Hotel:</label>
           <select className="border rounded px-3 py-2 w-full sm:w-64 lg:w-80 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"  name="selected" value={selected} onChange={(e)=>setSelected(e.target.value)}>
@@ -165,28 +232,37 @@ export default function OwnerTreasures() {
         <div className="grid lg:grid-cols-2 gap-6">
           <div>
             <div className="font-semibold mb-3 text-lg">Add Treasure</div>
-            <form onSubmit={submitAdd} className="space-y-3">
-              <input className="border rounded w-full px-3 py-2 text-sm" placeholder="Title"  name="title" value={form.title} onChange={(e)=>setForm(f=>({ ...f, title: e.target.value }))} required />
-              <input className="border rounded w-full px-3 py-2 text-sm" placeholder="Subtitle"  name="subtitle" value={form.subtitle} onChange={(e)=>setForm(f=>({ ...f, subtitle: e.target.value }))} required />
-              <label className="flex items-center gap-2 text-sm">
-                <input name="popular" type="checkbox" checked={form.popular} onChange={(e)=>setForm(f=>({ ...f, popular: e.target.checked }))} /> Popular
-              </label>
-              <label className="inline-block border px-3 py-2 rounded cursor-pointer bg-gray-50 hover:bg-gray-100 transition text-sm">
-                {form.image ? 'Change Image' : 'Choose Image'}
-                <input name="image" type="file" accept="image/*" className="hidden" onChange={(e)=> setForm(f=>({ ...f, image: e.target.files?.[0] || null }))} />
-              </label>
-              {form.image && (
-                <div>
-                  <div className="text-sm text-gray-600">Selected: {form.image.name}</div>
-                  {addPreview && (
-                    <div className="mt-2">
-                      <img src={addPreview} alt={form.image.name} className="w-32 h-20 object-cover rounded border" />
-                    </div>
-                  )}
+            <div>
+              <button className="px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition" onClick={()=>setShowAddModal(true)} disabled={!selected}>Add Treasure</button>
+              <div className="text-xs text-gray-500 mt-2">Open the add treasure form in a popup.</div>
+            </div>
+            <Modal title="Add Treasure" open={showAddModal} onClose={()=>setShowAddModal(false)} size="md">
+              <form onSubmit={submitAdd} className="space-y-3">
+                <input className="border rounded w-full px-3 py-2 text-sm" placeholder="Title"  name="title" value={form.title} onChange={(e)=>setForm(f=>({ ...f, title: e.target.value }))} required />
+                <input className="border rounded w-full px-3 py-2 text-sm" placeholder="Subtitle"  name="subtitle" value={form.subtitle} onChange={(e)=>setForm(f=>({ ...f, subtitle: e.target.value }))} required />
+                <label className="flex items-center gap-2 text-sm">
+                  <input name="popular" type="checkbox" checked={form.popular} onChange={(e)=>setForm(f=>({ ...f, popular: e.target.checked }))} /> Popular
+                </label>
+                <label className="inline-block border px-3 py-2 rounded cursor-pointer bg-gray-50 hover:bg-gray-100 transition text-sm">
+                  {form.image ? 'Change Image' : 'Choose Image'}
+                  <input name="image" type="file" accept="image/*" className="hidden" onChange={(e)=> setForm(f=>({ ...f, image: e.target.files?.[0] || null }))} />
+                </label>
+                {form.image && (
+                  <div>
+                    <div className="text-sm text-gray-600">Selected: {form.image.name}</div>
+                    {addPreview && (
+                      <div className="mt-2">
+                        <img src={addPreview} alt={form.image.name} className="w-32 h-20 object-cover rounded border" />
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition w-full sm:w-auto" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Add Treasure'}</button>
+                  <button type="button" className="px-4 py-2 border rounded text-sm" onClick={()=>setShowAddModal(false)}>Cancel</button>
                 </div>
-              )}
-              <button className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition w-full sm:w-auto" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Add Treasure'}</button>
-            </form>
+              </form>
+            </Modal>
           </div>
           <div>
             <div className="font-semibold mb-3 text-lg">Treasures</div>
@@ -198,7 +274,7 @@ export default function OwnerTreasures() {
                 <div className="block md:hidden space-y-3">
                   {(selectedHotel.treasures || []).map(t => {
                     const tid = t._id || t.id;
-                    if (tid === editId) {
+                    if (tid === editId && !showEditModal) {
                       return (
                         <div key={tid} className="border rounded-lg p-3 space-y-2">
                           <form className="space-y-3" onSubmit={(e)=>{ e.preventDefault(); saveEdit(tid); }}>
@@ -263,7 +339,7 @@ export default function OwnerTreasures() {
                     <tbody>
                       {(selectedHotel.treasures || []).map(t => {
                         const tid = t._id || t.id;
-                        if (tid === editId) {
+                        if (tid === editId && !showEditModal) {
                           return (
                             <tr key={tid} className="border-b">
                               <td className="py-2" colSpan={5}>
@@ -321,6 +397,7 @@ export default function OwnerTreasures() {
                   </table>
                 </div>
               </div>
+              
             )}
           </div>
         </div>
