@@ -34,7 +34,12 @@ const bookingSchema = new mongoose.Schema({
   paymentDetails: {
     cardNumber: String,
     bank: String,
-    expDate: String
+    expDate: String,
+    // Stripe identifiers to enable refunds
+    stripePaymentIntentId: String,
+    stripeChargeId: String,
+    // optional: payment method id (can help with support/debug)
+    stripePaymentMethodId: String
   },
   status: {
     type: String,
@@ -67,6 +72,17 @@ const bookingSchema = new mongoose.Schema({
   refundedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  },
+  refundNotes: {
+    type: [
+      {
+        by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        at: { type: Date, default: Date.now },
+        via: { type: String },
+        stripeRefundId: { type: String }
+      }
+    ],
+    default: []
   },
   createdAt: {
     type: Date,

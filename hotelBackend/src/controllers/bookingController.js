@@ -1,5 +1,6 @@
 const Booking = require('../models/Booking');
 const Hotel = require('../models/Hotel');
+const Stripe = require('stripe');
 
 // @desc    Get all bookings
 // @route   GET /api/bookings
@@ -148,6 +149,31 @@ exports.createBooking = async (req, res) => {
     } catch (capErr) {
       console.error('Capacity check error:', capErr);
       // don't block booking on capacity-check error; allow create and log
+    }
+
+    // If paymentDetails contains a Stripe payment intent id, verify payment succeeded
+    if (paymentDetails && paymentDetails.stripePaymentIntentId) {
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(500).json({ success: false, message: 'Stripe secret key not configured on server' });
+      }
+      const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+      try {
+        const pi = await stripe.paymentIntents.retrieve(paymentDetails.stripePaymentIntentId);
+        if (pi.status !== 'succeeded') {
+          return res.status(402).json({ success: false, message: 'Payment not completed' });
+        }
+        // Verify amount roughly matches initialPayment (allow tiny rounding)
+        const expected = Math.round(initialPayment * 100);
+        if (Math.abs((pi.amount || 0) - expected) > 5) {
+          // potential mismatch
+          return res.status(400).json({ success: false, message: 'Payment amount mismatch' });
+        }
+        // store charge id if available
+        paymentDetails.stripeChargeId = (pi.charges && pi.charges.data && pi.charges.data[0] && pi.charges.data[0].id) || null;
+      } catch (err) {
+        console.error('Stripe verify error', err);
+        return res.status(500).json({ success: false, message: 'Error verifying payment' });
+      }
     }
 
     // Create booking
@@ -368,10 +394,45 @@ exports.issueRefund = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Refund already issued' });
     }
 
-    // Simulate refund processing. In production, integrate payment gateway here.
+    // If a Stripe payment intent exists, try to issue a refund through Stripe
+    const stripePaymentIntentId = booking.paymentDetails && booking.paymentDetails.stripePaymentIntentId;
+    let stripeRefund = null;
+    if (stripePaymentIntentId || (booking.paymentDetails && booking.paymentDetails.stripeChargeId)) {
+      if (!process.env.STRIPE_SECRET_KEY) {
+        console.error('Stripe secret key not configured but booking has stripe payment identifiers');
+        return res.status(500).json({ success: false, message: 'Stripe secret key not configured on server' });
+      }
+      try {
+        const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+        const amount = Math.round((booking.refundAmount || 0) * 100);
+        const stripeChargeId = booking.paymentDetails && booking.paymentDetails.stripeChargeId;
+        if (stripeChargeId) {
+          // Prefer refunding the charge id when available
+          stripeRefund = await stripe.refunds.create({ charge: stripeChargeId, amount });
+        } else {
+          // Fall back to refunding by payment_intent
+          stripeRefund = await stripe.refunds.create({ payment_intent: stripePaymentIntentId, amount });
+        }
+      } catch (stripeErr) {
+        console.error('Stripe refund error', stripeErr);
+        return res.status(500).json({ success: false, message: 'Failed to process refund via Stripe', stripeError: stripeErr.message });
+      }
+    } else {
+      // No stripe payment attached: mark refund issued but note that no gateway refund was performed
+      console.warn(`No stripe identifiers for booking ${booking._id}; marking refund as issued without gateway refund.`);
+    }
+
+    // Mark booking refunded (regardless of whether Stripe refund was performed)
     booking.refundStatus = 'issued';
     booking.refundedAt = new Date();
     booking.refundedBy = req.user.id;
+    if (!booking.refundNotes) booking.refundNotes = [];
+    booking.refundNotes.push({
+      by: req.user.id,
+      at: new Date(),
+      via: stripePaymentIntentId ? 'stripe' : 'manual',
+      stripeRefundId: stripeRefund ? stripeRefund.id : null
+    });
     await booking.save();
 
     const populated = await Booking.findById(booking._id)

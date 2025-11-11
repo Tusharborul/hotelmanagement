@@ -1,6 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { bookingService } from "../services/bookingService";
+import { paymentService } from "../services/paymentService";
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 
 const Payment = () => {
   const navigate = useNavigate();
@@ -9,12 +14,7 @@ const Payment = () => {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [paymentData, setPaymentData] = useState({
-    cardNumber: '',
-    bank: '',
-    expDate: '',
-    cvv: ''
-  });
+  const [clientSecret, setClientSecret] = useState(null);
 
   // Calculate check-out date
   let checkOutDate = '';
@@ -24,59 +24,122 @@ const Payment = () => {
     checkOutDate = dateObj.toISOString().split('T')[0];
   }
 
-  const handleInputChange = (e) => {
-    setPaymentData({
-      ...paymentData,
-      [e.target.name]: e.target.value
-    });
+  // Note: We intentionally do NOT create a PaymentIntent on mount to avoid duplicate intents.
+  // We will create it only when the user clicks Pay.
+
+  const handleCancel = () => {
+    if (hotelId) navigate(`/booking?hotelId=${hotelId}`);
+    else navigate('/home');
   };
 
-  const handlePayment = async () => {
-    if (!hotelId) {
-      setError('Hotel information is missing. Please go back and select a hotel.');
-      return;
-    }
+  const CheckoutForm = () => {
+    const stripe = useStripe();
+    const elements = useElements();
 
-    // Basic validation
-    if (!paymentData.cardNumber || !paymentData.bank || !paymentData.expDate || !paymentData.cvv) {
-      setError('Please fill in all payment details');
-      return;
-    }
+    const [processing, setProcessing] = useState(false);
 
-    setLoading(true);
-    setError('');
-
-    try {
-      const bookingData = {
-        hotel: hotelId,
-        checkInDate,
-        checkOutDate,
-        days,
-        totalPrice,
-        initialPayment: Math.round(totalPrice / 2),
-        paymentDetails: {
-          cardNumber: paymentData.cardNumber.slice(-4), // Only store last 4 digits
-          bank: paymentData.bank,
-          expDate: paymentData.expDate
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setError('');
+      if (!stripe || !elements) return;
+      setProcessing(true);
+      try {
+        // 1) Create PaymentIntent right now (single API call on click)
+        const initialPayment = Math.round(totalPrice / 2);
+        const intentResp = await paymentService.createPaymentIntent({ amount: initialPayment, currency: 'usd', metadata: { hotelId } });
+        const secret = intentResp?.data?.clientSecret || intentResp?.clientSecret;
+        if (!secret) {
+          setError('Could not start payment. Please try again.');
+          setProcessing(false);
+          return;
         }
-      };
+        setClientSecret(secret);
 
-      await bookingService.createBooking(bookingData);
-      
-      // Navigate to success page
-      navigate("/sucess", { 
-        state: { 
-          hotelName, 
-          hotelLocation,
-          checkInDate, 
-          checkOutDate 
-        } 
-      });
-    } catch (err) {
-      setError(err.response?.data?.message || 'Payment failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+        const card = elements.getElement(CardElement);
+        // 2) Confirm the card payment using the freshly created secret
+        const result = await stripe.confirmCardPayment(secret, {
+          payment_method: { card }
+        });
+
+        if (result.error) {
+          setError(result.error.message || 'Payment failed.');
+          setProcessing(false);
+          return;
+        }
+
+        if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
+          // 3) Create booking on server and attach paymentIntent id
+          const bookingData = {
+            hotel: hotelId,
+            checkInDate,
+            checkOutDate,
+            days,
+            totalPrice,
+            initialPayment: Math.round(totalPrice / 2),
+            paymentDetails: {
+              stripePaymentIntentId: result.paymentIntent.id,
+              cardNumber: (result.paymentIntent.charges?.data?.[0]?.payment_method_details?.card?.last4) || ''
+            }
+          };
+
+          const created = await bookingService.createBooking(bookingData);
+
+          // 4) Ensure identifiers are persisted on the booking and PI metadata includes bookingId
+          try {
+            const createdId = created?.data?._id || created?.data?.id || created?._id || created?.id;
+            if (createdId) {
+              await paymentService.attachBooking({ bookingId: createdId, paymentIntentId: result.paymentIntent.id });
+            }
+          } catch (metaErr) {
+            // Non-fatal; continue navigation. This improves refund reliability.
+            console.warn('Failed to attach booking to PI metadata', metaErr);
+          }
+
+          navigate('/sucess', {
+            state: { hotelName, hotelLocation, checkInDate, checkOutDate }
+          });
+        } else {
+          setError('Payment was not completed.');
+        }
+      } catch (err) {
+        console.error('payment/process', err);
+        setError(err.response?.data?.message || 'Payment failed. Please try again.');
+      } finally {
+        setProcessing(false);
+      }
+    };
+
+    return (
+      <form onSubmit={handleSubmit} className="w-full">
+        <label className="block text-[#1a237e] font-semibold mb-2 text-sm sm:text-base">Card details</label>
+        <div className="bg-gray-100 rounded-lg p-3 mb-4">
+          {/* Disable Stripe Link button to avoid aria-hidden warning from collapsing Link UI */}
+          <CardElement
+            options={{
+              style: { base: { fontSize: '16px' } },
+              disableLink: true,
+            }}
+          />
+        </div>
+        {error && <div className="text-red-500 mb-3">{error}</div>}
+        <div className="flex flex-col items-center w-full max-w-xs mx-auto gap-3 sm:gap-4 mb-8">
+          <button
+            className="bg-[#0057FF] text-white text-base sm:text-lg font-medium rounded-lg py-2.5 sm:py-3 w-full shadow hover:bg-[#003bb3] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            type="submit"
+            disabled={processing || !stripe}
+          >
+            {processing ? 'Processing...' : `Pay $${Math.round(totalPrice / 2)} Now`}
+          </button>
+          <button
+            className="bg-gray-100 text-gray-400 text-base sm:text-lg font-medium rounded-lg py-2.5 sm:py-3 w-full shadow"
+            type="button"
+            onClick={handleCancel}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    );
   };
   return (
     <div className="w-full min-h-screen flex flex-col items-center bg-white pt-4 sm:pt-6 md:pt-8 px-4 sm:px-6">
@@ -129,71 +192,15 @@ const Payment = () => {
         </div>
 
         {/* Right: Payment Form */}
-        <form className="flex flex-col gap-4 sm:gap-6 w-full sm:max-w-md mx-auto lg:mx-0">
-          <div>
-            <label className="block text-[#1a237e] font-semibold mb-2 text-sm sm:text-base">Card Number</label>
-            <input
-              type="text"
-              name="cardNumber"
-              value={paymentData.cardNumber}
-              onChange={handleInputChange}
-              placeholder="Payment card number"
-              className="bg-gray-100 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-[#1a237e] font-semibold mb-2 text-sm sm:text-base">Bank</label>
-            <input
-              type="text"
-              name="bank"
-              value={paymentData.bank}
-              onChange={handleInputChange}
-              placeholder="Select Bank"
-              className="bg-gray-100 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-[#1a237e] font-semibold mb-2 text-sm sm:text-base">Exp Date</label>
-            <input
-              type="text"
-              name="expDate"
-              value={paymentData.expDate}
-              onChange={handleInputChange}
-              placeholder="MM/YY"
-              className="bg-gray-100 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-[#1a237e] font-semibold mb-2 text-sm sm:text-base">CVV</label>
-            <input
-              type="text"
-              name="cvv"
-              value={paymentData.cvv}
-              onChange={handleInputChange}
-              placeholder="Beside the card"
-              className="bg-gray-100 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-            />
-          </div>
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-        </form>
+        <div className="flex flex-col gap-4 sm:gap-6 w-full sm:max-w-md mx-auto lg:mx-0">
+          <Elements stripe={stripePromise}>
+            <CheckoutForm />
+          </Elements>
+        </div>
       </div>
 
-      {/* Buttons */}
-      <div className="flex flex-col items-center w-full max-w-xs mx-auto gap-3 sm:gap-4 mb-8">
-        <button 
-          className="bg-[#0057FF] text-white text-base sm:text-lg font-medium rounded-lg py-2.5 sm:py-3 w-full shadow hover:bg-[#003bb3] transition disabled:opacity-50 disabled:cursor-not-allowed" 
-          onClick={handlePayment}
-          disabled={loading}
-        >
-          {loading ? 'Processing...' : 'Pay Now'}
-        </button>
-        <button 
-          className="bg-gray-100 text-gray-400 text-base sm:text-lg font-medium rounded-lg py-2.5 sm:py-3 w-full shadow" 
-          onClick={() => hotelId ? navigate(`/booking?hotelId=${hotelId}`) : navigate("/home")}
-        >
-          Cancel
-        </button>
-      </div>
+      {/* Footer spacing - checkout form contains its own buttons */}
+      <div style={{ height: 24 }} />
     </div>
   );
 };

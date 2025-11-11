@@ -44,7 +44,8 @@ export const adminService = {
   }
   ,
   issueRefund: async (bookingId) => {
-    const res = await api.post(`/bookings/${bookingId}/refund`);
+    // Use payments refund endpoint which returns Stripe refund details when available
+    const res = await api.post(`/payments/refund`, { bookingId });
     return res.data;
   }
 };

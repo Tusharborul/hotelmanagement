@@ -102,7 +102,6 @@ export default function AdminUsers() {
           <button disabled={page>=Math.ceil(total/limit)} onClick={()=>load(page+1)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Next</button>
         </div>
       </div>
-      {/* Edit User Modal */}
       <Modal title="Edit User" open={showEditModal} onClose={()=>{ setShowEditModal(false); setEditRow(null); }} size="md">
         <div className="space-y-3">
           <label className="text-xs text-gray-600">Username</label>

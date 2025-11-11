@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import person from "../assets/Logos/Vector.png";
 import location from "../assets/Logos/add_location_alt.png";
 import calendar from "../assets/Logos/Frame.png";
-import arrowDown from "../assets/Logos/arrow-down.png";
 import { hotelService } from '../services/hotelService';
 
 

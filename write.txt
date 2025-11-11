@@ -1,1 +1,0 @@
-if any hotel is book and after that hotelowner delete the hotel or admin reject/ panding the statue then give the refund of that user of there booking automatically
