@@ -1,8 +1,6 @@
-@import "tailwindcss";
-
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities; */
+@import "tailwindcss/preflight";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 /* Optional: Use Inter font for a modern look */
 body {
