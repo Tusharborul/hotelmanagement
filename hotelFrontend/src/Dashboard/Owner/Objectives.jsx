@@ -153,7 +153,6 @@ export default function OwnerObjectives() {
 
   return (
     <Layout role="owner" title="Hello, Owner" subtitle="Objectives">
-      <div className="bg-white rounded-lg shadow p-4 md:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
           <div className="font-semibold text-lg">Your Properties</div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -375,7 +374,7 @@ export default function OwnerObjectives() {
             ))}
           </div>
         )}
-      </div>
+      
     </Layout>
   );
 }

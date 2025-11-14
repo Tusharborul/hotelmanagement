@@ -2,80 +2,64 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { hotelService } from '../../services/hotelService';
 import { bookingService } from '../../services/bookingService';
+import FilterControls from '../components/FilterControls';
 
 export default function OwnerBookings() {
   const [hotels, setHotels] = useState([]);
   const [selected, setSelected] = useState('');
   const [date, setDate] = useState('');
+  const [start, setStart] = useState('');
+  const [end, setEnd] = useState('');
+  const [field, setField] = useState('created');
   const [bookings, setBookings] = useState([]);
 
   useEffect(()=>{ (async()=>{
     const res = await hotelService.getMyHotels();
     setHotels(res.data || []);
-    // default to "All Hotels" (empty selection) instead of auto-selecting the first hotel
   })(); },[]);
 
+  // Initial load when hotels list changes. Subsequent filter changes are applied immediately
+  // via `applyFilter` called from onChange handlers to avoid waiting for setState.
   useEffect(()=>{ (async()=>{
-    // load bookings for either selected hotel or all hotels
-    const loadBookings = async () => {
-      try {
-        if (!selected) {
-          // aggregate bookings for all hotels and attach hotel info when missing
-          const all = [];
-          for (const h of (hotels || [])) {
-            try {
-              const r = await bookingService.getHotelBookings(h._id);
-              const list = Array.isArray(r) ? r : (r?.data || []);
-              // ensure each booking has hotel info for display
-              const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: h._id, name: h.name }, hotelName: (b.hotel && b.hotel.name) || h.name }));
-              all.push(...mapped);
-            } catch (err) {
-              console.warn('Failed to load bookings for hotel', h._id, err);
-            }
-          }
-          setBookings(filterByDate(all, date));
-        } else {
-          const r = await bookingService.getHotelBookings(selected);
-          const list = Array.isArray(r) ? r : (r?.data || []);
-          // Attach hotel info for display when fetching for a single selected hotel
-          const hotelMeta = (hotels || []).find(h => h._id === selected) || { _id: selected, name: '' };
-          const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: hotelMeta._id, name: hotelMeta.name }, hotelName: (b.hotel && b.hotel.name) || hotelMeta.name }));
-          setBookings(filterByDate(mapped, date));
-        }
-      } catch (err) { console.error('Failed to load bookings', err); setBookings([]); }
-    };
+    if (!hotels || hotels.length === 0) return;
+    await applyFilter();
+  })(); }, [hotels]);
 
-    loadBookings();
-  })(); }, [selected, hotels]);
-
-  // helper to filter list by date (if date provided)
-  const filterByDate = (list, selectedDate) => {
-    if (!selectedDate) return list;
+  // helper to filter list by start/end and field (created or checkin)
+  const filterByRange = (list, s, e, f) => {
+    if (!s && !e) return list;
     try {
-      const target = new Date(selectedDate).toDateString();
+      const ss = s ? new Date(s) : null;
+      const ee = e ? (() => { const d = new Date(e); d.setHours(23,59,59,999); return d; })() : null;
       return (list || []).filter(b => {
-        if (!b.checkInDate) return false;
-        return new Date(b.checkInDate).toDateString() === target;
+        const val = f === 'checkin' ? b.checkInDate : b.createdAt;
+        if (!val) return false;
+        const d = new Date(val);
+        if (ss && d < ss) return false;
+        if (ee && d > ee) return false;
+        return true;
       });
     } catch (err) {
       return list;
     }
   };
 
-  // provide a manual filter action (useful when changing date)
-  const applyFilter = async () => {
-    // trigger the same load logic by setting selected to itself (causes useEffect)
-    if (selected) {
-      // direct call for performance
+  // provide a manual filter action (accepts overrides for immediate filtering)
+  const applyFilter = async (overrides = {}) => {
+    const sel = overrides.selected !== undefined ? overrides.selected : selected;
+    const s = overrides.start !== undefined ? overrides.start : start;
+    const e = overrides.end !== undefined ? overrides.end : end;
+    const f = overrides.field !== undefined ? overrides.field : field;
+
+    if (sel) {
       try {
-        const r = await bookingService.getHotelBookings(selected);
+        const r = await bookingService.getHotelBookings(sel);
         const list = Array.isArray(r) ? r : (r?.data || []);
-        const hotelMeta = (hotels || []).find(h => h._id === selected) || { _id: selected, name: '' };
+        const hotelMeta = (hotels || []).find(h => h._id === sel) || { _id: sel, name: '' };
         const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: hotelMeta._id, name: hotelMeta.name }, hotelName: (b.hotel && b.hotel.name) || hotelMeta.name }));
-        setBookings(filterByDate(mapped, date));
+        setBookings(filterByRange(mapped, s, e, f));
       } catch (err) { console.error(err); }
     } else {
-      // aggregate and attach hotel info
       const all = [];
       for (const h of (hotels || [])) {
         try {
@@ -85,44 +69,29 @@ export default function OwnerBookings() {
           all.push(...mapped);
         } catch (err) { /* ignore per-hotel errors */ }
       }
-      setBookings(filterByDate(all, date));
+      setBookings(filterByRange(all, s, e, f));
     }
   };
 
-  const clearFilter = () => { setDate(''); applyFilter(); };
+  const clearFilter = () => { setDate(''); setStart(''); setEnd(''); setField('created'); setSelected(''); applyFilter({ start: '', end: '', field: 'created', selected: '' }); };
 
   return (
     <Layout role="owner" title="Hello, Owner" subtitle="Bookings">
-      <div className="bg-white rounded-lg shadow p-4 md:p-6">
+      
         <div className="mb-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
-            <div className="w-full sm:w-72">
-              <label className="block text-sm text-gray-600 mb-1 font-medium">Select Hotel</label>
-              <select
-                className="border rounded-md px-3 py-2 w-full h-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                 name="selected" value={selected}
-                onChange={(e)=>setSelected(e.target.value)}
-              >
-                <option value="">All Hotels</option>
-                {hotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
-              </select>
-            </div>
-
-            <div className="w-full sm:w-48">
-              <label className="block text-sm text-gray-600 mb-1 font-medium">Date</label>
-              <input
-                type="date"
-                className="border rounded-md px-3 py-2 w-full h-10 text-sm"
-                 name="date" value={date}
-                onChange={(e)=>setDate(e.target.value)}
-              />
-            </div>
-
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button onClick={applyFilter} className="px-4 h-10 bg-blue-600 text-white rounded-md text-sm shadow-sm hover:bg-blue-700 w-full sm:w-auto">Filter</button>
-              <button onClick={clearFilter} className="px-4 h-10 border rounded-md text-sm w-full sm:w-auto">Clear</button>
-            </div>
-          </div>
+          <FilterControls
+            start={start}
+            end={end}
+            field={field}
+            selectedHotel={selected}
+            hotels={hotels}
+            onChangeStart={(v) => { setStart(v); applyFilter({ start: v }); }}
+            onChangeEnd={(v) => { setEnd(v); applyFilter({ end: v }); }}
+            onChangeField={(v) => { setField(v); applyFilter({ field: v }); }}
+            onChangeSelectedHotel={(v) => { setSelected(v); applyFilter({ selected: v }); }}
+            onReset={clearFilter}
+            onFilter={() => applyFilter()}
+          />
         </div>
 
         <div className="space-y-3">
@@ -187,7 +156,7 @@ export default function OwnerBookings() {
             </table>
           </div>
         </div>
-      </div>
+  
     </Layout>
   );
 }

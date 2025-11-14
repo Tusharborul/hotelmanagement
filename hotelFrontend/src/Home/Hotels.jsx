@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { hotelService } from "../services/hotelService";
 import Header from "../head";
 import SearchBar from "./SearchBar";
@@ -7,16 +7,15 @@ import getImageUrl from '../utils/getImageUrl';
 
 const Hotels = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [hotels, setHotels] = useState([]);
   const [filteredHotels, setFilteredHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  // Get search parameters
-  const date = searchParams.get("date") || "";
-  const persons = searchParams.get("persons") || "2";
-  const location = searchParams.get("location") || "";
+  const [filters, setFilters] = useState({
+    date: "",
+    persons: 2,
+    location: ""
+  });
 
   useEffect(() => {
     fetchHotels();
@@ -24,7 +23,7 @@ const Hotels = () => {
 
   useEffect(() => {
     filterHotels();
-  }, [hotels, location]);
+  }, [hotels, filters]);
 
   const fetchHotels = async () => {
     try {
@@ -44,13 +43,19 @@ const Hotels = () => {
     let filtered = [...hotels];
 
     // Filter by location if specified
-    if (location) {
+    if (filters.location) {
       filtered = filtered.filter((hotel) =>
-        hotel.location.toLowerCase().includes(location.toLowerCase())
+        hotel.location.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
+    // You can add more filters here (date, persons, etc.)
+
     setFilteredHotels(filtered);
+  };
+
+  const handleSearchFilter = (searchFilters) => {
+    setFilters(searchFilters);
   };
 
   // use shared helper
@@ -75,21 +80,24 @@ const Hotels = () => {
       <Header />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* SearchBar with filter callback */}
+        <SearchBar onSearch={handleSearchFilter} />
+
         {/* Search Info */}
         {/* <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Available Hotels
           </h1>
           <div className="text-gray-600">
-            {location && <span className="font-medium">Location: {location}</span>}
-            {date && <span className="ml-4">Check-in: {date}</span>}
-            {persons && <span className="ml-4">Persons: {persons}</span>}
+            {filters.location && <span className="font-medium">Location: {filters.location}</span>}
+            {filters.date && <span className="ml-4">Check-in: {filters.date}</span>}
+            {filters.persons && <span className="ml-4">Persons: {filters.persons}</span>}
           </div>
           <p className="text-gray-500 mt-2">
             Found {filteredHotels.length} hotel{filteredHotels.length !== 1 ? "s" : ""}
           </p>
         </div> */}
-      <SearchBar />
+
         {/* Error Message */}
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">

@@ -23,7 +23,7 @@ export default function UserRefunds() {
 
   return (
     <Layout role="user" title="Hello, User" subtitle="Refunds">
-      <div className="bg-white rounded-lg shadow p-4 md:p-6">
+     
         <div className="font-semibold mb-4 text-lg">Your Refunds</div>
         {loading ? (
           <div className="text-gray-500">Loading refunds...</div>
@@ -114,7 +114,7 @@ export default function UserRefunds() {
             </div>
           </div>
         )}
-      </div>
+    
     </Layout>
   );
 }

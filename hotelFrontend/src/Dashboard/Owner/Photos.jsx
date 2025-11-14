@@ -67,7 +67,6 @@ export default function OwnerPhotos() {
 
   return (
     <Layout role="owner" title="Hello, Owner" subtitle="Photos">
-      <div className="bg-white rounded-lg shadow p-4 md:p-6">
         <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
           <label className="text-sm text-gray-600 font-medium">Hotel:</label>
           <select className="border rounded px-3 py-2 w-full sm:w-64 lg:w-80 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"  name="selected" value={selected} onChange={(e)=>setSelected(e.target.value)}>
@@ -124,7 +123,7 @@ export default function OwnerPhotos() {
             </section>
           </div>
         )}
-      </div>
+      
     </Layout>
   );
 }

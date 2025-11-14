@@ -18,7 +18,7 @@ export default function UserBookings() {
 
   return (
     <Layout role="user" title="Hello, User" subtitle="Bookings">
-      <div className="bg-white rounded-lg shadow p-4 md:p-6">
+      
         <div className="font-semibold mb-4 text-lg">Your Bookings</div>
         {loading ? (
           <div className="text-gray-500">Loading...</div>
@@ -85,7 +85,7 @@ export default function UserBookings() {
             </div>
           </div>
         )}
-      </div>
+     
     </Layout>
   );
 }

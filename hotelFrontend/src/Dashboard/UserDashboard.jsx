@@ -84,7 +84,7 @@ const UserDashboard = () => {
 
   return (
     <Layout role="user" title="Hello, User" subtitle="John Wick">
-      <div className="bg-white rounded-lg shadow p-6">
+      <div >
         <div className="font-semibold mb-4">Booking List</div>
         {loading ? (
           <div className="text-gray-500">Loading bookings...</div>

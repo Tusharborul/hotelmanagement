@@ -3,11 +3,18 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { hotelService } from '../../services/hotelService';
 import { bookingService } from '../../services/bookingService';
+import FilterControls from '../components/FilterControls';
 
 export default function OwnerRefunds() {
 	const [hotels, setHotels] = useState([]);
 	const [selected, setSelected] = useState('');
+	const [start, setStart] = useState('');
+	const [end, setEnd] = useState('');
+	const [field, setField] = useState('created');
 	const [data, setData] = useState([]);
+	const [page, setPage] = useState(1);
+	const [total, setTotal] = useState(0);
+	const limit = 20;
 	const [loading, setLoading] = useState(false);
 
 	const loadHotels = async () => {
@@ -21,54 +28,87 @@ export default function OwnerRefunds() {
 		}
 	};
 
-	const loadRefunds = async (hotelId) => {
-			setLoading(true);
-			try {
-				if (!hotelId) {
-					// aggregate across all hotels
-					const all = [];
-					for (const h of (hotels || [])) {
-						try {
-							const res = await bookingService.getHotelBookings(h._id);
-							const list = Array.isArray(res) ? res : (res?.data || []);
-							const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: h._id, name: h.name }, hotelName: (b.hotel && b.hotel.name) || h.name }));
-							all.push(...mapped);
-						} catch (err) {
-							console.warn('Failed to load bookings for hotel', h._id, err);
-						}
+	const loadRefunds = async (p = 1, overrides = {}) => {
+		setLoading(true);
+		try {
+			const sel = overrides.selected !== undefined ? overrides.selected : selected;
+			const s = overrides.start !== undefined ? overrides.start : start;
+			const e = overrides.end !== undefined ? overrides.end : end;
+			const f = overrides.field !== undefined ? overrides.field : field;
+
+			// helper to check date range for createdAt or checkInDate
+			const inRange = (b) => {
+				if (!s && !e) return true;
+				const val = f === 'checkin' ? b.checkInDate : b.createdAt;
+				if (!val) return false;
+				const d = new Date(val);
+				const ss = s ? new Date(s) : null;
+				const ee = e ? (() => { const dd = new Date(e); dd.setHours(23,59,59,999); return dd; })() : null;
+				if (ss && d < ss) return false;
+				if (ee && d > ee) return false;
+				return true;
+			};
+
+			let all = [];
+			if (sel) {
+				// load selected hotel bookings
+				const res = await bookingService.getHotelBookings(sel);
+				const list = Array.isArray(res) ? res : (res?.data || []);
+				all = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: sel, name: (hotels.find(x=>x._id===sel)?.name) || '' } }));
+			} else {
+				// aggregate across owner's hotels
+				for (const h of (hotels || [])) {
+					try {
+						const res = await bookingService.getHotelBookings(h._id);
+						const list = Array.isArray(res) ? res : (res?.data || []);
+						const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: h._id, name: h.name } }));
+						all.push(...mapped);
+					} catch (err) {
+						console.warn('Failed to load bookings for hotel', h._id, err);
 					}
-					const refunds = all.filter(b => Number(b.refundAmount || 0) > 0 || (b.refundStatus && b.refundStatus !== 'none'));
-					setData(refunds);
-				} else {
-					const res = await bookingService.getHotelBookings(hotelId);
-					const list = Array.isArray(res) ? res : (res?.data || []);
-					const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: hotelId, name: (hotels.find(x=>x._id===hotelId)?.name) || '' }, hotelName: (b.hotel && b.hotel.name) || (hotels.find(x=>x._id===hotelId)?.name) || '' }));
-					const refunds = mapped.filter(b => Number(b.refundAmount || 0) > 0 || (b.refundStatus && b.refundStatus !== 'none'));
-					setData(refunds);
 				}
-			} catch (err) {
-				console.error('Failed to load refunds for hotel', err);
-				setData([]);
-			} finally { setLoading(false); }
-		};
+			}
+
+			// filter refunds and by range
+			const refunds = (all || []).filter(b => (Number(b.refundAmount || 0) > 0 || (b.refundStatus && b.refundStatus !== 'none')) && inRange(b));
+
+			// pagination: when aggregating (or even for single hotel), slice client-side
+			const tot = refunds.length;
+			const startIdx = (p - 1) * limit;
+			const pageItems = refunds.slice(startIdx, startIdx + limit);
+
+			setData(pageItems);
+			setTotal(tot);
+			setPage(p);
+		} catch (err) {
+			console.error('Failed to load refunds for hotel', err);
+			setData([]);
+		} finally { setLoading(false); }
+	};
 
 	useEffect(()=>{ loadHotels(); }, []);
-	// run refunds loader when selection or hotels list changes so default (empty selection) aggregates across hotels
-	useEffect(()=>{ loadRefunds(selected); }, [selected, hotels]);
+	// when hotels load, run refunds loader (aggregated) with current filters
+	useEffect(()=>{ if (hotels && hotels.length) loadRefunds(1); }, [hotels]);
+	// also run when selected changes
+	useEffect(()=>{ loadRefunds(1, { selected }); }, [selected]);
 
 	return (
 		<Layout role="owner" title="Hello, Owner" subtitle="Refunds">
-			<div className="bg-white rounded-lg shadow p-4 md:p-6">
-				<div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
-					<div className="w-full sm:w-auto">
-						<label className="text-sm text-gray-600 block mb-1">Hotel</label>
-						<select  name="selected" value={selected} onChange={(e)=>setSelected(e.target.value)} className="border rounded px-3 py-2 w-full sm:w-64 lg:w-80 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-							<option value="">All Hotels</option>
-							{hotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
-						</select>
-					</div>
-
-					</div>
+				<div>
+					<FilterControls
+						start={start}
+						end={end}
+						field={field}
+						selectedHotel={selected}
+						hotels={hotels}
+						onChangeStart={(v) => { setStart(v); loadRefunds(1, { start: v }); }}
+						onChangeEnd={(v) => { setEnd(v); loadRefunds(1, { end: v }); }}
+						onChangeField={(v) => { setField(v); loadRefunds(1, { field: v }); }}
+						onChangeSelectedHotel={(v) => { setSelected(v); loadRefunds(1, { selected: v }); }}
+						onReset={() => { setStart(''); setEnd(''); setField('created'); setSelected(''); loadRefunds(1, { start: '', end: '', field: 'created', selected: '' }); }}
+						onFilter={() => loadRefunds(1)}
+					/>
+				</div>
 
 				{loading ? (
 					<div className="text-gray-500">Loading refunds...</div>
@@ -151,7 +191,7 @@ export default function OwnerRefunds() {
 						</div>
 					</div>
 				)}
-			</div>
+			
 		</Layout>
 	);
 }

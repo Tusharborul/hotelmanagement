@@ -40,7 +40,7 @@ export default function AdminOwners() {
 
   return (
     <Layout role="admin" title="Hello, Admin" subtitle="Hotel Owners">
-      <div className="bg-white rounded-lg shadow p-4 md:p-6">
+    
         <div className="font-semibold mb-4 text-lg">Owners (role: hotelOwner)</div>
         {loading ? (
           <div className="text-gray-500">Loading...</div>
@@ -138,7 +138,7 @@ export default function AdminOwners() {
           <div className="text-sm">Page {page} / {Math.max(1, Math.ceil(total/limit))}</div>
           <button disabled={page>=Math.ceil(total/limit)} onClick={()=>load(page+1)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Next</button>
         </div>
-      </div>
+    
       {/* Edit Owner Modal */}
       <Modal title="Edit Owner" open={showEditModal} onClose={()=>{ setShowEditModal(false); setEditId(null); }} size="md">
         <div className="space-y-3">

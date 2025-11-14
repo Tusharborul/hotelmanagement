@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import FilterControls from '../components/FilterControls';
 import Layout from '../components/Layout';
 import { adminService } from '../../services/adminService';
 
@@ -13,36 +14,51 @@ export default function AdminBookingDetails() {
   const [total, setTotal] = useState(0);
   const limit = 20;
 
-  const load = async (p=1) => {
-    const res = await adminService.getBookings({ start, end, page: p, limit, field: field === 'checkin' ? 'checkin' : undefined });
+  // load supports overrides so callers can trigger filtering immediately
+  const load = async (p = 1, overrides = {}) => {
+    const s = overrides.start !== undefined ? overrides.start : start;
+    const e = overrides.end !== undefined ? overrides.end : end;
+    const sel = overrides.selectedHotel !== undefined ? overrides.selectedHotel : selectedHotel;
+    const f = overrides.field !== undefined ? overrides.field : field;
+
+    const res = await adminService.getBookings({ start: s, end: e, page: p, limit, field: f === 'checkin' ? 'checkin' : undefined });
     let items = res.data || [];
 
     // client-side hotel filter: if selectedHotel is empty -> all hotels
-    if (selectedHotel) {
-      items = (items || []).filter(b => (b.hotel && (b.hotel._id || b.hotel.id) === selectedHotel) || b.hotelId === selectedHotel);
+    if (sel) {
+      items = (items || []).filter(b => (b.hotel && (b.hotel._id || b.hotel.id) === sel) || b.hotelId === sel);
     }
 
     // Client-side fallback: if 'checkin' filter selected, ensure we filter by booking.checkInDate
-    if (field === 'checkin' && (start || end)) {
-      const s = start ? new Date(start) : null;
-      const e = end ? (() => { const d = new Date(end); d.setHours(23,59,59,999); return d; })() : null;
+    if (f === 'checkin' && (s || e)) {
+      const ss = s ? new Date(s) : null;
+      const ee = e ? (() => { const d = new Date(e); d.setHours(23,59,59,999); return d; })() : null;
       items = (items || []).filter(b => {
         if (!b.checkInDate) return false;
         const d = new Date(b.checkInDate);
-        if (s && d < s) return false;
-        if (e && d > e) return false;
+        if (ss && d < ss) return false;
+        if (ee && d > ee) return false;
         return true;
       });
     }
 
     setData(items);
     // If we performed client-side filtering, update total to the filtered count so pagination reflects results
-    setTotal((field === 'checkin' && (start || end)) ? items.length : (selectedHotel ? items.length : res.total));
+    setTotal((f === 'checkin' && (s || e)) ? items.length : (sel ? items.length : res.total));
     setPage(res.page);
   };
 
-  useEffect(()=>{ load(1); }, [selectedHotel]);
+  // initial load
+  useEffect(()=>{ load(1); }, []);
 
+  const onReset = () => {
+    // clear state and trigger load with overrides so API call uses cleared values immediately
+    setStart('');
+    setEnd('');
+    setField('created');
+    setSelectedHotel('');
+    load(1, { start: '', end: '', field: 'created', selectedHotel: '' });
+  };
   useEffect(()=>{
     (async ()=>{
       try {
@@ -58,32 +74,20 @@ export default function AdminBookingDetails() {
 
   return (
     <Layout role="admin" title="Hello, Admin" subtitle="Booking Details">
-      <div className="bg-white rounded-lg shadow p-4 md:p-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 mb-4">
-          <div className="w-full sm:w-auto">
-            <label className="text-sm text-gray-600 block mb-1">Start</label>
-            <input type="date" className="border rounded px-3 py-1.5 w-full text-sm"  name="start" value={start} onChange={(e)=>setStart(e.target.value)} />
-          </div>
-          <div className="w-full sm:w-auto">
-            <label className="text-sm text-gray-600 block mb-1">End</label>
-            <input type="date" className="border rounded px-3 py-1.5 w-full text-sm"  name="end" value={end} onChange={(e)=>setEnd(e.target.value)} />
-          </div>
-          <div className="w-full sm:w-auto">
-            <label className="text-sm text-gray-600 block mb-1">Filter by</label>
-            <select  name="field" value={field} onChange={(e)=>setField(e.target.value)} className="border rounded px-3 py-1.5 w-full text-sm">
-              <option value="created">Created</option>
-              <option value="checkin">Check-in</option>
-            </select>
-          </div>
-          <div className="w-full sm:w-auto">
-            <label className="text-sm text-gray-600 block mb-1">Hotel</label>
-            <select name="hotel" value={selectedHotel} onChange={(e) => setSelectedHotel(e.target.value)} className="border rounded px-3 py-1.5 w-full text-sm">
-              <option value="">All Hotels</option>
-              {hotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
-            </select>
-          </div>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded w-full sm:w-auto text-sm" onClick={()=>load(1)}>Filter</button>
-        </div>
+      
+        <FilterControls
+          start={start}
+          end={end}
+          field={field}
+          selectedHotel={selectedHotel}
+          hotels={hotels}
+          onChangeStart={(v) => { setStart(v); load(1, { start: v }); }}
+          onChangeEnd={(v) => { setEnd(v); load(1, { end: v }); }}
+          onChangeField={(v) => { setField(v); load(1, { field: v }); }}
+          onChangeSelectedHotel={(v) => { setSelectedHotel(v); load(1, { selectedHotel: v }); }}
+          onReset={onReset}
+          onFilter={() => load(1)}
+        />
 
         <div className="space-y-3">
           {/* Mobile card view */}
@@ -171,7 +175,7 @@ export default function AdminBookingDetails() {
           <div className="text-sm">Page {page} / {Math.max(1, Math.ceil(total/limit))}</div>
           <button disabled={page>=Math.ceil(total/limit)} onClick={()=>load(page+1)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Next</button>
         </div>
-      </div>
+   
     </Layout>
   );
 }

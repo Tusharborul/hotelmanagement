@@ -57,7 +57,7 @@ export default function AdminHotels(){
 
   return (
     <Layout role="admin" title="Hello, Admin" subtitle="Hotels">
-      <div className="bg-white rounded-lg shadow p-4 md:p-6">
+    
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
           <div className="font-semibold text-lg">Hotels</div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -163,7 +163,7 @@ export default function AdminHotels(){
           <div className="text-sm">Page {page} / {Math.max(1, Math.ceil(total/limit))}</div>
           <button disabled={page>=Math.ceil(total/limit)} onClick={()=>load(page+1, filter)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Next</button>
         </div>
-      </div>
+     
     </Layout>
   );
 }

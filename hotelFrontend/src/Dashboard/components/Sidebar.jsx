@@ -56,10 +56,10 @@ export default function Sidebar({ role = 'user', isOpen, onClose }) {
       <aside className={`
         fixed inset-y-0 left-0 z-30
         w-64 lg:w-72 xl:w-80
-        bg-white border-r border-gray-200 shadow-lg lg:shadow-none
+        bg-white border-r border-gray-200 shadow-lg 
         flex flex-col overflow-hidden
         transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${isOpen ? 'translate-x-0' : '-translate-x-full '}
       `}>
         {/* Header */}
         <div className="p-6 lg:p-8 border-b border-gray-100">
@@ -69,7 +69,7 @@ export default function Sidebar({ role = 'user', isOpen, onClose }) {
             </Link>
             <button
               onClick={onClose}
-              className="lg:hidden text-gray-500 hover:text-gray-700"
+              className=" text-gray-500 hover:text-gray-700"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

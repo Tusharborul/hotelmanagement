@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import calendar from "../../assets/Logos/Frame.png";
+import locationIcon from "../../assets/Logos/add_location_alt.png";
 import Layout from '../components/Layout';
 import { adminService } from '../../services/adminService';
 import { showToast } from '../../utils/toast';
@@ -15,35 +17,41 @@ export default function AdminRefunds() {
   const limit = 20;
   const [loading, setLoading] = useState(false);
 
-  const load = async (p = 1) => {
+  // load supports overrides so callers can trigger filtering immediately
+  const load = async (p = 1, overrides = {}) => {
     setLoading(true);
     try {
-      const res = await adminService.getBookings({ start, end, page: p, limit, field: field === 'checkin' ? 'checkin' : undefined });
-      // res: { data, total, page }
+      const s = overrides.start !== undefined ? overrides.start : start;
+      const e = overrides.end !== undefined ? overrides.end : end;
+      const sel = overrides.selectedHotel !== undefined ? overrides.selectedHotel : selectedHotel;
+      const f = overrides.field !== undefined ? overrides.field : field;
+
+      const res = await adminService.getBookings({ start: s, end: e, page: p, limit, field: f === 'checkin' ? 'checkin' : undefined });
       let all = res.data || [];
 
       // Client-side fallback: if filtering by check-in, ensure we filter by booking.checkInDate range
-      if (field === 'checkin' && (start || end)) {
-        const s = start ? new Date(start) : null;
-        const e = end ? (() => { const d = new Date(end); d.setHours(23,59,59,999); return d; })() : null;
+      if (f === 'checkin' && (s || e)) {
+        const ss = s ? new Date(s) : null;
+        const ee = e ? (() => { const d = new Date(e); d.setHours(23,59,59,999); return d; })() : null;
         all = (all || []).filter(b => {
           if (!b.checkInDate) return false;
           const d = new Date(b.checkInDate);
-          if (s && d < s) return false;
-          if (e && d > e) return false;
+          if (ss && d < ss) return false;
+          if (ee && d > ee) return false;
           return true;
         });
       }
 
       // if a hotel is selected, filter by hotel id (client-side)
-      if (selectedHotel) {
-        all = (all || []).filter(b => (b.hotel && (b.hotel._id || b.hotel.id) === selectedHotel) || b.hotelId === selectedHotel);
+      if (sel) {
+        all = (all || []).filter(b => (b.hotel && (b.hotel._id || b.hotel.id) === sel) || b.hotelId === sel);
       }
+
       // keep only bookings that have refunds (refundAmount > 0) or pending refunds
       const refunds = all.filter(b => Number(b.refundAmount || 0) > 0 || (b.refundStatus && b.refundStatus !== 'none'));
       setData(refunds);
       // If we applied client-side filtering, set total to the filtered count to reflect UI results
-      setTotal((field === 'checkin' && (start || end)) ? refunds.length : (res.total || refunds.length));
+      setTotal((f === 'checkin' && (s || e)) ? refunds.length : (res.total || refunds.length));
       setPage(res.page || p);
     } catch (err) {
       console.error('Failed to load admin bookings', err);
@@ -52,8 +60,8 @@ export default function AdminRefunds() {
     }
   };
 
+  // initial load
   useEffect(() => { load(1); }, []);
-  useEffect(() => { load(1); }, [selectedHotel]);
   useEffect(()=>{
     (async ()=>{
       try {
@@ -78,31 +86,60 @@ export default function AdminRefunds() {
 
   return (
     <Layout role="admin" title="Hello, Admin" subtitle="Refunds">
-      <div className="bg-white rounded-lg shadow p-4 md:p-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 mb-4">
-          <div className="w-full sm:w-auto">
-            <label className="text-sm text-gray-600 block mb-1">Hotel</label>
-            <select name="selectedHotel" value={selectedHotel} onChange={(e)=>setSelectedHotel(e.target.value)} className="border rounded px-3 py-1.5 w-full text-sm">
-              <option value="">All Hotels</option>
-              {hotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
-            </select>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-4 items-end">
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">Start</label>
+            <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-inner border border-gray-100">
+              <img src={calendar} alt="calendar" className="w-5 h-5 mr-3 shrink-0" />
+              <input type="date" className="bg-transparent outline-none text-sm font-medium text-gray-700 w-full" name="start" value={start} onChange={(e) => { setStart(e.target.value); load(1, { start: e.target.value }); }} />
+            </div>
           </div>
-          <div className="w-full sm:w-auto">
-            <label className="text-sm text-gray-600 block mb-1">Start</label>
-            <input type="date" className="border rounded px-3 py-1.5 w-full text-sm"  name="start" value={start} onChange={(e) => setStart(e.target.value)} />
+
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">End</label>
+            <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-inner border border-gray-100">
+              <img src={calendar} alt="calendar" className="w-5 h-5 mr-3 shrink-0" />
+              <input type="date" className="bg-transparent outline-none text-sm font-medium text-gray-700 w-full" name="end" value={end} onChange={(e) => { setEnd(e.target.value); load(1, { end: e.target.value }); }} />
+            </div>
           </div>
-          <div className="w-full sm:w-auto">
-            <label className="text-sm text-gray-600 block mb-1">End</label>
-            <input type="date" className="border rounded px-3 py-1.5 w-full text-sm"  name="end" value={end} onChange={(e) => setEnd(e.target.value)} />
+
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">Filter by</label>
+            <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-inner border border-gray-100">
+              <select name="field" value={field} onChange={(e) => { const v = e.target.value; setField(v); load(1, { field: v }); }} className="text-sm font-medium text-gray-700 bg-transparent outline-none w-full cursor-pointer appearance-none pr-2" style={{
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                backgroundPosition: 'right center',
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: '1.5em 1.5em'
+              }}>
+                <option value="created">Created</option>
+                <option value="checkin">Check-in</option>
+              </select>
+            </div>
           </div>
-          <div className="w-full sm:w-auto">
-            <label className="text-sm text-gray-600 block mb-1">Filter by</label>
-            <select  name="field" value={field} onChange={(e)=>setField(e.target.value)} className="border rounded px-3 py-1.5 w-full text-sm">
-              <option value="created">Created</option>
-              <option value="checkin">Check-in</option>
-            </select>
+
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">Hotel</label>
+            <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-inner border border-gray-100">
+              <img src={locationIcon} alt="hotel" className="w-5 h-5 mr-3 shrink-0" />
+              <select name="selectedHotel" value={selectedHotel} onChange={(e) => { const v = e.target.value; setSelectedHotel(v); load(1, { selectedHotel: v }); }} className="text-sm font-medium text-gray-700 bg-transparent outline-none w-full cursor-pointer appearance-none pr-2" style={{
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                backgroundPosition: 'right center',
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: '1.5em 1.5em'
+              }}>
+                <option value="">All Hotels</option>
+                {hotels.map(h => <option key={h._id || h.id} value={h._id || h.id}>{h.name}</option>)}
+              </select>
+            </div>
           </div>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded w-full sm:w-auto text-sm" onClick={() => load(1)}>Filter</button>
+
+          <div className="flex gap-2 justify-end">
+            <button type="button" onClick={() => { setStart(''); setEnd(''); setField('created'); setSelectedHotel(''); load(1, { start:'', end:'', field:'created', selectedHotel: '' }); }} className="flex items-center justify-center bg-white border border-gray-300 text-gray-600 rounded-lg px-4 py-2 hover:bg-gray-50 text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" /></svg>
+            </button>
+            <button className="bg-blue-600 text-white rounded px-4 py-2 text-sm" onClick={() => load(1)}>Filter</button>
+          </div>
         </div>
 
         {loading ? (
@@ -199,7 +236,7 @@ export default function AdminRefunds() {
             </div>
           </div>
         )}
-      </div>
+      
     </Layout>
   );
 }

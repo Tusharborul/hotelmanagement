@@ -10,7 +10,7 @@ export default function Layout({ role, title, subtitle, children }) {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-[#474747] bg-opacity-50 z-20 lg:hidden"
+          className="fixed inset-0 bg-[#474747] bg-opacity-50 z-20 "
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -19,16 +19,16 @@ export default function Layout({ role, title, subtitle, children }) {
       <Sidebar role={role} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
       {/* Main content */}
-      <main className="flex-1 flex flex-col min-h-screen overflow-auto lg:ml-72 xl:ml-80">
+      <main className="flex-1 flex flex-col min-h-screen overflow-auto  ">
         <Header 
           title={title} 
           subtitle={subtitle} 
           onMenuClick={() => setSidebarOpen(true)}
         />
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 xl:p-10">
-          <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto w-full flex-1 pt-3 pb-6   lg:pb-8 ">
+          
             {children}
-          </div>
+          
         </div>
       </main>
     </div>

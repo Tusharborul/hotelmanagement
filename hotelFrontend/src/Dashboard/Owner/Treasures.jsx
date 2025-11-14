@@ -164,7 +164,6 @@ export default function OwnerTreasures() {
 
   return (
     <Layout role="owner" title="Hello, Owner" subtitle="Treasures">
-      <div className="bg-white rounded-lg shadow p-4 md:p-6">
         {/* Add/Edit modals rendered at top-level of this card to avoid nesting issues */}
         <Modal title="Add Treasure" open={showAddModal} onClose={()=>setShowAddModal(false)} size="md">
           <form onSubmit={submitAdd} className="space-y-3">
@@ -401,7 +400,7 @@ export default function OwnerTreasures() {
             )}
           </div>
         </div>
-      </div>
+   
     </Layout>
   );
 }
