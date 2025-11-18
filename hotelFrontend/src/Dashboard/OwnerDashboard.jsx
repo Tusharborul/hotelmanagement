@@ -23,6 +23,8 @@ const OwnerDashboard = () => {
     hotels: 0,
     bookings: 0,
     revenue: 0,
+    revenueGross: 0,
+    totalRefunds: 0,
     todayBookings: 0,
     todayIncome: 0
   });
@@ -48,7 +50,16 @@ const OwnerDashboard = () => {
           today.setHours(0, 0, 0, 0);
 
           const totalBookings = bookingsPerHotel.reduce((s, p) => s + (p.bookings?.length || 0), 0);
-          const totalRevenue = bookingsPerHotel.reduce((s, p) => s + (p.bookings?.reduce((ss, b) => ss + (Number(b.totalPrice) || 0), 0) || 0), 0);
+          // Compute gross revenue, total refunds, and net revenue
+          const totalGross = bookingsPerHotel.reduce((s, p) => s + (
+            p.bookings?.reduce((ss, b) => ss + (Number(b.totalPrice) || 0), 0) || 0
+          ), 0);
+
+          const totalRefunds = bookingsPerHotel.reduce((s, p) => s + (
+            p.bookings?.reduce((ss, b) => ss + (Number(b.refundAmount) || 0), 0) || 0
+          ), 0);
+
+          const netRevenue = Math.max(0, totalGross - totalRefunds);
 
           // Calculate today's bookings (bookings that occupy today) and income
           const todayBookings = bookingsPerHotel.reduce((s, p) => {
@@ -121,7 +132,9 @@ const OwnerDashboard = () => {
           if (mounted) setSummary({
             hotels: list.length,
             bookings: totalBookings,
-            revenue: totalRevenue,
+            revenue: netRevenue,
+            revenueGross: totalGross,
+            totalRefunds: totalRefunds,
             todayBookings: todayBookings,
             todayIncome: todayIncome
           });
@@ -169,7 +182,7 @@ const OwnerDashboard = () => {
               <div className="text-orange-100 text-sm font-medium">Total Revenue</div>
               <div className="text-3xl">💰</div>
             </div>
-            <div className="text-3xl font-bold">{formatINR(summary.revenue)}</div>
+            <div className="text-3xl font-bold">{formatINR(summary.revenue - summary.totalRefunds)}</div>
             <div className="text-orange-100 text-xs mt-1">All time earnings</div>
           </div>
         </div>
