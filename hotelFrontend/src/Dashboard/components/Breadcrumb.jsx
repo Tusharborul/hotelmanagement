@@ -12,10 +12,14 @@ export default function Breadcrumb({ showHome = false }) {
     return seg.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   };
 
-  // build cumulative paths
+  // build cumulative paths — skip explicit role segments (admin/owner/user)
   const items = [];
+  const skipSegs = new Set(['admin', 'owner', 'user']);
   for (let i = 0; i < parts.length; i++) {
     const seg = parts[i];
+    // skip explicit role path segments so breadcrumb stays concise
+    if (seg !== 'dashboard' && skipSegs.has(seg.toLowerCase())) continue;
+
     // special-case the top-level 'dashboard' segment: map to the current user's dashboard route
     let to = '/' + parts.slice(0, i + 1).join('/');
     if (seg === 'dashboard') {

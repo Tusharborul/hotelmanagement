@@ -79,10 +79,10 @@ export default function OwnerPhotos() {
         {!selectedHotel ? (
           <div className="text-gray-500 text-center py-8">No hotel selected.</div>
         ) : (
-          <div className="flex flex-col gap-6">
-            <section className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="flex flex-col md:flex-row justify-center gap-20">
+            <section className="bg-white rounded-2xl shadow-lg p-6 w-full md:w-1/3">
               <div className="font-bold mb-4 text-xl bg-linear-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Main Image</div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex flex-col  items-start sm:items-center gap-4">
                 <div className="w-full sm:w-64 h-40 bg-linear-to-br from-purple-50 to-pink-50 rounded-xl overflow-hidden flex items-center justify-center shadow-md border-2 border-purple-100">
                   {selectedHotel.mainImage ? (
                     <img src={getImageUrl(selectedHotel.mainImage)} alt="Main" className="w-full h-full object-cover" />
@@ -97,8 +97,8 @@ export default function OwnerPhotos() {
               </div>
             </section>
 
-            <section className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="font-bold mb-4 text-xl bg-linear-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Gallery Images</div>
+            <section className="bg-white rounded-2xl text-center shadow-lg p-6 w-full md:w-2/3">
+              <div className="font-bold mb-4 text-xl text-left bg-linear-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Gallery Images</div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {(selectedHotel.images || []).map((img, idx) => {
                   const computedId = (typeof img === 'object' && img !== null) ? (img.public_id || img.url) : img;
