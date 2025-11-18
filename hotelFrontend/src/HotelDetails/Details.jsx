@@ -1,3 +1,4 @@
+import { formatLocation } from "../utils/location";
 import React from "react";
 import { formatINR } from "../utils/currency";
 import { useNavigate } from "react-router-dom";
@@ -55,7 +56,7 @@ const Details = ({ hotel, hotelId }) => {
                             </p>
                             {hotel.location && (
                                 <p className="text-[17px] text-gray-600 leading-relaxed">
-                                    Located in {hotel.location}, this property offers a comfortable stay with modern amenities.
+                                    Located in {formatLocation(hotel.location)}, this property offers a comfortable stay with modern amenities.
                                 </p>
                             )}
                         </>

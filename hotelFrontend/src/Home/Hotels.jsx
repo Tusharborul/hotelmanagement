@@ -1,3 +1,4 @@
+import { formatLocation } from "../utils/location";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { hotelService } from "../services/hotelService";
@@ -160,7 +161,7 @@ const Hotels = () => {
                         clipRule="evenodd"
                       />
                     </svg>
-                    {hotel.location}
+                    {formatLocation(hotel.location)}
                   </p>
 
                   {/* Price */}

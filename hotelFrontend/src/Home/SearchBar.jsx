@@ -6,6 +6,7 @@ import calendar from "../assets/Logos/Frame.png";
 import { hotelService } from '../services/hotelService';
 import getImageUrl from '../utils/getImageUrl';
 import { formatINR } from '../utils/currency';
+import { uniqueLocations, formatLocation } from '../utils/location';
 
 
 const SearchBar = () => {
@@ -49,10 +50,9 @@ const SearchBar = () => {
       const hotelsData = response.data || [];
       setHotels(hotelsData);
       setFilteredHotels(hotelsData);
-      
-      // Get unique locations
-      const uniqueLocations = Array.from(new Set(hotelsData.map(hotel => hotel.location).filter(Boolean)));
-      setLocations(uniqueLocations);
+
+      // Get unique locations with normalization and consistent display
+      setLocations(uniqueLocations(hotelsData.map(h => h.location)).sort());
       setError("");
     } catch (err) {
       setError("Failed to load hotels. Please try again.");
@@ -248,7 +248,7 @@ const SearchBar = () => {
                     clipRule="evenodd"
                   />
                 </svg>
-                {hotel.location}
+                {formatLocation(hotel.location)}
               </p>
 
               {/* Price */}
