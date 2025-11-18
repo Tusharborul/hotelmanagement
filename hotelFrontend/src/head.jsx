@@ -86,9 +86,9 @@ const Header = () => {
       
         
         {/* Logo */}
-        <div className="text-[22px] sm:text-[26px] font-medium flex items-center">
-          <span className="text-blue-600 font-medium">Lanka</span>
-          <span className="text-gray-900 font-medium ml-1">Stay.</span>
+        <div className="text-[22px] sm:text-[26px] font-bold flex items-center">
+          <span className="bg-linear-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent font-bold">Lanka</span>
+          <span className="text-gray-900 font-bold ml-1">Stay.</span>
         </div>
 
         {/* Desktop Nav */}
@@ -103,14 +103,14 @@ const Header = () => {
           </nav>
           {currentUser && currentUser.role && (
             <button
-              className="text-blue-600 border border-blue-600 font-semibold rounded-lg px-5 py-2 shadow-sm hover:bg-blue-50 transition focus:outline-none"
+              className="text-blue-600 border-2 border-blue-600 font-semibold rounded-xl px-5 py-2.5 shadow-md hover:bg-blue-50 hover:scale-105 transition-all duration-300 focus:outline-none cursor-pointer"
               onClick={goToDashboard}
             >
               Dashboard
             </button>
           )}
           <button
-            className="bg-blue-600 text-white font-semibold rounded-lg px-8 py-2 shadow-lg hover:bg-blue-700 transition focus:outline-none"
+            className="bg-linear-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl px-8 py-2.5 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 focus:outline-none cursor-pointer"
             onClick={handleAuthClick}
           >
             {isLoggedIn ? 'Logout' : 'Login'}
@@ -137,16 +137,16 @@ const Header = () => {
 
         {/* Mobile Menu */}
         {menuOpen && (
-          <div className="fixed inset-0 w-full h-full bg-white shadow-lg z-50 flex flex-col lg:hidden overflow-auto pt-6 px-6">
+          <div className="fixed inset-0 w-full h-full bg-white shadow-2xl z-50 flex flex-col lg:hidden overflow-auto pt-6 px-6 animate-slide-in">
             {/* Logo at top */}
             <div className="w-full flex items-center justify-between mb-8">
-              <div className="text-[22px] sm:text-[26px] font-medium flex items-center">
-                <span className="text-blue-600 font-medium">Lanka</span>
-                <span className="text-gray-900 font-medium ml-1">Stay.</span>
+              <div className="text-[22px] sm:text-[26px] font-bold flex items-center">
+                <span className="bg-linear-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent font-bold">Lanka</span>
+                <span className="text-gray-900 font-bold ml-1">Stay.</span>
               </div>
               {/* Close button */}
               <button
-                className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                className="text-gray-500 hover:text-gray-700 focus:outline-none p-2 hover:bg-gray-100 rounded-lg transition-all duration-200"
                 onClick={() => setMenuOpen(false)}
               >
                 <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -155,14 +155,14 @@ const Header = () => {
               </button>
             </div>
             <nav className="flex flex-col gap-4 font-[Poppins] w-full mt-4">
-              <a href="/home" className="text-[#3252DF] text-[18px] w-full text-left" onClick={() => setMenuOpen(false)}>Home</a>
-              <a href="#" onClick={(e) => { handleHotelsClick(e); setMenuOpen(false); }} className="text-[#152C5B] hover:text-[#3252DF] transition cursor-pointer w-full text-left">Hotels</a>
-              <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition w-full text-left" onClick={() => setMenuOpen(false)}>Rooms</a>
-              <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition w-full text-left" onClick={() => setMenuOpen(false)}>About</a>
-              <a href="#" className="text-[#152C5B] hover:text-[#3252DF] transition w-full text-left" onClick={() => setMenuOpen(false)}>Contact</a>
+              <a href="/home" className="text-[#3252DF] text-[18px] w-full text-left py-3 px-4 rounded-xl hover:bg-blue-50 transition-all duration-200" onClick={() => setMenuOpen(false)}>Home</a>
+              <a href="#" onClick={(e) => { handleHotelsClick(e); setMenuOpen(false); }} className="text-[#152C5B] hover:text-[#3252DF] hover:bg-blue-50 transition-all duration-200 cursor-pointer w-full text-left py-3 px-4 rounded-xl">Hotels</a>
+              <a href="#" className="text-[#152C5B] hover:text-[#3252DF] hover:bg-blue-50 transition-all duration-200 w-full text-left py-3 px-4 rounded-xl" onClick={() => setMenuOpen(false)}>Rooms</a>
+              <a href="#" className="text-[#152C5B] hover:text-[#3252DF] hover:bg-blue-50 transition-all duration-200 w-full text-left py-3 px-4 rounded-xl" onClick={() => setMenuOpen(false)}>About</a>
+              <a href="#" className="text-[#152C5B] hover:text-[#3252DF] hover:bg-blue-50 transition-all duration-200 w-full text-left py-3 px-4 rounded-xl" onClick={() => setMenuOpen(false)}>Contact</a>
               {currentUser && currentUser.role && (
                 <button
-                  className="text-blue-600 border border-blue-600 font-semibold rounded-lg px-5 py-2 shadow-sm hover:bg-blue-50 transition focus:outline-none w-full text-left"
+                  className="text-blue-600 border-2 border-blue-600 font-semibold rounded-xl px-5 py-3 shadow-md hover:bg-blue-50 transition-all duration-200 focus:outline-none w-full text-left"
                   onClick={() => { setMenuOpen(false); goToDashboard(); }}
                 >
                   Dashboard
@@ -170,7 +170,7 @@ const Header = () => {
               )}
             </nav>
             <button
-              className="bg-blue-600 text-white font-semibold rounded-lg px-8 py-2 mt-6 shadow-lg hover:bg-blue-700 transition focus:outline-none w-full max-w-sm"
+              className="bg-linear-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl px-8 py-3 mt-6 shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none w-full max-w-sm"
               onClick={() => {
                 setMenuOpen(false);
                 handleAuthClick();

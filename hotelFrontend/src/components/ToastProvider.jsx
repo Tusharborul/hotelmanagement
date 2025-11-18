@@ -8,9 +8,16 @@ function Toast({ t, onRemove }) {
     const timer = setTimeout(()=> onRemove(id), t.duration || 4000);
     return ()=>clearTimeout(timer);
   }, [id, onRemove, t.duration]);
-  const bg = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : type === 'warning' ? 'bg-yellow-600' : 'bg-gray-800';
+  const bg = type === 'error' ? 'bg-linear-to-r from-red-500 to-red-600' : type === 'success' ? 'bg-linear-to-r from-green-500 to-green-600' : type === 'warning' ? 'bg-linear-to-r from-yellow-500 to-yellow-600' : 'bg-linear-to-r from-gray-700 to-gray-800';
   return (
-    <div className={`text-white text-sm px-3 py-2 rounded shadow ${bg} max-w-xs wrap-break-word`}>{message}</div>
+    <div className={`text-white text-sm px-5 py-3 rounded-xl shadow-lg hover:shadow-2xl ${bg} max-w-sm wrap-break-word transform transition-all duration-300 hover:scale-105 cursor-pointer animate-slide-in-right`}>
+      <div className="flex items-center gap-2">
+        {type === 'success' && <span className="text-xl">✓</span>}
+        {type === 'error' && <span className="text-xl">✕</span>}
+        {type === 'warning' && <span className="text-xl">⚠</span>}
+        <span>{message}</span>
+      </div>
+    </div>
   );
 }
 

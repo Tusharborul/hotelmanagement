@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { bookingService } from "../services/bookingService";
 import { paymentService } from "../services/paymentService";
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import FullScreenLoader from '../components/FullScreenLoader';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 
@@ -15,6 +16,8 @@ const Payment = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [clientSecret, setClientSecret] = useState(null);
+  const publishableKeyMissing = !import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+  const [pageInvalid, setPageInvalid] = useState(false);
 
   // Calculate check-out date
   let checkOutDate = '';
@@ -37,14 +40,33 @@ const Payment = () => {
     const elements = useElements();
 
     const [processing, setProcessing] = useState(false);
+    const inFlightRef = useRef(false);
 
     const handleSubmit = async (e) => {
       e.preventDefault();
       setError('');
+      // Hard guard against concurrent submissions (rapid double-clicks, hot reload quirks)
+      if (inFlightRef.current || (typeof window !== 'undefined' && window.__confirmingCardPayment)) return;
       if (!stripe || !elements) return;
+      // Basic validations
+      if (!hotelId || !checkInDate || !days || !totalPrice || Number(totalPrice) <= 0) {
+        setError('Payment cannot start: booking details are missing or invalid. Please go back and try again.');
+        return;
+      }
+      const card = elements.getElement(CardElement);
+      if (!card) {
+        setError('Payment form is not ready yet.');
+        return;
+      }
+      if (publishableKeyMissing) {
+        setError('Stripe is not configured. Please contact support.');
+        return;
+      }
+      inFlightRef.current = true;
+      if (typeof window !== 'undefined') window.__confirmingCardPayment = true;
       setProcessing(true);
       try {
-        // 1) Create PaymentIntent right now (single API call on click)
+        // Hard guard against concurrent submissions (rapid double-clicks, hot reload quirks)
         const initialPayment = Math.round(totalPrice / 2);
         const intentResp = await paymentService.createPaymentIntent({ amount: initialPayment, currency: 'usd', metadata: { hotelId } });
         const secret = intentResp?.data?.clientSecret || intentResp?.clientSecret;
@@ -54,8 +76,7 @@ const Payment = () => {
           return;
         }
         setClientSecret(secret);
-
-        const card = elements.getElement(CardElement);
+        
         // 2) Confirm the card payment using the freshly created secret
         const result = await stripe.confirmCardPayment(secret, {
           payment_method: { card }
@@ -84,15 +105,17 @@ const Payment = () => {
 
           const created = await bookingService.createBooking(bookingData);
 
-          // 4) Ensure identifiers are persisted on the booking and PI metadata includes bookingId
+          // 4) Ensure identifiers are persisted on the booking and PI metadata includes bookingId (fire-and-forget)
           try {
             const createdId = created?.data?._id || created?.data?.id || created?._id || created?.id;
             if (createdId) {
-              await paymentService.attachBooking({ bookingId: createdId, paymentIntentId: result.paymentIntent.id });
+              // Do not block UI navigation on this auxiliary call
+              paymentService.attachBooking({ bookingId: createdId, paymentIntentId: result.paymentIntent.id }).catch((metaErr) => {
+                console.warn('Failed to attach booking to PI metadata', metaErr);
+              });
             }
           } catch (metaErr) {
-            // Non-fatal; continue navigation. This improves refund reliability.
-            console.warn('Failed to attach booking to PI metadata', metaErr);
+            console.warn('Attach booking skipped', metaErr);
           }
 
           navigate('/sucess', {
@@ -103,8 +126,10 @@ const Payment = () => {
         }
       } catch (err) {
         console.error('payment/process', err);
-        setError(err.response?.data?.message || 'Payment failed. Please try again.');
+        setError(err.response?.data?.message || err.message || 'Payment failed. Please try again.');
       } finally {
+        inFlightRef.current = false;
+        if (typeof window !== 'undefined') window.__confirmingCardPayment = false;
         setProcessing(false);
       }
     };
@@ -126,7 +151,7 @@ const Payment = () => {
           <button
             className="bg-[#0057FF] text-white text-base sm:text-lg font-medium rounded-lg py-2.5 sm:py-3 w-full shadow hover:bg-[#003bb3] transition disabled:opacity-50 disabled:cursor-not-allowed"
             type="submit"
-            disabled={processing || !stripe}
+            disabled={processing || !stripe || publishableKeyMissing}
           >
             {processing ? 'Processing...' : `Pay $${Math.round(totalPrice / 2)} Now`}
           </button>
@@ -138,6 +163,9 @@ const Payment = () => {
             Cancel
           </button>
         </div>
+        {processing && (
+          <FullScreenLoader label="Processing payment..." />
+        )}
       </form>
     );
   };
@@ -168,6 +196,11 @@ const Payment = () => {
       <p className="text-gray-400 mb-6 sm:mb-8 text-center text-sm sm:text-base px-4">
         Kindly follow the instructions below
       </p>
+      {publishableKeyMissing && (
+        <div className="mb-4 w-full max-w-3xl mx-auto bg-yellow-50 text-yellow-800 border border-yellow-200 rounded-xl px-4 py-3">
+          Stripe publishable key is not configured. Payments are disabled in this environment.
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex flex-col lg:flex-row items-start justify-center w-full max-w-3xl mx-auto gap-6 sm:gap-8 lg:gap-12 mb-8 sm:mb-12">
@@ -193,9 +226,13 @@ const Payment = () => {
 
         {/* Right: Payment Form */}
         <div className="flex flex-col gap-4 sm:gap-6 w-full sm:max-w-md mx-auto lg:mx-0">
-          <Elements stripe={stripePromise}>
-            <CheckoutForm />
-          </Elements>
+          {!publishableKeyMissing ? (
+            <Elements stripe={stripePromise}>
+              <CheckoutForm />
+            </Elements>
+          ) : (
+            <div className="text-sm text-gray-500">Configure `VITE_STRIPE_PUBLISHABLE_KEY` to enable the payment form.</div>
+          )}
         </div>
       </div>
 

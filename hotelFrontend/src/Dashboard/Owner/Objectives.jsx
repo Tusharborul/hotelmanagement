@@ -153,46 +153,46 @@ export default function OwnerObjectives() {
 
   return (
     <Layout role="owner" title="Hello, Owner" subtitle="Objectives">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-          <div className="font-semibold text-lg">Your Properties</div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div className="bg-linear-to-r from-orange-600 to-red-600 bg-clip-text text-transparent font-bold text-2xl">Your Properties</div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button className="px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition w-full sm:w-auto" onClick={startAdd}>Add Hotel</button>
+            <button className="px-6 py-3 bg-linear-to-r from-green-500 to-green-600 text-white rounded-xl text-sm font-medium hover:scale-105 transition-transform duration-300 shadow-md hover:shadow-lg w-full sm:w-auto" onClick={startAdd}>Add Hotel</button>
           </div>
         </div>
         {/* Add / Edit modals rendered at top-level of this card */}
         <Modal title="Add Hotel" open={showAddModal} onClose={()=>setShowAddModal(false)} size="lg">
-          <div className="text-sm font-semibold mb-4">Create new hotel</div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="text-sm font-bold mb-4 text-gray-800">Create new hotel</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-600 mb-1 font-medium">Hotel name</label>
-              <input className="border rounded px-3 py-2 w-full text-sm" placeholder="e.g. Ocean View Apartments"  name="name" value={addForm.name} onChange={(e)=>setAddForm(f=>({ ...f, name: e.target.value }))} />
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Hotel name</label>
+              <input className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" placeholder="e.g. Ocean View Apartments"  name="name" value={addForm.name} onChange={(e)=>setAddForm(f=>({ ...f, name: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1 font-medium">Location</label>
-              <input className="border rounded px-3 py-2 w-full text-sm" placeholder="City, Country or address"  name="location" value={addForm.location} onChange={(e)=>setAddForm(f=>({ ...f, location: e.target.value }))} />
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Location</label>
+              <input className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" placeholder="City, Country or address"  name="location" value={addForm.location} onChange={(e)=>setAddForm(f=>({ ...f, location: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1 font-medium">Address</label>
-              <input id="addForm_address" name="address" className="border rounded px-3 py-2 w-full text-sm" placeholder="Street address, building or detailed address" value={addForm.address || ''} onChange={(e)=>setAddForm(f=>({ ...f, address: e.target.value }))} />
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Address</label>
+              <input id="addForm_address" name="address" className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" placeholder="Street address, building or detailed address" value={addForm.address || ''} onChange={(e)=>setAddForm(f=>({ ...f, address: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1 font-medium">Price per night (USD)</label>
-              <input id="addForm_price" name="price" className="border rounded px-3 py-2 w-full text-sm" type="number" min={0} placeholder="e.g. 120" value={addForm.price || ''} onChange={(e)=>setAddForm(f=>({ ...f, price: e.target.value }))} />
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Price per night (USD)</label>
+              <input id="addForm_price" name="price" className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 120" value={addForm.price || ''} onChange={(e)=>setAddForm(f=>({ ...f, price: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1 font-medium">Daily capacity (0 = unlimited)</label>
-              <input id="addForm_dailyCapacity" name="dailyCapacity" className="border rounded px-3 py-2 w-full text-sm" type="number" min={0} placeholder="e.g. 5" value={addForm.dailyCapacity || 0} onChange={(e)=>setAddForm(f=>({ ...f, dailyCapacity: Number(e.target.value) }))} />
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Daily capacity (0 = unlimited)</label>
+              <input id="addForm_dailyCapacity" name="dailyCapacity" className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 5" value={addForm.dailyCapacity || 0} onChange={(e)=>setAddForm(f=>({ ...f, dailyCapacity: Number(e.target.value) }))} />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs text-gray-600 mb-1 font-medium">Description</label>
-              <textarea className="border rounded px-3 py-2 w-full text-sm" rows={3} placeholder="Short description for guests"  name="description" value={addForm.description} onChange={(e)=>setAddForm(f=>({ ...f, description: e.target.value }))} />
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Description</label>
+              <textarea className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" rows={3} placeholder="Short description for guests"  name="description" value={addForm.description} onChange={(e)=>setAddForm(f=>({ ...f, description: e.target.value }))} />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs text-gray-600 mb-1 font-medium">Images</label>
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Images</label>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                  <label className="inline-block px-4 py-2 bg-white border rounded cursor-pointer text-sm hover:bg-gray-50 transition w-full sm:w-auto text-center">Select images
+                  <label className="inline-block px-6 py-3 bg-white border-2 border-orange-300 rounded-xl cursor-pointer text-sm hover:bg-orange-50 hover:border-orange-400 transition-all duration-300 w-full sm:w-auto text-center font-medium text-orange-600 shadow-md">Select images
                   <input id="addForm_images" name="images" type="file" multiple accept="image/*" onChange={(e)=>{
                     const files = e.target.files ? Array.from(e.target.files) : [];
                     setAddForm(f=>({ ...f, images: files }));

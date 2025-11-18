@@ -56,90 +56,68 @@ const AdminDashboard = () => {
     <Layout role="admin" title="Hello, Admin" subtitle="Admin Dashboard">
       <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-linear-to-r from-white to-gray-50 border rounded-lg shadow-sm p-4 flex flex-col justify-between">
+          <div className="bg-linear-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-gray-500">Users</div>
-                <div className="text-2xl font-bold">{counts.users}</div>
+                <div className="text-blue-100 text-sm font-medium mb-2">Users</div>
+                <div className="text-3xl font-bold">{counts.users}</div>
               </div>
-              <div className="text-3xl">👥</div>
+              <div className="text-5xl opacity-80">👥</div>
             </div>
-            <div className="mt-3">
-              <Link to="/dashboard/admin/users" className="text-sm text-blue-600">Manage users →</Link>
+            <div className="mt-4 pt-4 border-t border-blue-400">
+              <Link to="/dashboard/admin/users" className="text-sm text-blue-100 hover:text-white transition-colors duration-200 flex items-center gap-1">
+                Manage users <span>→</span>
+              </Link>
             </div>
           </div>
 
-          <div className="bg-linear-to-r from-white to-gray-50 border rounded-lg shadow-sm p-4 flex flex-col justify-between">
+          <div className="bg-linear-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-gray-500">Hotel Owners</div>
-                <div className="text-2xl font-bold">{counts.owners}</div>
+                <div className="text-purple-100 text-sm font-medium mb-2">Hotel Owners</div>
+                <div className="text-3xl font-bold">{counts.owners}</div>
               </div>
-              <div className="text-3xl">🏨</div>
+              <div className="text-5xl opacity-80">🏨</div>
             </div>
-            <div className="mt-3">
-              <Link to="/dashboard/admin/owners" className="text-sm text-blue-600">Manage owners →</Link>
+            <div className="mt-4 pt-4 border-t border-purple-400">
+              <Link to="/dashboard/admin/owners" className="text-sm text-purple-100 hover:text-white transition-colors duration-200 flex items-center gap-1">
+                Manage owners <span>→</span>
+              </Link>
             </div>
           </div>
 
-          <div className="bg-linear-to-r from-white to-gray-50 border rounded-lg shadow-sm p-4 flex flex-col justify-between">
+          <div className="bg-linear-to-br from-green-500 to-green-600 rounded-2xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-gray-500">Bookings</div>
-                <div className="text-2xl font-bold">{counts.bookings}</div>
+                <div className="text-green-100 text-sm font-medium mb-2">Bookings</div>
+                <div className="text-3xl font-bold">{counts.bookings}</div>
               </div>
-              <div className="text-3xl">📅</div>
+              <div className="text-5xl opacity-80">📅</div>
             </div>
-            <div className="mt-3">
-              <Link to="/dashboard/admin/bookings" className="text-sm text-blue-600">View bookings →</Link>
+            <div className="mt-4 pt-4 border-t border-green-400">
+              <Link to="/dashboard/admin/bookings" className="text-sm text-green-100 hover:text-white transition-colors duration-200 flex items-center gap-1">
+                View bookings <span>→</span>
+              </Link>
             </div>
           </div>
 
-          <div className="bg-linear-to-r from-white to-gray-50 border rounded-lg shadow-sm p-4 flex flex-col justify-between">
+          <div className="bg-linear-to-br from-orange-500 to-orange-600 rounded-2xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-gray-500">Pending Refunds</div>
-                <div className="text-2xl font-bold">{counts.pendingRefunds}</div>
+                <div className="text-orange-100 text-sm font-medium mb-2">Pending Refunds</div>
+                <div className="text-3xl font-bold">{counts.pendingRefunds}</div>
               </div>
-              <div className="text-3xl">💰</div>
+              <div className="text-5xl opacity-80">💰</div>
             </div>
-            <div className="mt-3">
-              <Link to="/dashboard/admin/refunds" className="text-sm text-blue-600">Manage refunds →</Link>
+            <div className="mt-4 pt-4 border-t border-orange-400">
+              <Link to="/dashboard/admin/refunds" className="text-sm text-orange-100 hover:text-white transition-colors duration-200 flex items-center gap-1">
+                Manage refunds <span>→</span>
+              </Link>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="font-semibold">Recent Hotel Owners</div>
-            <div className="flex items-center gap-3">
-              <button onClick={() => navigate('/dashboard/admin/owners')} className="text-sm text-blue-600">View all</button>
-            </div>
-          </div>
-
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-            {loadingOwners ? (
-              <div className="text-gray-500 col-span-full">Loading owners...</div>
-            ) : owners.length === 0 ? (
-              <div className="text-gray-500 col-span-full">No owners found.</div>
-            ) : (
-              owners.map((o) => (
-                <div key={o._id || o.id || o.email} className="flex items-center gap-4 p-3 border rounded">
-                  <div className="w-12 h-12 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-semibold text-lg">
-                    {((o.name || o.fullName || o.email || '').trim().split(' ').map(s=>s[0]).slice(0,2).join('')) || 'U'}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium">{o.name || o.fullName || o.email}</div>
-                    <div className="text-xs text-gray-500">{o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '-'}</div>
-                  </div>
-                  <div className="text-sm">
-                    <span className="bg-blue-500 text-white px-2 py-1 rounded">{o.role || 'Owner'}</span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+     
       </div>
     </Layout>
   );

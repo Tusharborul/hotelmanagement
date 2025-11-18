@@ -22,6 +22,10 @@ export const adminService = {
     const res = await api.get(`/admin/owners?${params.toString()}`);
     return res.data;
   },
+  getOwnerHotels: async (ownerId) => {
+    const res = await api.get(`/admin/owners/${ownerId}/hotels`);
+    return res.data;
+  },
   getHotels: async ({ status, page=1, limit=20 } = {}) => {
     const params = new URLSearchParams({ page, limit });
     if (status) params.append('status', status);
@@ -30,6 +34,10 @@ export const adminService = {
   },
   updateHotelStatus: async (hotelId, status) => {
     const res = await api.put(`/admin/hotels/${hotelId}/status`, { status });
+    return res.data;
+  },
+  updateOwnerHotelsStatus: async (ownerId, status) => {
+    const res = await api.put(`/admin/owners/${ownerId}/hotels/status`, { status });
     return res.data;
   },
   getBookings: async ({ start, end, page=1, limit=20, field } = {}) => {

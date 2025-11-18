@@ -4,13 +4,16 @@ import './index.css'
 import App from './App.jsx'
 import ToastProvider from './components/ToastProvider'
 import ConfirmProvider from './components/ConfirmProvider'
+import LoadingProvider from './components/LoadingProvider'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <ToastProvider>
-      <ConfirmProvider>
-        <App />
-      </ConfirmProvider>
-    </ToastProvider>
+    <LoadingProvider>
+      <ToastProvider>
+        <ConfirmProvider>
+          <App />
+        </ConfirmProvider>
+      </ToastProvider>
+    </LoadingProvider>
   </StrictMode>,
 )

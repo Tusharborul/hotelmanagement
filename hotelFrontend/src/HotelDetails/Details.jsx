@@ -38,39 +38,39 @@ const Details = ({ hotel, hotelId }) => {
     };
 
     if (!hotel) {
-        return <div className="mb-6 mt-20 text-center text-gray-400">No hotel details available.</div>;
+        return <div className="mb-6 mt-20 text-center text-lg text-gray-500">No hotel details available.</div>;
     }
 
     return (
-        <div className=" mb-6 mt-20 ">
+        <div className="mb-8 mt-20">
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* Left: About the place */}
                 <div className="flex-1">
-                    <h2 className="text-[20px] font-semibold text-[#1a237e] mb-4">About the place</h2>
+                    <h2 className="text-[22px] font-bold text-[#1a237e] mb-5">About the place</h2>
                     {hotel.description ? (
                         <>
-                            <p className="text-[16px] text-gray-400 mb-2">
+                            <p className="text-[17px] text-gray-600 mb-4 leading-relaxed">
                                 {hotel.description}
                             </p>
                             {hotel.location && (
-                                <p className="text-[16px] text-gray-400">
+                                <p className="text-[17px] text-gray-600 leading-relaxed">
                                     Located in {hotel.location}, this property offers a comfortable stay with modern amenities.
                                 </p>
                             )}
                         </>
                     ) : (
-                        <p className="text-[16px] text-gray-400">No description available.</p>
+                        <p className="text-[17px] text-gray-500">No description available.</p>
                     )}
                 </div>
                 {/* Right: Booking Card */}
-                <div className="w-full lg:w-[487px] h-auto lg:h-[230px] bg-white rounded-2xl shadow-md flex flex-col justify-center border border-gray-200 p-6 lg:p-20">
-                    <div className="text-[20px] text-[#1a237e] font-semibold mb-2">Start Booking</div>
-                    <div className="text-[36px] font-bold text-[#2ad3b3] mb-2">
+                <div className="w-full lg:w-[487px] h-auto lg:h-[240px] bg-white rounded-2xl shadow-xl flex flex-col justify-center border border-gray-200 p-6 lg:p-20 hover:shadow-2xl transition-shadow duration-300">
+                    <div className="text-[20px] text-[#1a237e] font-bold mb-3">Start Booking</div>
+                    <div className="text-[38px] font-bold text-[#3256e2] mb-3">
                         {hotel.price ? `$${hotel.price}` : 'Price not available'} 
-                        {hotel.price && <span className="text-[18px] text-gray-400 font-normal"> per Day</span>}
+                        {hotel.price && <span className="text-[18px] text-gray-500 font-normal"> per Day</span>}
                     </div>
                     <button
-                        className="bg-[#3256e2] w-full lg:w-[347px] h-[41px] text-white font-semibold rounded-xl px-8 py-3 shadow-sm hover:bg-blue-700 transition mt-4"
+                        className="bg-[#3256e2] w-full lg:w-[347px] h-[48px] text-white font-semibold rounded-lg px-8 shadow-md hover:bg-[#2545c8] transition-colors duration-200 mt-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3256e2]"
                         onClick={handleBooking}
                         disabled={!hotel.price}
                     >
@@ -80,53 +80,69 @@ const Details = ({ hotel, hotelId }) => {
             </div>
             {/* Bottom: Features icons and labels */}
             {hotel.facilities && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-6 mt-12 px-2 items-center">
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-6 mt-14 px-2 items-center">
                     {hotel.facilities.bedrooms && (
                         <div className="flex flex-col items-left">
-                            <img src={bedroom} alt="Bedroom" className="w-9 h-9 mb-2" />
-                            <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{hotel.facilities.bedrooms}</span> bedroom</span>
+                            <div className="bg-blue-50 rounded-full p-2.5 w-fit mb-2.5">
+                                <img src={bedroom} alt="Bedroom" className="w-9 h-9" />
+                            </div>
+                            <span className="text-base text-gray-600"><span className="font-semibold text-[#1a237e]">{hotel.facilities.bedrooms}</span> bedroom</span>
                         </div>
                     )}
                     {hotel.facilities.livingrooms && (
                         <div className="flex flex-col items-left">
-                            <img src={livingroom} alt="Living Room" className="w-9 h-9 mb-2" />
-                            <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{hotel.facilities.livingrooms}</span> living room</span>
+                            <div className="bg-purple-50 rounded-full p-2.5 w-fit mb-2.5">
+                                <img src={livingroom} alt="Living Room" className="w-9 h-9" />
+                            </div>
+                            <span className="text-base text-gray-600"><span className="font-semibold text-[#1a237e]">{hotel.facilities.livingrooms}</span> living room</span>
                         </div>
                     )}
                     {hotel.facilities.bathrooms && (
                         <div className="flex flex-col items-left">
-                            <img src={bathroom} alt="Bathroom" className="w-9 h-9 mb-2" />
-                            <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{hotel.facilities.bathrooms}</span> bathroom</span>
+                            <div className="bg-cyan-50 rounded-full p-2.5 w-fit mb-2.5">
+                                <img src={bathroom} alt="Bathroom" className="w-9 h-9" />
+                            </div>
+                            <span className="text-base text-gray-600"><span className="font-semibold text-[#1a237e]">{hotel.facilities.bathrooms}</span> bathroom</span>
                         </div>
                     )}
                     {hotel.facilities.diningrooms && (
                         <div className="flex flex-col items-left">
-                            <img src={diningroom} alt="Dining Room" className="w-9 h-9 mb-2" />
-                            <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{hotel.facilities.diningrooms}</span> dining room</span>
+                            <div className="bg-green-50 rounded-full p-2.5 w-fit mb-2.5">
+                                <img src={diningroom} alt="Dining Room" className="w-9 h-9" />
+                            </div>
+                            <span className="text-base text-gray-600"><span className="font-semibold text-[#1a237e]">{hotel.facilities.diningrooms}</span> dining room</span>
                         </div>
                     )}
                     {hotel.facilities.wifi && (
                         <div className="flex flex-col items-left">
-                            <img src={wifi} alt="WiFi" className="w-9 h-9 mb-2" />
-                            <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{hotel.facilities.wifi}</span></span>
+                            <div className="bg-yellow-50 rounded-full p-2.5 w-fit mb-2.5">
+                                <img src={wifi} alt="WiFi" className="w-9 h-9" />
+                            </div>
+                            <span className="text-base text-gray-600"><span className="font-semibold text-[#1a237e]">{hotel.facilities.wifi}</span></span>
                         </div>
                     )}
                     {hotel.facilities.unitsReady && (
                         <div className="flex flex-col items-left">
-                            <img src={unit} alt="Unit Ready" className="w-9 h-9 mb-2" />
-                            <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{hotel.facilities.unitsReady}</span> unit ready</span>
+                            <div className="bg-pink-50 rounded-full p-2.5 w-fit mb-2.5">
+                                <img src={unit} alt="Unit Ready" className="w-9 h-9" />
+                            </div>
+                            <span className="text-base text-gray-600"><span className="font-semibold text-[#1a237e]">{hotel.facilities.unitsReady}</span> unit ready</span>
                         </div>
                     )}
                     {hotel.facilities.refrigerator && (
                         <div className="flex flex-col items-left">
-                            <img src={fridge} alt="Refrigerator" className="w-9 h-9 mb-2" />
-                            <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{hotel.facilities.refrigerator}</span> refrigerator</span>
+                            <div className="bg-indigo-50 rounded-full p-2.5 w-fit mb-2.5">
+                                <img src={fridge} alt="Refrigerator" className="w-9 h-9" />
+                            </div>
+                            <span className="text-base text-gray-600"><span className="font-semibold text-[#1a237e]">{hotel.facilities.refrigerator}</span> refrigerator</span>
                         </div>
                     )}
                     {hotel.facilities.television && (
                         <div className="flex flex-col items-left">
-                            <img src={tv} alt="Television" className="w-9 h-9 mb-2" />
-                            <span className="text-lg text-gray-400"><span className="font-semibold text-[#1a237e]">{hotel.facilities.television}</span> television</span>
+                            <div className="bg-orange-50 rounded-full p-2.5 w-fit mb-2.5">
+                                <img src={tv} alt="Television" className="w-9 h-9" />
+                            </div>
+                            <span className="text-base text-gray-600"><span className="font-semibold text-[#1a237e]">{hotel.facilities.television}</span> television</span>
                         </div>
                     )}
                 </div>

@@ -43,6 +43,10 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'hotelOwner', 'admin'],
     default: 'user'
   },
+  ownerApproved: {
+    type: Boolean,
+    default: false
+  },
   avatar: {
     url: { type: String, default: '' },
     public_id: { type: String, default: '' }

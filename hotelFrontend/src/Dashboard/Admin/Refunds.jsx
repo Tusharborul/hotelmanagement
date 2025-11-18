@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import calendar from "../../assets/Logos/Frame.png";
-import locationIcon from "../../assets/Logos/add_location_alt.png";
 import Layout from '../components/Layout';
 import { adminService } from '../../services/adminService';
+import { bookingService } from '../../services/bookingService';
+import FilterControls from '../components/FilterControls';
 import { showToast } from '../../utils/toast';
+import { formatDateTime } from '../../utils/date';
+import Spinner from '../../components/Spinner';
+import Pagination from '../../components/Pagination';
 
 export default function AdminRefunds() {
   const [start, setStart] = useState('');
@@ -14,47 +17,78 @@ export default function AdminRefunds() {
   const [data, setData] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const limit = 20;
+  const limit = 10;
   const [loading, setLoading] = useState(false);
 
   // load supports overrides so callers can trigger filtering immediately
   const load = async (p = 1, overrides = {}) => {
     setLoading(true);
     try {
+      const sel = overrides.selectedHotel !== undefined ? overrides.selectedHotel : selectedHotel;
       const s = overrides.start !== undefined ? overrides.start : start;
       const e = overrides.end !== undefined ? overrides.end : end;
-      const sel = overrides.selectedHotel !== undefined ? overrides.selectedHotel : selectedHotel;
       const f = overrides.field !== undefined ? overrides.field : field;
 
-      const res = await adminService.getBookings({ start: s, end: e, page: p, limit, field: f === 'checkin' ? 'checkin' : undefined });
-      let all = res.data || [];
-
-      // Client-side fallback: if filtering by check-in, ensure we filter by booking.checkInDate range
-      if (f === 'checkin' && (s || e)) {
+      // helper to check date range for createdAt or checkInDate
+      const inRange = (b) => {
+        if (!s && !e) return true;
+        const val = f === 'checkin' ? b.checkInDate : b.createdAt;
+        if (!val) return false;
+        const d = new Date(val);
         const ss = s ? new Date(s) : null;
-        const ee = e ? (() => { const d = new Date(e); d.setHours(23,59,59,999); return d; })() : null;
-        all = (all || []).filter(b => {
-          if (!b.checkInDate) return false;
-          const d = new Date(b.checkInDate);
-          if (ss && d < ss) return false;
-          if (ee && d > ee) return false;
-          return true;
-        });
-      }
+        const ee = e ? (() => { const dd = new Date(e); dd.setHours(23,59,59,999); return dd; })() : null;
+        if (ss && d < ss) return false;
+        if (ee && d > ee) return false;
+        return true;
+      };
 
-      // if a hotel is selected, filter by hotel id (client-side)
+      let all = [];
       if (sel) {
-        all = (all || []).filter(b => (b.hotel && (b.hotel._id || b.hotel.id) === sel) || b.hotelId === sel);
+        // load selected hotel bookings and ensure name is available
+        const res = await bookingService.getHotelBookings(sel);
+        const list = Array.isArray(res) ? res : (res?.data || []);
+        const hotelMeta = (hotels || []).find(x => (x._id || x.id) === sel) || {};
+        all = (list || []).map(b => {
+          const name = (b?.hotel && b.hotel.name) || hotelMeta.name || '';
+          const hotel = (b?.hotel && typeof b.hotel === 'object')
+            ? { ...b.hotel, name: name || b.hotel.name }
+            : { _id: sel, name };
+          return { ...b, hotel, hotelName: name };
+        });
+      } else {
+        // aggregate across all hotels (admin-wide): fetch hotels then bookings per hotel
+        for (const h of (hotels || [])) {
+          try {
+            const res = await bookingService.getHotelBookings(h._id || h.id);
+            const list = Array.isArray(res) ? res : (res?.data || []);
+            const mapped = (list || []).map(b => {
+              const name = (b?.hotel && b.hotel.name) || h.name || '';
+              const hotel = (b?.hotel && typeof b.hotel === 'object')
+                ? { ...b.hotel, name: name || b.hotel.name }
+                : { _id: h._id || h.id, name };
+              return { ...b, hotel, hotelName: name };
+            });
+            all.push(...mapped);
+          } catch (err) {
+            console.warn('Failed to load bookings for hotel', h._id || h.id, err);
+          }
+        }
       }
 
-      // keep only bookings that have refunds (refundAmount > 0) or pending refunds
-      const refunds = all.filter(b => Number(b.refundAmount || 0) > 0 || (b.refundStatus && b.refundStatus !== 'none'));
-      setData(refunds);
-      // If we applied client-side filtering, set total to the filtered count to reflect UI results
-      setTotal((f === 'checkin' && (s || e)) ? refunds.length : (res.total || refunds.length));
-      setPage(res.page || p);
+      // filter refunds and by range
+      const refunds = (all || []).filter(b => (Number(b.refundAmount || 0) > 0 || (b.refundStatus && b.refundStatus !== 'none')) && inRange(b));
+
+      // pagination: client-side slicing (we aggregated)
+      const tot = refunds.length;
+      const startIdx = (p - 1) * limit;
+      const pageItems = refunds.slice(startIdx, startIdx + limit);
+
+      setData(pageItems);
+      setTotal(tot);
+      setPage(p);
     } catch (err) {
       console.error('Failed to load admin bookings', err);
+      setData([]);
     } finally {
       setLoading(false);
     }
@@ -86,78 +120,39 @@ export default function AdminRefunds() {
 
   return (
     <Layout role="admin" title="Hello, Admin" subtitle="Refunds">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-4 items-end">
-          <div>
-            <label className="text-xs text-gray-500 block mb-1">Start</label>
-            <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-inner border border-gray-100">
-              <img src={calendar} alt="calendar" className="w-5 h-5 mr-3 shrink-0" />
-              <input type="date" className="bg-transparent outline-none text-sm font-medium text-gray-700 w-full" name="start" value={start} onChange={(e) => { setStart(e.target.value); load(1, { start: e.target.value }); }} />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs text-gray-500 block mb-1">End</label>
-            <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-inner border border-gray-100">
-              <img src={calendar} alt="calendar" className="w-5 h-5 mr-3 shrink-0" />
-              <input type="date" className="bg-transparent outline-none text-sm font-medium text-gray-700 w-full" name="end" value={end} onChange={(e) => { setEnd(e.target.value); load(1, { end: e.target.value }); }} />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs text-gray-500 block mb-1">Filter by</label>
-            <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-inner border border-gray-100">
-              <select name="field" value={field} onChange={(e) => { const v = e.target.value; setField(v); load(1, { field: v }); }} className="text-sm font-medium text-gray-700 bg-transparent outline-none w-full cursor-pointer appearance-none pr-2" style={{
-                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                backgroundPosition: 'right center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: '1.5em 1.5em'
-              }}>
-                <option value="created">Created</option>
-                <option value="checkin">Check-in</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs text-gray-500 block mb-1">Hotel</label>
-            <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-inner border border-gray-100">
-              <img src={locationIcon} alt="hotel" className="w-5 h-5 mr-3 shrink-0" />
-              <select name="selectedHotel" value={selectedHotel} onChange={(e) => { const v = e.target.value; setSelectedHotel(v); load(1, { selectedHotel: v }); }} className="text-sm font-medium text-gray-700 bg-transparent outline-none w-full cursor-pointer appearance-none pr-2" style={{
-                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                backgroundPosition: 'right center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: '1.5em 1.5em'
-              }}>
-                <option value="">All Hotels</option>
-                {hotels.map(h => <option key={h._id || h.id} value={h._id || h.id}>{h.name}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="flex gap-2 justify-end">
-            <button type="button" onClick={() => { setStart(''); setEnd(''); setField('created'); setSelectedHotel(''); load(1, { start:'', end:'', field:'created', selectedHotel: '' }); }} className="flex items-center justify-center bg-white border border-gray-300 text-gray-600 rounded-lg px-4 py-2 hover:bg-gray-50 text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" /></svg>
-            </button>
-            <button className="bg-blue-600 text-white rounded px-4 py-2 text-sm" onClick={() => load(1)}>Filter</button>
-          </div>
+        <div className="bg-linear-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent font-bold mb-6 text-2xl">Refunds Management</div>
+        <div>
+          <FilterControls
+            start={start}
+            end={end}
+            field={field}
+            selectedHotel={selectedHotel}
+            hotels={hotels}
+            onChangeStart={(v) => { setStart(v); load(1, { start: v }); }}
+            onChangeEnd={(v) => { setEnd(v); load(1, { end: v }); }}
+            onChangeField={(v) => { setField(v); load(1, { field: v }); }}
+            onChangeSelectedHotel={(v) => { setSelectedHotel(v); load(1, { selected: v }); }}
+            onReset={() => { setStart(''); setEnd(''); setField('created'); setSelectedHotel(''); load(1, { start: '', end: '', field: 'created', selected: '' }); }}
+            onFilter={() => load(1)}
+          />
         </div>
 
         {loading ? (
-          <div className="text-gray-500">Loading refunds...</div>
+          <div className="flex justify-center py-8"><Spinner label="Loading refunds..." /></div>
         ) : (
           <div className="space-y-3">
             {/* Mobile card view */}
             <div className="block md:hidden space-y-3">
               {data?.map(b => (
-                <div key={b._id} className="border rounded-lg p-3 space-y-2">
+                <div key={b._id} className="border-2 border-pink-100 rounded-xl p-4 space-y-3 bg-white shadow-md hover:shadow-xl hover:border-pink-300 transition-all duration-300">
                   <div className="flex justify-between items-start">
                     <div>
                       <span className="text-xs text-gray-500">User:</span>
                       <div className="font-medium text-sm">{b.user?.name || b.user?.username}</div>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      b.refundStatus === 'completed' ? 'bg-green-100 text-green-700' :
-                      b.refundStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                    <span className={`text-xs px-3 py-1.5 rounded-lg font-semibold shadow-sm ${
+                      b.refundStatus === 'completed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
+                      b.refundStatus === 'pending' ? 'bg-linear-to-r from-yellow-400 to-yellow-500 text-white' :
                       'bg-gray-100 text-gray-700'
                     }`}>
                       {(b.refundStatus || 'none').charAt(0).toUpperCase() + (b.refundStatus || '').slice(1)}
@@ -170,7 +165,7 @@ export default function AdminRefunds() {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <span className="text-xs text-gray-500">Check-in:</span>
-                      <div className="text-sm">{b.checkInDate ? new Date(b.checkInDate).toLocaleDateString() : '-'}</div>
+                      <div className="text-sm">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</div>
                     </div>
                     <div>
                       <span className="text-xs text-gray-500">Total:</span>
@@ -183,7 +178,7 @@ export default function AdminRefunds() {
                   </div>
                   {b.refundStatus === 'pending' && (
                       <button 
-                        className="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm mt-2" 
+                        className="w-full px-4 py-2.5 bg-linear-to-r from-pink-500 to-rose-500 text-white rounded-xl text-sm font-medium mt-2 hover:scale-105 transition-transform duration-300 shadow-md" 
                         onClick={async () => { const { confirmAsync } = await import('../../utils/confirm'); if (await confirmAsync('Issue refund?')) { await adminIssueRefund(b._id); } }}
                       >
                         Issue Refund
@@ -194,33 +189,37 @@ export default function AdminRefunds() {
             </div>
 
             {/* Desktop table view */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-lg">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b">
-                    <th className="py-2">User</th>
-                    <th className="py-2">Hotel</th>
-                    <th className="py-2">Check-in</th>
-                    <th className="py-2">Total</th>
-                    <th className="py-2">Refund</th>
-                    <th className="py-2">Refund Status</th>
-                    <th className="py-2">Actions</th>
+                  <tr className="bg-linear-to-r from-pink-50 to-rose-50 border-b-2 border-pink-200">
+                    <th className="py-4 px-6 font-semibold text-gray-700">User</th>
+                    <th className="py-4 px-6 font-semibold text-gray-700">Hotel</th>
+                    <th className="py-4 px-6 font-semibold text-gray-700">Check-in</th>
+                    <th className="py-4 px-6 font-semibold text-gray-700">Total</th>
+                    <th className="py-4 px-6 font-semibold text-gray-700">Refund</th>
+                    <th className="py-4 px-6 font-semibold text-gray-700">Refund Status</th>
+                    <th className="py-4 px-6 font-semibold text-gray-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data?.map(b => (
-                    <tr key={b._id} className="border-b">
-                      <td className="py-2">{b.user?.name || b.user?.username}</td>
-                      <td className="py-2">{b.hotel?.name}</td>
-                      <td className="py-2">{b.checkInDate ? new Date(b.checkInDate).toLocaleString() : '-'}</td>
-                      <td className="py-2">${b.totalPrice}</td>
-                      <td className="py-2">{b.refundAmount ? ('$' + Number(b.refundAmount).toFixed(2)) : '-'}</td>
-                      <td className="py-2">{(b.refundStatus || 'none').charAt(0).toUpperCase() + (b.refundStatus || '').slice(1)}</td>
-                      <td className="py-2">
+                    <tr key={b._id} className="border-b border-gray-100 hover:bg-pink-50 transition-colors duration-200">
+                      <td className="py-4 px-6 font-medium text-gray-800">{b.user?.name || b.user?.username}</td>
+                      <td className="py-4 px-6 text-gray-600">{b.hotel?.name}</td>
+                      <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
+                      <td className="py-4 px-6 font-semibold text-green-600">${b.totalPrice}</td>
+                      <td className="py-4 px-6 font-semibold text-pink-600">{b.refundAmount ? ('$' + Number(b.refundAmount).toFixed(2)) : '-'}</td>
+                      <td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${
+                        (b.refundStatus || 'none') === 'completed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
+                        (b.refundStatus || 'none') === 'pending' ? 'bg-linear-to-r from-yellow-400 to-yellow-500 text-white' :
+                        'bg-gray-200 text-gray-700'
+                      }`}>{(b.refundStatus || 'none').charAt(0).toUpperCase() + (b.refundStatus || '').slice(1)}</span></td>
+                      <td className="py-4 px-6">
                         {b.refundStatus === 'pending' ? (
-                          <button className="px-2 py-1 bg-blue-600 text-white rounded text-sm" onClick={async () => { const { confirmAsync } = await import('../../utils/confirm'); if (await confirmAsync('Issue refund?')) { await adminIssueRefund(b._id); } }}>Issue</button>
+                          <button className="px-4 py-2 bg-linear-to-r from-pink-500 to-rose-500 text-white rounded-xl text-sm font-medium hover:scale-105 transition-transform duration-300 shadow-md" onClick={async () => { const { confirmAsync } = await import('../../utils/confirm'); if (await confirmAsync('Issue refund?')) { await adminIssueRefund(b._id); } }}>Issue</button>
                         ) : (
-                          <span className="text-sm text-gray-500">-</span>
+                          <span className="text-sm text-gray-400">-</span>
                         )}
                       </td>
                     </tr>
@@ -229,11 +228,7 @@ export default function AdminRefunds() {
               </table>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
-              <button disabled={page <= 1} onClick={() => load(page - 1)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Prev</button>
-              <div className="text-sm">Page {page} / {Math.max(1, Math.ceil((total || data.length) / limit))}</div>
-              <button disabled={page >= Math.ceil((total || data.length) / limit)} onClick={() => load(page + 1)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Next</button>
-            </div>
+            <Pagination page={page} total={total} limit={limit} onPageChange={(p)=>load(p)} className="mt-6" />
           </div>
         )}
       

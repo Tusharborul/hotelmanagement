@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import FilterControls from '../components/FilterControls';
 import Layout from '../components/Layout';
 import { adminService } from '../../services/adminService';
+import Pagination from '../../components/Pagination';
+import { formatDateTime } from '../../utils/date';
 
 export default function AdminBookingDetails() {
   const [start, setStart] = useState('');
@@ -12,7 +14,7 @@ export default function AdminBookingDetails() {
   const [selectedHotel, setSelectedHotel] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const limit = 20;
+  const limit = 10;
 
   // load supports overrides so callers can trigger filtering immediately
   const load = async (p = 1, overrides = {}) => {
@@ -74,6 +76,7 @@ export default function AdminBookingDetails() {
 
   return (
     <Layout role="admin" title="Hello, Admin" subtitle="Booking Details">
+        <div className="bg-linear-to-r from-orange-600 to-red-600 bg-clip-text text-transparent font-bold mb-6 text-2xl">Booking Details</div>
       
         <FilterControls
           start={start}
@@ -93,16 +96,16 @@ export default function AdminBookingDetails() {
           {/* Mobile card view */}
           <div className="block md:hidden space-y-3">
             {data?.map(b => (
-              <div key={b._id} className="border rounded-lg p-3 space-y-2">
+              <div key={b._id} className="border-2 border-orange-100 rounded-xl p-4 space-y-3 bg-white shadow-md hover:shadow-xl hover:border-orange-300 transition-all duration-300">
                 <div className="flex justify-between">
                   <div>
                     <span className="text-xs text-gray-500">User:</span>
                     <div className="font-medium text-sm">{b.user?.name || b.user?.username}</div>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded h-fit ${
-                    b.status === 'confirmed' ? 'bg-green-100 text-green-700' : 
-                    b.status === 'cancelled' ? 'bg-red-100 text-red-700' : 
-                    'bg-yellow-100 text-yellow-700'
+                  <span className={`text-xs px-3 py-1.5 rounded-lg font-semibold shadow-sm h-fit ${
+                    b.status === 'confirmed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' : 
+                    b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' : 
+                    'bg-linear-to-r from-yellow-400 to-yellow-500 text-white'
                   }`}>
                     {b.status}
                   </span>
@@ -114,7 +117,7 @@ export default function AdminBookingDetails() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <span className="text-xs text-gray-500">Check-in:</span>
-                    <div className="text-sm">{b.checkInDate ? new Date(b.checkInDate).toLocaleDateString() : '-'}</div>
+                    <div className="text-sm">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</div>
                   </div>
                   <div>
                     <span className="text-xs text-gray-500">Days:</span>
@@ -126,13 +129,13 @@ export default function AdminBookingDetails() {
                   </div>
                   <div>
                     <span className="text-xs text-gray-500">Created:</span>
-                    <div className="text-sm">{new Date(b.createdAt).toLocaleDateString()}</div>
+                    <div className="text-sm">{formatDateTime(b.createdAt)}</div>
                   </div>
                 </div>
                 {b.refundStatus && b.refundStatus !== 'none' && (
-                  <div className="pt-2 border-t">
-                    <span className="text-xs text-gray-500">Refund:</span>
-                    <span className="text-xs ml-2 px-2 py-0.5 rounded bg-blue-100 text-blue-700">{b.refundStatus}</span>
+                  <div className="pt-2 border-t border-gray-200">
+                    <span className="text-xs text-gray-500 font-medium">Refund:</span>
+                    <span className="text-xs ml-2 px-3 py-1 rounded-lg bg-linear-to-r from-blue-400 to-blue-500 text-white font-semibold shadow-sm">{b.refundStatus}</span>
                   </div>
                 )}
               </div>
@@ -140,29 +143,35 @@ export default function AdminBookingDetails() {
           </div>
 
           {/* Desktop table view */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-lg">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b">
-                  <th className="py-2">User</th>
-                  <th className="py-2">Hotel</th>
-                  <th className="py-2">Check-in</th>
-                  <th className="py-2">Days</th>
-                  <th className="py-2">Total</th>
-                  <th className="py-2">Status</th>
-                  <th className="py-2">Created</th>
+                <tr className="bg-linear-to-r from-orange-50 to-red-50 border-b-2 border-orange-200">
+                  <th className="py-4 px-6 font-semibold text-gray-700">User</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Hotel</th>
+                   <th className="py-4 px-6 font-semibold text-gray-700">Created</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Check-in</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Days</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Total</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Status</th>
+                 
                 </tr>
               </thead>
               <tbody>
                 {data?.map(b => (
-                  <tr key={b._id} className="border-b">
-                    <td className="py-2">{b.user?.name || b.user?.username}</td>
-                    <td className="py-2">{b.hotel?.name}</td>
-                    <td className="py-2">{b.checkInDate ? new Date(b.checkInDate).toLocaleDateString() : '-'}</td>
-                    <td className="py-2">{b.days}</td>
-                    <td className="py-2">${b.totalPrice}</td>
-                    <td className="py-2">{b.status}{b.refundStatus && b.refundStatus !== 'none' ? ` / ${b.refundStatus}` : ''}</td>
-                    <td className="py-2">{new Date(b.createdAt).toLocaleDateString()}</td>
+                  <tr key={b._id} className="border-b border-gray-100 hover:bg-orange-50 transition-colors duration-200">
+                    <td className="py-4 px-6 text-gray-800 font-medium">{b.user?.name || b.user?.username}</td>
+                    <td className="py-4 px-6 text-gray-600">{b.hotel?.name}</td>
+                     <td className="py-4 px-6 text-gray-600">{formatDateTime(b.createdAt)}</td>
+                    <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
+                    <td className="py-4 px-6 text-gray-600">{b.days}</td>
+                    <td className="py-4 px-6 font-semibold text-green-600">${b.totalPrice}</td>
+                    <td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${
+                      b.status === 'confirmed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' : 
+                      b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' : 
+                      'bg-linear-to-r from-yellow-400 to-yellow-500 text-white'
+                    }`}>{b.status}</span>{b.refundStatus && b.refundStatus !== 'none' ? <span className="ml-2 px-2 py-1 rounded-lg text-xs bg-blue-100 text-blue-700 font-semibold">{b.refundStatus}</span> : ''}</td>
+                   
                   </tr>
                 ))}
               </tbody>
@@ -170,11 +179,7 @@ export default function AdminBookingDetails() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
-          <button disabled={page<=1} onClick={()=>load(page-1)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Prev</button>
-          <div className="text-sm">Page {page} / {Math.max(1, Math.ceil(total/limit))}</div>
-          <button disabled={page>=Math.ceil(total/limit)} onClick={()=>load(page+1)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Next</button>
-        </div>
+        <Pagination page={page} total={total} limit={limit} onPageChange={(p)=>load(p)} className="mt-6" />
    
     </Layout>
   );

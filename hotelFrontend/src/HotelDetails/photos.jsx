@@ -58,20 +58,25 @@ const Photos = ({ hotel }) => {
     return (
         <div className="w-full flex flex-col">
             {/* Breadcrumb and Title */}
-            <div className="mb-6 mt-20">
-                <div className="text-gray-400 text-xl mb-2">
-                    <span>Home</span>
-                    <span className="mx-2">/</span>
+            <div className="mb-8 mt-8">
+                <div className="text-gray-500 text-base mb-6 flex items-center gap-2">
+                    <span className="hover:text-[#3256e2] transition-colors cursor-pointer">Home</span>
+                    <span className="text-gray-400">→</span>
                     <span className="text-[#1a237e] font-semibold">Hotel Details</span>
                 </div>
                 <div className="flex flex-col items-center">
-                    <h1 className="text-2xl md:text-[36px] font-bold text-[#1a237e] mb-2 text-center">{hotel.name}</h1>
-                    <div className="text-[14px] md:text-[18px] text-gray-400 text-center">{hotel.location}</div>
+                    <h1 className="text-3xl md:text-[42px] font-bold text-[#1a237e] mb-3 text-center">{hotel.name}</h1>
+                    <div className="text-[16px] md:text-[18px] text-gray-600 text-center flex items-center gap-2">
+                        <svg className="w-5 h-5 text-[#3256e2]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                        </svg>
+                        {hotel.location}
+                    </div>
                 </div>
             </div>
 
             {/* Carousel container */}
-            <div className="w-full max-w-[1150px] mx-auto bg-white rounded-[15px] shadow-sm overflow-hidden">
+            <div className="w-full max-w-[1150px] mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-blue-100">
                 <div
                     className="relative"
                     onMouseEnter={() => (isHover.current = true)}
@@ -89,17 +94,17 @@ const Photos = ({ hotel }) => {
                     </div>
 
                     {/* Prev / Next */}
-                    <button onClick={prev} aria-label="Previous" className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md focus:outline-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-700"><path d="m15 18-6-6 6-6"></path></svg>
+                    <button onClick={prev} aria-label="Previous" className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white rounded-full p-3 shadow-lg hover:shadow-xl focus:outline-none transition-all duration-300 hover:scale-110 border border-blue-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600"><path d="m15 18-6-6 6-6"></path></svg>
                     </button>
-                    <button onClick={next} aria-label="Next" className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md focus:outline-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-700"><path d="m9 18 6-6-6-6"></path></svg>
+                    <button onClick={next} aria-label="Next" className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white rounded-full p-3 shadow-lg hover:shadow-xl focus:outline-none transition-all duration-300 hover:scale-110 border border-blue-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600"><path d="m9 18 6-6-6-6"></path></svg>
                     </button>
 
                     {/* Pagination dots */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 bg-black/30 backdrop-blur-sm px-4 py-2 rounded-full">
                         {imgs.map((_, i) => (
-                            <button key={i} onClick={() => setIndex(i)} className={`w-3 h-3 rounded-full ${i === index ? 'bg-blue-600' : 'bg-white border border-gray-300'}`} aria-label={`Go to ${i + 1}`} />
+                            <button key={i} onClick={() => setIndex(i)} className={`w-3 h-3 rounded-full transition-all duration-300 ${i === index ? 'bg-white w-8' : 'bg-white/60 hover:bg-white/80'}`} aria-label={`Go to ${i + 1}`} />
                         ))}
                     </div>
                 </div>

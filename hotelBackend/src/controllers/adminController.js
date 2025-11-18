@@ -41,7 +41,7 @@ exports.getUsers = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const fields = {};
-    ['name','username','email','role','phone','country'].forEach(k=>{
+    ['name','username','email','role','phone','country','ownerApproved'].forEach(k=>{
       if (req.body[k] !== undefined) fields[k] = req.body[k];
     });
     const user = await User.findByIdAndUpdate(req.params.id, fields, { new: true, runValidators: true });
@@ -73,7 +73,21 @@ exports.getOwners = async (req, res) => {
     const pipeline = [
       { $match: { role: 'hotelOwner' } },
       { $lookup: { from: 'hotels', localField: '_id', foreignField: 'owner', as: 'hotels' } },
-      { $project: { username: 1, name:1, createdAt:1, hotelCount: { $size: '$hotels' }, statuses: '$hotels.status' } },
+      { $project: { 
+        username: 1, 
+        name:1, 
+        createdAt:1, 
+        ownerApproved: 1,
+        hotelCount: { $size: '$hotels' }, 
+        statuses: '$hotels.status',
+        hotels: {
+          $map: {
+            input: '$hotels',
+            as: 'h',
+            in: { _id: '$$h._id', status: '$$h.status' }
+          }
+        }
+      } },
       { $sort: { createdAt: -1 } },
       { $skip: skip },
       { $limit: limit }
@@ -122,6 +136,65 @@ exports.updateHotelStatus = async (req, res) => {
       console.error('Error auto-refunding bookings during admin status change:', err);
     }
     res.status(200).json({ success: true, data: hotel });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// GET /api/admin/owners/:id/hotels - list minimal hotel docs for an owner
+exports.getOwnerHotels = async (req, res) => {
+  try {
+    const ownerId = req.params.id;
+    const hotels = await Hotel.find({ owner: ownerId }).select('_id status createdAt').sort({ createdAt: -1 });
+    return res.status(200).json({ success: true, data: hotels });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// PUT /api/admin/owners/:id/hotels/status - bulk update all hotels of an owner
+exports.bulkUpdateOwnerHotelsStatus = async (req, res) => {
+  try {
+    const ownerId = req.params.id;
+    const { status } = req.body;
+    if (!status || !['pending','approved','rejected'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+
+    const hotels = await Hotel.find({ owner: ownerId });
+    const results = [];
+    for (const hotel of hotels) {
+      // update status
+      hotel.status = status;
+      await hotel.save({ validateModifiedOnly: true });
+
+      // mirror the auto-refund logic when moving away from approved
+      if (status !== 'approved') {
+        try {
+          const bookings = await Booking.find({ hotel: hotel._id, status: { $in: ['pending','confirmed'] } });
+          for (const b of bookings) {
+            b.status = 'cancelled';
+            b.cancelledAt = new Date();
+            b.cancelledBy = req.user.id;
+            b.cancellationReason = 'lankastay';
+            const refundAmount = b.initialPayment || 0;
+            b.refundAmount = refundAmount;
+            if (refundAmount > 0) {
+              b.refundStatus = 'issued';
+              b.refundedAt = new Date();
+              b.refundedBy = req.user.id;
+            } else {
+              b.refundStatus = 'none';
+            }
+            await b.save();
+          }
+        } catch (err) {
+          console.error('bulkUpdateOwnerHotelsStatus refund loop error:', err);
+        }
+      }
+      results.push({ _id: hotel._id, status: hotel.status });
+    }
+    return res.status(200).json({ success: true, data: results });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

@@ -64,17 +64,17 @@ const Login = () => {
       {/* Right: Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center items-center py-12 lg:h-screen">
         <form onSubmit={handleSubmit} className="w-[90%] lg:w-[80%] max-w-sm flex flex-col gap-3 mt-2">
-          <h2 className="text-[32px] font-bold mb-2 text-center">Login Account</h2>
+          <h2 className="text-[32px] font-bold mb-2 text-center bg-linear-to-r from-[#152C5B] to-[#3252DF] bg-clip-text text-transparent">Login Account</h2>
           <div>
-            <label className="text-[16px] font-medium mb-1 block" htmlFor="username">Username</label>
-            <input  name="username" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full h-9 rounded-md border border-gray-300 px-3 py-1 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" id="username" type="text" placeholder="Username" />
+            <label className="text-[16px] font-medium mb-1 block text-gray-700" htmlFor="username">Username</label>
+            <input  name="username" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full h-10 rounded-xl border-2 border-gray-200 px-4 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-300" id="username" type="text" placeholder="Username" />
             {errors.username && <div className="text-red-500 text-xs mt-1">{errors.username}</div>}
           </div>
           <div>
-            <label className="text-[16px] font-medium mb-1 block" htmlFor="password">Password</label>
+            <label className="text-[16px] font-medium mb-1 block text-gray-700" htmlFor="password">Password</label>
             <div className="relative">
-              <input  name="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-9 rounded-md border border-gray-300 px-3 py-1 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10" id="password" type={showPassword ? "text" : "password"} placeholder="6+ characters" />
-              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer flex items-center" style={{height: '100%'}} onClick={() => setShowPassword(!showPassword)}>
+              <input  name="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-10 rounded-xl border-2 border-gray-200 px-4 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10 transition-all duration-300 hover:border-blue-300" id="password" type={showPassword ? "text" : "password"} placeholder="6+ characters" />
+              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer flex items-center hover:text-blue-500 transition-colors duration-200" style={{height: '100%'}} onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? (
                   // Eye icon (visible)
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
@@ -95,7 +95,7 @@ const Login = () => {
           </div>
           {errors.submit && <div className="text-red-500 text-sm mt-2 text-center">{errors.submit}</div>}
           <p className="text-xs text-gray-500 mt-2 mb-2 text-center">By signing up you agree to <a href="#" className="text-blue-600 underline">terms and conditions</a> at zoho.</p>
-          <button type="submit" disabled={loading} className="bg-[#0057FF] text-white text-base font-medium rounded-lg py-2 mt-2 mb-2 w-full shadow hover:bg-[#003bb3] transition disabled:opacity-50 disabled:cursor-not-allowed">
+          <button type="submit" disabled={loading} className="bg-linear-to-r from-[#0057FF] to-[#5b7cff] text-white text-base font-medium rounded-xl py-3 mt-2 mb-2 w-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
             {loading ? 'Logging in...' : 'Login'}
           </button>
           <div className="flex items-center justify-between w-full mt-2">

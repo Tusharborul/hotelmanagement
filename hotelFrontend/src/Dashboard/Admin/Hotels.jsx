@@ -3,6 +3,9 @@ import Layout from '../components/Layout';
 import { adminService } from '../../services/adminService';
 import { showToast } from '../../utils/toast';
 import Modal from '../../components/Modal';
+import Spinner from '../../components/Spinner';
+import Pagination from '../../components/Pagination';
+import { formatDateTime } from '../../utils/date';
 
 export default function AdminHotels(){
   const [hotels, setHotels] = useState([]);
@@ -10,7 +13,7 @@ export default function AdminHotels(){
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
-  const limit = 20;
+  const limit = 10;
 
   const load = async (p=1, status) => {
     setLoading(true);
@@ -58,14 +61,14 @@ export default function AdminHotels(){
   return (
     <Layout role="admin" title="Hello, Admin" subtitle="Hotels">
     
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-          <div className="font-semibold text-lg">Hotels</div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div className="bg-linear-to-r from-green-600 to-teal-600 bg-clip-text text-transparent font-bold text-2xl">Hotels Management</div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <label className="text-sm text-gray-600">Filter:</label>
+            <label className="text-sm font-semibold text-gray-700">Filter:</label>
             <select 
                name="filter" value={filter} 
               onChange={(e)=>{ setFilter(e.target.value); load(1, e.target.value); }} 
-              className="border rounded px-3 py-2 text-sm w-full sm:w-48 lg:w-56 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border-2 border-green-300 rounded-xl px-4 py-2.5 text-sm w-full sm:w-48 lg:w-56 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white font-medium text-gray-700 cursor-pointer hover:border-green-400 transition-colors duration-300"
             >
               <option value="all">All Hotels</option>
               <option value="pending">Pending</option>
@@ -76,7 +79,7 @@ export default function AdminHotels(){
         </div>
 
         {loading ? (
-          <div className="text-gray-500">Loading...</div>
+          <div className="flex justify-center py-8"><Spinner label="Loading hotels..." /></div>
         ) : (
           <div className="space-y-3">
             {/* Status change modal */}
@@ -101,7 +104,7 @@ export default function AdminHotels(){
             {/* Mobile card view */}
             <div className="block md:hidden space-y-3">
               {hotels.map(h => (
-                <div key={h._id} className="border rounded-lg p-3 space-y-2">
+                <div key={h._id} className="border-2 border-green-100 rounded-xl p-4 space-y-3 bg-white shadow-md hover:shadow-xl hover:border-green-300 transition-all duration-300">
                   <div>
                     <span className="text-xs text-gray-500">Name:</span>
                     <div className="font-medium">{h.name}</div>
@@ -113,40 +116,40 @@ export default function AdminHotels(){
                   <div className="flex justify-between items-center">
                     <div>
                       <span className="text-xs text-gray-500">Created:</span>
-                      <div className="text-sm">{new Date(h.createdAt).toLocaleDateString()}</div>
+                      <div className="text-sm">{formatDateTime(h.createdAt)}</div>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      h.status === 'approved' ? 'bg-green-100 text-green-700' : 
-                      h.status === 'rejected' ? 'bg-red-100 text-red-700' : 
-                      'bg-yellow-100 text-yellow-700'
+                    <span className={`text-xs px-3 py-1.5 rounded-lg font-semibold shadow-sm ${
+                      h.status === 'approved' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' : 
+                      h.status === 'rejected' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' : 
+                      'bg-linear-to-r from-yellow-400 to-yellow-500 text-white'
                     }`}>
                       {h.status}
                     </span>
                   </div>
                   <div className="flex gap-2 pt-2">
-                    <button className="px-2 py-1.5 bg-yellow-400 text-black rounded text-xs flex-1" onClick={()=>openStatusModal(h._id, h.status)}>Change Status</button>
+                    <button className="px-4 py-2 bg-linear-to-r from-green-500 to-teal-500 text-white rounded-xl text-sm flex-1 hover:scale-105 transition-transform duration-300 shadow-md" onClick={()=>openStatusModal(h._id, h.status)}>Change Status</button>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Desktop table view */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-lg">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b"><th className="py-2">Name</th><th className="py-2">Owner</th><th className="py-2">Created</th><th className="py-2">Action</th></tr>
+                  <tr className="bg-linear-to-r from-green-50 to-teal-50 border-b-2 border-green-200"><th className="py-4 px-6 font-semibold text-gray-700">Name</th><th className="py-4 px-6 font-semibold text-gray-700">Owner</th><th className="py-4 px-6 font-semibold text-gray-700">Created</th><th className="py-4 px-6 font-semibold text-gray-700">Action</th></tr>
                 </thead>
                 <tbody>
                   {hotels.map(h => (
-                    <tr key={h._id} className="border-b">
-                      <td className="py-2">{h.name}</td>
-                      <td className="py-2">{h.owner?.name || h.owner?.username || ''}</td>
-                      <td className="py-2">{new Date(h.createdAt).toLocaleDateString()}</td>
-                      <td className="py-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className={`text-xs px-2 py-1 rounded ${h.status === 'approved' ? 'bg-green-100 text-green-800' : h.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>{h.status}</span>
+                    <tr key={h._id} className="border-b border-gray-100 hover:bg-green-50 transition-colors duration-200">
+                      <td className="py-4 px-6 font-medium text-gray-800">{h.name}</td>
+                      <td className="py-4 px-6 text-gray-600">{h.owner?.name || h.owner?.username || ''}</td>
+                      <td className="py-4 px-6 text-gray-600">{formatDateTime(h.createdAt)}</td>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className={`text-xs px-3 py-1.5 rounded-lg font-semibold shadow-sm ${h.status === 'approved' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' : h.status === 'rejected' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' : 'bg-linear-to-r from-yellow-400 to-yellow-500 text-white'}`}>{h.status}</span>
                           <div className="flex gap-2">
-                            <button className="px-2 py-1 bg-yellow-400 text-black rounded text-sm" onClick={()=>openStatusModal(h._id, h.status)}>Change Status</button>
+                            <button className="px-4 py-2 bg-linear-to-r from-green-500 to-teal-500 text-white rounded-xl text-sm hover:scale-105 transition-transform duration-300 shadow-md" onClick={()=>openStatusModal(h._id, h.status)}>Change Status</button>
                           </div>
                         </div>
                       </td>
@@ -158,11 +161,7 @@ export default function AdminHotels(){
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
-          <button disabled={page<=1} onClick={()=>load(page-1, filter)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Prev</button>
-          <div className="text-sm">Page {page} / {Math.max(1, Math.ceil(total/limit))}</div>
-          <button disabled={page>=Math.ceil(total/limit)} onClick={()=>load(page+1, filter)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Next</button>
-        </div>
+        <Pagination page={page} total={total} limit={limit} onPageChange={(p)=>load(p, filter)} className="mt-6" />
      
     </Layout>
   );

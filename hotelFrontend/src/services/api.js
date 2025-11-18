@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { loaderBus } from '../utils/loaderBus';
 
 // Create axios instance
 const api = axios.create({
@@ -11,6 +12,7 @@ const api = axios.create({
 // Request interceptor to add token
 api.interceptors.request.use(
   (config) => {
+    try { loaderBus.increment(); } catch (e) {}
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -18,14 +20,19 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    try { loaderBus.decrement(); } catch (e) {}
     return Promise.reject(error);
   }
 );
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    try { loaderBus.decrement(); } catch (e) {}
+    return response;
+  },
   (error) => {
+    try { loaderBus.decrement(); } catch (e) {}
     if (error.response?.status === 401) {
       // Token expired or invalid - clear localStorage and redirect to login
       localStorage.removeItem('token');

@@ -175,7 +175,7 @@ const SearchBar = () => {
         </div>
 
         {/* Actions: Reset + Search */}
-        <div className="flex items-center gap-2 justify-end">
+        <div className="flex items-center gap-2 ">
           <button
             onClick={onReset}
             className="flex items-center justify-center bg-white border border-gray-300 text-gray-600 rounded-lg px-4 py-2.5 hover:bg-gray-50 transition"
@@ -187,9 +187,9 @@ const SearchBar = () => {
             </svg>
           </button>
 
-          <button type="submit" className="bg-[#6f46ff] text-white font-semibold rounded-lg px-8 py-2.5 shadow-md hover:bg-[#5935d6] transition-all">
+          {/* <button type="submit" className="bg-[#6f46ff] text-white font-semibold rounded-lg px-8 py-2.5 shadow-md hover:bg-[#5935d6] transition-all">
             Search
-          </button>
+          </button> */}
         </div>
       </div>
     </form>

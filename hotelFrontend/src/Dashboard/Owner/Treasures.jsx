@@ -164,6 +164,7 @@ export default function OwnerTreasures() {
 
   return (
     <Layout role="owner" title="Hello, Owner" subtitle="Treasures">
+        <div className="bg-linear-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent font-bold mb-6 text-2xl">Treasures Management</div>
         {/* Add/Edit modals rendered at top-level of this card to avoid nesting issues */}
         <Modal title="Add Treasure" open={showAddModal} onClose={()=>setShowAddModal(false)} size="md">
           <form onSubmit={submitAdd} className="space-y-3">
@@ -219,9 +220,9 @@ export default function OwnerTreasures() {
             </div>
           </form>
         </Modal>
-        <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
-          <label className="text-sm text-gray-600 font-medium">Hotel:</label>
-          <select className="border rounded px-3 py-2 w-full sm:w-64 lg:w-80 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"  name="selected" value={selected} onChange={(e)=>setSelected(e.target.value)}>
+        <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <label className="text-sm font-semibold text-gray-700">Hotel:</label>
+          <select className="border-2 border-yellow-300 rounded-xl px-4 py-2.5 w-full sm:w-64 lg:w-80 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white font-medium text-gray-700 cursor-pointer hover:border-yellow-400 transition-colors duration-300"  name="selected" value={selected} onChange={(e)=>setSelected(e.target.value)}>
             <option value="">Select a hotel</option>
             {hotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
           </select>
@@ -229,10 +230,10 @@ export default function OwnerTreasures() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
-          <div>
-            <div className="font-semibold mb-3 text-lg">Add Treasure</div>
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="font-bold mb-4 text-xl bg-linear-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent">Add Treasure</div>
             <div>
-              <button className="px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition" onClick={()=>setShowAddModal(true)} disabled={!selected}>Add Treasure</button>
+              <button className="px-6 py-3 bg-linear-to-r from-green-500 to-green-600 text-white rounded-xl text-sm font-medium hover:scale-105 transition-transform duration-300 shadow-md hover:shadow-lg" onClick={()=>setShowAddModal(true)} disabled={!selected}>Add Treasure</button>
               <div className="text-xs text-gray-500 mt-2">Open the add treasure form in a popup.</div>
             </div>
             <Modal title="Add Treasure" open={showAddModal} onClose={()=>setShowAddModal(false)} size="md">
@@ -263,8 +264,8 @@ export default function OwnerTreasures() {
               </form>
             </Modal>
           </div>
-          <div>
-            <div className="font-semibold mb-3 text-lg">Treasures</div>
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="font-bold mb-4 text-xl bg-linear-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent">Treasures</div>
             {!selectedHotel ? (
               <div className="text-gray-500 text-center py-8">No hotel selected</div>
             ) : (

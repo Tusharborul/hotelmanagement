@@ -67,9 +67,9 @@ export default function ProfileEditor({ open, onClose }) {
 
   return (
     <Modal open={open} onClose={onClose} title="Edit Profile">
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+          <div className="w-20 h-20 rounded-full overflow-hidden bg-linear-to-br from-blue-100 to-blue-200 flex items-center justify-center shadow-md">
             {preview ? (
               <img src={preview} alt="avatar" className="w-full h-full object-cover" />
             ) : (
@@ -77,9 +77,9 @@ export default function ProfileEditor({ open, onClose }) {
             )}
           </div>
           <div className="flex-1">
-            <label className="block text-sm text-gray-600 mb-1">Change photo</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Change photo</label>
             <div className="flex items-center gap-3">
-              <label htmlFor="profile-file" className="inline-flex items-center px-3 py-2 bg-white border rounded text-sm cursor-pointer hover:bg-gray-50">
+              <label htmlFor="profile-file" className="inline-flex items-center px-4 py-2.5 bg-white border-2 border-blue-300 rounded-xl text-sm cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all duration-300 shadow-md hover:shadow-lg font-medium text-blue-600">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12v8m0-8l-3 3m3-3l3 3M7 8l5-5 5 5" />
                 </svg>
@@ -92,13 +92,13 @@ export default function ProfileEditor({ open, onClose }) {
         </div>
 
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Display name</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} className="w-full border rounded px-3 py-2 text-sm" />
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Display name</label>
+          <input value={name} onChange={(e) => setName(e.target.value)} className="w-full border-2 border-blue-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-300" />
         </div>
 
-        <div className="flex justify-end gap-2">
-          <button className="px-4 py-2 border rounded" onClick={onClose} disabled={saving}>Cancel</button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={save} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+        <div className="flex justify-end gap-3 pt-2">
+          <button className="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 font-medium" onClick={onClose} disabled={saving}>Cancel</button>
+          <button className="px-6 py-2.5 bg-linear-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:scale-105 transition-transform duration-300 shadow-md hover:shadow-lg font-medium disabled:opacity-50 disabled:hover:scale-100" onClick={save} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
         </div>
       </div>
     </Modal>

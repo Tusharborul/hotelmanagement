@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { adminService } from '../../services/adminService';
 import Modal from '../../components/Modal';
+import Spinner from '../../components/Spinner';
+import Pagination from '../../components/Pagination';
+import { formatDateTime } from '../../utils/date';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const limit = 20;
+  const limit = 10;
   const [loading, setLoading] = useState(false);
   const [editRow, setEditRow] = useState(null);
   const [username, setUsername] = useState('');
@@ -32,15 +35,15 @@ export default function AdminUsers() {
 
   return (
     <Layout role="admin" title="Hello, Admin" subtitle="Users">
-        <div className="font-semibold mb-4 text-lg">Users (role: user)</div>
+        <div className="bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold mb-6 text-2xl">Users Management</div>
         {loading ? (
-          <div className="text-gray-500">Loading...</div>
+          <div className="flex justify-center py-8"><Spinner label="Loading users..." /></div>
         ) : (
           <div className="space-y-3">
             {/* Mobile card view */}
             <div className="block md:hidden space-y-3">
               {users.map(u => (
-                <div key={u._id} className="border rounded-lg p-3 space-y-2">
+                <div key={u._id} className="border-2 border-blue-100 rounded-xl p-4 space-y-3 bg-white shadow-md hover:shadow-xl hover:border-blue-300 transition-all duration-300">
                   <div>
                     <span className="text-xs text-gray-500">Username:</span>
                     {editRow===u._id && !showEditModal ? (
@@ -51,42 +54,42 @@ export default function AdminUsers() {
                   </div>
                   <div>
                     <span className="text-xs text-gray-500">Created:</span>
-                    <div className="text-sm">{new Date(u.createdAt).toLocaleDateString()}</div>
+                    <div className="text-sm">{formatDateTime(u.createdAt)}</div>
                   </div>
                   <div className="flex gap-2 pt-2">
                     {editRow===u._id && !showEditModal ? (
-                      <button className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm flex-1" onClick={()=>saveEdit(u._id)}>Save</button>
+                      <button className="px-4 py-2 bg-linear-to-r from-blue-500 to-blue-600 text-white rounded-xl text-sm flex-1 hover:scale-105 transition-transform duration-300 shadow-md" onClick={()=>saveEdit(u._id)}>Save</button>
                     ) : (
-                      <button className="px-3 py-1.5 border rounded text-sm flex-1" onClick={()=>startEditModal(u)}>Edit</button>
+                      <button className="px-4 py-2 border-2 border-blue-500 text-blue-600 rounded-xl text-sm flex-1 hover:bg-blue-50 hover:scale-105 transition-all duration-300" onClick={()=>startEditModal(u)}>Edit</button>
                     )}
-                    <button className="px-3 py-1.5 border rounded text-red-600 text-sm flex-1" onClick={()=>remove(u._id)}>Delete</button>
+                    <button className="px-4 py-2 border-2 border-red-500 text-red-600 rounded-xl text-sm flex-1 hover:bg-red-50 hover:scale-105 transition-all duration-300" onClick={()=>remove(u._id)}>Delete</button>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Desktop table view */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-lg">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b"><th className="py-2">Username</th><th className="py-2">Created</th><th className="py-2">Action</th></tr>
+                  <tr className="bg-linear-to-r from-blue-50 to-purple-50 border-b-2 border-blue-200"><th className="py-4 px-6 font-semibold text-gray-700">Username</th><th className="py-4 px-6 font-semibold text-gray-700">Created</th><th className="py-4 px-6 font-semibold text-gray-700">Action</th></tr>
                 </thead>
                 <tbody>
                   {users.map(u => (
-                    <tr key={u._id} className="border-b">
-                      <td className="py-2">
+                    <tr key={u._id} className="border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200">
+                      <td className="py-4 px-6">
                         {editRow===u._id && !showEditModal ? (
-                          <input className="border px-2 py-1 rounded"  name="username" value={username} onChange={(e)=>setUsername(e.target.value)} />
-                        ) : u.username}
+                          <input className="border-2 border-blue-300 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"  name="username" value={username} onChange={(e)=>setUsername(e.target.value)} />
+                        ) : <span className="font-medium text-gray-800">{u.username}</span>}
                       </td>
-                      <td className="py-2">{new Date(u.createdAt).toLocaleDateString()}</td>
-                      <td className="py-2 flex gap-2">
+                      <td className="py-4 px-6 text-gray-600">{formatDateTime(u.createdAt)}</td>
+                      <td className="py-4 px-6 flex gap-2">
                         {editRow===u._id && !showEditModal ? (
-                          <button className="px-2 py-1 bg-blue-600 text-white rounded" onClick={()=>saveEdit(u._id)}>Save</button>
+                          <button className="px-4 py-2 bg-linear-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:scale-105 transition-transform duration-300 shadow-md" onClick={()=>saveEdit(u._id)}>Save</button>
                         ) : (
-                          <button className="px-2 py-1 border rounded" onClick={()=>startEditModal(u)}>Edit</button>
+                          <button className="px-4 py-2 border-2 border-blue-500 text-blue-600 rounded-xl hover:bg-blue-50 transition-colors duration-300" onClick={()=>startEditModal(u)}>Edit</button>
                         )}
-                        <button className="px-2 py-1 border rounded text-red-600" onClick={()=>remove(u._id)}>Delete</button>
+                        <button className="px-4 py-2 border-2 border-red-500 text-red-600 rounded-xl hover:bg-red-50 transition-colors duration-300" onClick={()=>remove(u._id)}>Delete</button>
                       </td>
                     </tr>
                   ))}
@@ -95,11 +98,7 @@ export default function AdminUsers() {
             </div>
           </div>
         )}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
-          <button disabled={page<=1} onClick={()=>load(page-1)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Prev</button>
-          <div className="text-sm">Page {page} / {Math.max(1, Math.ceil(total/limit))}</div>
-          <button disabled={page>=Math.ceil(total/limit)} onClick={()=>load(page+1)} className="border px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto text-sm">Next</button>
-        </div>
+        <Pagination page={page} total={total} limit={limit} onPageChange={(p)=>load(p)} className="mt-6" />
     
       <Modal title="Edit User" open={showEditModal} onClose={()=>{ setShowEditModal(false); setEditRow(null); }} size="md">
         <div className="space-y-3">

@@ -9,12 +9,13 @@ const HomePage = () => {
     return (
         <>
             <Head />
-            <div className="max-w-7xl mx-auto px-8 w-full">
-                
-                <StartNewVacation />
-                <SearchBar />
-                <MostPicked />
-                <Popular />
+            <div className="bg-linear-to-b from-white via-blue-50/30 to-white min-h-screen">
+                <div className="max-w-7xl mx-auto px-8 w-full">
+                    <StartNewVacation />
+                    <SearchBar />
+                    <MostPicked />
+                    <Popular />
+                </div>
             </div>
             <Foot />
         </>

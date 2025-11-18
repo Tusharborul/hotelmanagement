@@ -14,14 +14,15 @@ export default function Header({ title, subtitle, onMenuClick }) {
   }, [showProfile]);
   
   return (
-    <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm ">
-      <div className=" px-8 w-full lg:px-12 py-4 lg:py-6">
-        <div className="flex items-center justify-between">
+    <div className="bg-linear-to-r from-white to-blue-50 border-b-2 border-blue-100 sticky top-0 z-10 shadow-md">
+      <div className="flex px-8 w-full lg:px-12 h-16">
+        <div className="flex items-center space-x-4 justify-between w-full">
           {/* Mobile menu button + Title */}
           <div className="flex items-center gap-10">
             <button
               onClick={onMenuClick}
-              className=" text-gray-600 hover:text-gray-900 focus:outline-none"
+              className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+              aria-label="Toggle menu"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -29,12 +30,9 @@ export default function Header({ title, subtitle, onMenuClick }) {
             </button>
             
             <div>
-              <h1 className="text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900">
-                {title || `Hello, ${user?.name || 'User'}`}
+              <h1 className="text-xl lg:text-2xl xl:text-3xl font-bold bg-linear-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent">
+                {`Hello, ${user?.name || 'User'}`}
               </h1>
-              {subtitle && (
-                <p className="text-sm lg:text-base text-gray-500 mt-1">{subtitle}</p>
-              )}
             </div>
           </div>
 
@@ -51,7 +49,7 @@ export default function Header({ title, subtitle, onMenuClick }) {
                   {user?.role || 'User'}
                 </div>
               </div>
-              <button aria-label="Edit profile" title="Edit profile" onClick={() => setShowProfile(true)} className="w-10 h-10 lg:w-12 lg:h-12 rounded-full overflow-hidden bg-linear-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md focus:outline-none">
+              <button aria-label="Edit profile" title="Edit profile" onClick={() => setShowProfile(true)} className="w-10 h-10 lg:w-12 lg:h-12 rounded-full overflow-hidden bg-linear-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 focus:outline-none cursor-pointer">
                 {user?.avatar?.url ? (
                   <img src={user.avatar.url} alt="avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -61,7 +59,7 @@ export default function Header({ title, subtitle, onMenuClick }) {
             </div>
 
             {/* Mobile user avatar only */}
-            <button aria-label="Edit profile" title="Edit profile" onClick={() => setShowProfile(true)} className="sm:hidden w-10 h-10 rounded-full overflow-hidden bg-linear-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold shadow-md focus:outline-none">
+            <button aria-label="Edit profile" title="Edit profile" onClick={() => setShowProfile(true)} className="sm:hidden w-10 h-10 rounded-full overflow-hidden bg-linear-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 focus:outline-none cursor-pointer">
               {user?.avatar?.url ? (
                 <img src={user.avatar.url} alt="avatar" className="w-full h-full object-cover" />
               ) : (

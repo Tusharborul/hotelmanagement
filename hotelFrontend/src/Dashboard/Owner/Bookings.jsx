@@ -3,6 +3,8 @@ import Layout from '../components/Layout';
 import { hotelService } from '../../services/hotelService';
 import { bookingService } from '../../services/bookingService';
 import FilterControls from '../components/FilterControls';
+import { formatDateTime } from '../../utils/date';
+import Pagination from '../../components/Pagination';
 
 export default function OwnerBookings() {
   const [hotels, setHotels] = useState([]);
@@ -12,6 +14,9 @@ export default function OwnerBookings() {
   const [end, setEnd] = useState('');
   const [field, setField] = useState('created');
   const [bookings, setBookings] = useState([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
 
   useEffect(()=>{ (async()=>{
     const res = await hotelService.getMyHotels();
@@ -50,6 +55,7 @@ export default function OwnerBookings() {
     const s = overrides.start !== undefined ? overrides.start : start;
     const e = overrides.end !== undefined ? overrides.end : end;
     const f = overrides.field !== undefined ? overrides.field : field;
+    const p = overrides.page !== undefined ? overrides.page : 1;
 
     if (sel) {
       try {
@@ -57,7 +63,13 @@ export default function OwnerBookings() {
         const list = Array.isArray(r) ? r : (r?.data || []);
         const hotelMeta = (hotels || []).find(h => h._id === sel) || { _id: sel, name: '' };
         const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: hotelMeta._id, name: hotelMeta.name }, hotelName: (b.hotel && b.hotel.name) || hotelMeta.name }));
-        setBookings(filterByRange(mapped, s, e, f));
+        const filtered = filterByRange(mapped, s, e, f);
+        const tot = filtered.length;
+        const startIdx = (p - 1) * limit;
+        const pageItems = filtered.slice(startIdx, startIdx + limit);
+        setBookings(pageItems);
+        setTotal(tot);
+        setPage(p);
       } catch (err) { console.error(err); }
     } else {
       const all = [];
@@ -69,7 +81,13 @@ export default function OwnerBookings() {
           all.push(...mapped);
         } catch (err) { /* ignore per-hotel errors */ }
       }
-      setBookings(filterByRange(all, s, e, f));
+      const filtered = filterByRange(all, s, e, f);
+      const tot = filtered.length;
+      const startIdx = (p - 1) * limit;
+      const pageItems = filtered.slice(startIdx, startIdx + limit);
+      setBookings(pageItems);
+      setTotal(tot);
+      setPage(p);
     }
   };
 
@@ -77,18 +95,19 @@ export default function OwnerBookings() {
 
   return (
     <Layout role="owner" title="Hello, Owner" subtitle="Bookings">
+        <div className="bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent font-bold mb-6 text-2xl">Bookings Management</div>
       
-        <div className="mb-4">
+        <div className="mb-6">
           <FilterControls
             start={start}
             end={end}
             field={field}
             selectedHotel={selected}
             hotels={hotels}
-            onChangeStart={(v) => { setStart(v); applyFilter({ start: v }); }}
-            onChangeEnd={(v) => { setEnd(v); applyFilter({ end: v }); }}
-            onChangeField={(v) => { setField(v); applyFilter({ field: v }); }}
-            onChangeSelectedHotel={(v) => { setSelected(v); applyFilter({ selected: v }); }}
+            onChangeStart={(v) => { setStart(v); applyFilter({ start: v, page: 1 }); }}
+            onChangeEnd={(v) => { setEnd(v); applyFilter({ end: v, page: 1 }); }}
+            onChangeField={(v) => { setField(v); applyFilter({ field: v, page: 1 }); }}
+            onChangeSelectedHotel={(v) => { setSelected(v); applyFilter({ selected: v, page: 1 }); }}
             onReset={clearFilter}
             onFilter={() => applyFilter()}
           />
@@ -98,7 +117,7 @@ export default function OwnerBookings() {
           {/* Mobile card view */}
           <div className="block md:hidden space-y-3">
             {bookings.map(b => (
-              <div key={b._id} className="border rounded-lg p-3 space-y-2">
+              <div key={b._id} className="border-2 border-blue-100 rounded-xl p-4 space-y-3 bg-white shadow-md hover:shadow-xl hover:border-blue-300 transition-all duration-300">
                 <div>
                   <span className="text-xs text-gray-500">User:</span>
                   <div className="font-medium text-sm">{b.user?.name || b.user?.username}</div>
@@ -110,7 +129,7 @@ export default function OwnerBookings() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <span className="text-xs text-gray-500">Check-in:</span>
-                    <div className="text-sm">{b.checkInDate ? new Date(b.checkInDate).toLocaleDateString() : '-'}</div>
+                    <div className="text-sm">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</div>
                   </div>
                   <div>
                     <span className="text-xs text-gray-500">Days:</span>
@@ -123,10 +142,10 @@ export default function OwnerBookings() {
                   <div>
                     <span className="text-xs text-gray-500">Status:</span>
                     <div>
-                      <span className={`text-xs px-2 py-0.5 rounded ${
-                        b.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                        b.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                        'bg-yellow-100 text-yellow-700'
+                      <span className={`text-xs px-3 py-1.5 rounded-lg font-semibold shadow-sm ${
+                        b.status === 'confirmed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
+                        b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' :
+                        'bg-linear-to-r from-yellow-400 to-yellow-500 text-white'
                       }`}>
                         {b.status}
                       </span>
@@ -138,24 +157,29 @@ export default function OwnerBookings() {
           </div>
 
           {/* Desktop table view */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-lg">
             <table className="w-full text-left">
-              <thead><tr className="border-b"><th className="py-2">User</th><th className="py-2">Hotel</th><th className="py-2">Check-in</th><th className="py-2">Days</th><th className="py-2">Total</th><th className="py-2">Status</th></tr></thead>
+              <thead><tr className="bg-linear-to-r from-blue-50 to-indigo-50 border-b-2 border-blue-200"><th className="py-4 px-6 font-semibold text-gray-700">User</th><th className="py-4 px-6 font-semibold text-gray-700">Hotel</th><th className="py-4 px-6 font-semibold text-gray-700">Check-in</th><th className="py-4 px-6 font-semibold text-gray-700">Days</th><th className="py-4 px-6 font-semibold text-gray-700">Total</th><th className="py-4 px-6 font-semibold text-gray-700">Status</th></tr></thead>
               <tbody>
                 {bookings.map(b => (
-                  <tr key={b._id} className="border-b">
-                    <td className="py-2">{b.user?.name || b.user?.username}</td>
-                    <td className="py-2">{b.hotel?.name || b.hotelName || '-'}</td>
-                    <td className="py-2">{b.checkInDate ? new Date(b.checkInDate).toLocaleDateString() : '-'}</td>
-                    <td className="py-2">{b.days}</td>
-                    <td className="py-2">${b.totalPrice}</td>
-                    <td className="py-2">{b.status}</td>
+                  <tr key={b._id} className="border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200">
+                    <td className="py-4 px-6 font-medium text-gray-800">{b.user?.name || b.user?.username}</td>
+                    <td className="py-4 px-6 text-gray-600">{b.hotel?.name || b.hotelName || '-'}</td>
+                    <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
+                    <td className="py-4 px-6 text-gray-600">{b.days}</td>
+                    <td className="py-4 px-6 font-semibold text-green-600">${b.totalPrice}</td>
+                    <td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${
+                      b.status === 'confirmed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
+                      b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' :
+                      'bg-linear-to-r from-yellow-400 to-yellow-500 text-white'
+                    }`}>{b.status}</span></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
+        <Pagination page={page} total={total} limit={limit} onPageChange={(p)=>applyFilter({ page: p })} className="mt-6" />
   
     </Layout>
   );
