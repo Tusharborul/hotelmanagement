@@ -5,6 +5,7 @@ import { hotelService } from "../services/hotelService";
 import { bookingService } from "../services/bookingService";
 import getImageUrl from '../utils/getImageUrl';
 import { formatDateTime } from '../utils/date';
+import { formatINR } from '../utils/currency';
 
 const normalizeList = (res) => {
   if (!res) return [];
@@ -17,6 +18,7 @@ const normalizeList = (res) => {
 const OwnerDashboard = () => {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fullToday, setFullToday] = useState({});
   const [summary, setSummary] = useState({
     hotels: 0,
     bookings: 0,
@@ -48,29 +50,73 @@ const OwnerDashboard = () => {
           const totalBookings = bookingsPerHotel.reduce((s, p) => s + (p.bookings?.length || 0), 0);
           const totalRevenue = bookingsPerHotel.reduce((s, p) => s + (p.bookings?.reduce((ss, b) => ss + (Number(b.totalPrice) || 0), 0) || 0), 0);
 
-          // Calculate today's bookings and income
+          // Calculate today's bookings (bookings that occupy today) and income
           const todayBookings = bookingsPerHotel.reduce((s, p) => {
-            return s + (p.bookings?.filter(b => {
-              const bookingDate = new Date(b.createdAt);
-              bookingDate.setHours(0, 0, 0, 0);
-              return bookingDate.getTime() === today.getTime();
-            }).length || 0);
-          }, 0);
-
-          // Today's income should be based on guests checking in today,
-          // not the booking creation date. Consider only confirmed/completed bookings.
-          const todayIncome = bookingsPerHotel.reduce((s, p) => {
             return s + (
-              p.bookings?.filter(b => {
+              (p.bookings || []).filter(b => {
+                // Prefer checkIn/checkOut range when available
                 const ci = b.checkInDate ? new Date(b.checkInDate) : null;
-                if (!ci) return false;
-                ci.setHours(0, 0, 0, 0);
-                const isToday = ci.getTime() === today.getTime();
-                const isRevenue = ['confirmed', 'completed'].includes(b.status || '');
-                return isToday && isRevenue;
-              }).reduce((ss, b) => ss + (Number(b.totalPrice) || 0), 0) || 0
+                const co = b.checkOutDate ? new Date(b.checkOutDate) : null;
+                if (ci && co) {
+                  ci.setHours(0,0,0,0); co.setHours(0,0,0,0);
+                  return ci.getTime() <= today.getTime() && today.getTime() < co.getTime();
+                }
+                // Fallback: treat booking created today as today's booking
+                if (b.createdAt) {
+                  const bookingDate = new Date(b.createdAt);
+                  bookingDate.setHours(0, 0, 0, 0);
+                  return bookingDate.getTime() === today.getTime();
+                }
+                return false;
+              }).length || 0
             );
           }, 0);
+
+          // Today's income should represent revenue attributable to today —
+          // i.e. sum the per-night share of bookings that include today
+          // (checkInDate <= today < checkOutDate) and are confirmed/completed.
+          const todayIncome = bookingsPerHotel.reduce((s, p) => {
+            return s + (
+              (p.bookings || [])
+                .filter(b => {
+                  const ci = b.checkInDate ? new Date(b.checkInDate) : null;
+                  const co = b.checkOutDate ? new Date(b.checkOutDate) : null;
+                  if (!ci || !co) return false;
+                  // normalize to midnight for date-only comparison
+                  ci.setHours(0, 0, 0, 0);
+                  co.setHours(0, 0, 0, 0);
+                  const includesToday = ci.getTime() <= today.getTime() && today.getTime() < co.getTime();
+                  const isRevenue = ['confirmed', 'completed'].includes((b.status || '').toString());
+                  return includesToday && isRevenue;
+                })
+                .reduce((ss, b) => {
+                  const days = Number(b.days) || (b.checkInDate && b.checkOutDate ? Math.max(1, Math.round((new Date(b.checkOutDate) - new Date(b.checkInDate)) / (24*60*60*1000))) : 1);
+                  const perNight = days > 0 ? (Number(b.totalPrice) || 0) / days : (Number(b.totalPrice) || 0);
+                  return ss + perNight;
+                }, 0) || 0
+            );
+          }, 0);
+
+          // determine per-hotel full status for today based on dailyCapacity and confirmed bookings
+          const fullMap = {};
+          for (const p of bookingsPerHotel) {
+            const hid = p.hotelId;
+            const hotelMeta = (list || []).find(h => (h._id || h.id) === hid) || {};
+            const cap = Number(hotelMeta.dailyCapacity || 0);
+            if (!cap || cap <= 0) { fullMap[hid] = false; continue; }
+            const overlaps = (p.bookings || []).filter(b => {
+              const ci = b.checkInDate ? new Date(b.checkInDate) : null;
+              const co = b.checkOutDate ? new Date(b.checkOutDate) : null;
+              if (!ci || !co) return false;
+              ci.setHours(0,0,0,0); co.setHours(0,0,0,0);
+              const includesToday = ci.getTime() <= today.getTime() && today.getTime() < co.getTime();
+              // capacity enforcement counts confirmed bookings
+              return includesToday && (b.status === 'confirmed');
+            }).length;
+            fullMap[hid] = overlaps >= cap;
+          }
+
+          if (mounted) setFullToday(fullMap);
 
           if (mounted) setSummary({
             hotels: list.length,
@@ -107,23 +153,23 @@ const OwnerDashboard = () => {
             <div className="text-green-100 text-xs mt-1">Bookings today</div>
           </div>
 
-          {/* Total Revenue */}
+          {/* Total Income */}
           <div className="bg-linear-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
             <div className="flex items-center justify-between mb-2">
               <div className="text-pink-100 text-sm font-medium">Today's Income</div>
               <div className="text-3xl">💵</div>
             </div>
-            <div className="text-3xl font-bold">${summary.todayIncome.toFixed(2)}</div>
+            <div className="text-3xl font-bold">{formatINR(summary.todayIncome)}</div>
             <div className="text-pink-100 text-xs mt-1">Earned today</div>
           </div>
 
-          {/* Today's Income */}
+          {/* Total Revenue */}
           <div className="bg-linear-to-br from-pink-500 to-pink-600 rounded-xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
             <div className="flex items-center justify-between mb-2">
               <div className="text-orange-100 text-sm font-medium">Total Revenue</div>
               <div className="text-3xl">💰</div>
             </div>
-            <div className="text-3xl font-bold">${summary.revenue.toFixed(2)}</div>
+            <div className="text-3xl font-bold">{formatINR(summary.revenue)}</div>
             <div className="text-orange-100 text-xs mt-1">All time earnings</div>
           </div>
         </div>
@@ -153,6 +199,12 @@ const OwnerDashboard = () => {
                         }`}>
                         {h.status}
                       </span>
+                    </div>
+                  )}
+                  {/* full-today badge */}
+                  {fullToday[h._id] && (
+                    <div className="absolute top-4 left-4 z-10">
+                      <span className="text-xs px-3 py-1.5 rounded-lg font-semibold shadow-md bg-red-500 text-white">Full Today</span>
                     </div>
                   )}
 

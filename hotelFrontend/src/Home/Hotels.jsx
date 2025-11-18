@@ -4,6 +4,7 @@ import { hotelService } from "../services/hotelService";
 import Header from "../head";
 import SearchBar from "./SearchBar";
 import getImageUrl from '../utils/getImageUrl';
+import { formatINR } from '../utils/currency';
 
 const Hotels = () => {
   const navigate = useNavigate();
@@ -166,7 +167,7 @@ const Hotels = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <span className="text-2xl font-bold text-[#3256e2]">
-                        ${hotel.price}
+                        {formatINR(hotel.price)}
                       </span>
                       <span className="text-gray-500 text-sm ml-1.5">
                         per night

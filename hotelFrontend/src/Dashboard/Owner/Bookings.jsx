@@ -5,6 +5,7 @@ import { bookingService } from '../../services/bookingService';
 import FilterControls from '../components/FilterControls';
 import { formatDateTime } from '../../utils/date';
 import Pagination from '../../components/Pagination';
+import { formatINR } from '../../utils/currency';
 
 export default function OwnerBookings() {
   const [hotels, setHotels] = useState([]);
@@ -37,7 +38,27 @@ export default function OwnerBookings() {
       const ss = s ? new Date(s) : null;
       const ee = e ? (() => { const d = new Date(e); d.setHours(23,59,59,999); return d; })() : null;
       return (list || []).filter(b => {
-        const val = f === 'checkin' ? b.checkInDate : b.createdAt;
+        if (f === 'checkin') {
+          // Treat the filter range as an occupancy window and include bookings
+          // that overlap the selected range: booking.checkInDate <= ee && booking.checkOutDate > ss
+          const ci = b.checkInDate ? new Date(b.checkInDate) : null;
+          const co = b.checkOutDate ? new Date(b.checkOutDate) : null;
+          if (!ci || !co) return false;
+          // normalize
+          if (ss) ss.setHours(0,0,0,0);
+          if (ee) ee.setHours(23,59,59,999);
+          if (ss && ee) {
+            return ci.getTime() <= ee.getTime() && co.getTime() > ss.getTime();
+          }
+          if (ss && !ee) {
+            return co.getTime() > ss.getTime();
+          }
+          if (!ss && ee) {
+            return ci.getTime() <= ee.getTime();
+          }
+          return true;
+        }
+        const val = b.createdAt;
         if (!val) return false;
         const d = new Date(val);
         if (ss && d < ss) return false;
@@ -137,7 +158,7 @@ export default function OwnerBookings() {
                   </div>
                   <div>
                     <span className="text-xs text-gray-500">Total:</span>
-                    <div className="text-sm font-semibold">${b.totalPrice}</div>
+                    <div className="text-sm font-semibold">{formatINR(b.totalPrice)}</div>
                   </div>
                   <div>
                     <span className="text-xs text-gray-500">Status:</span>
@@ -167,7 +188,7 @@ export default function OwnerBookings() {
                     <td className="py-4 px-6 text-gray-600">{b.hotel?.name || b.hotelName || '-'}</td>
                     <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
                     <td className="py-4 px-6 text-gray-600">{b.days}</td>
-                    <td className="py-4 px-6 font-semibold text-green-600">${b.totalPrice}</td>
+                    <td className="py-4 px-6 font-semibold text-green-600">{formatINR(b.totalPrice)}</td>
                     <td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${
                       b.status === 'confirmed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
                       b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' :

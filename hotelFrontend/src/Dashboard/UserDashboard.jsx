@@ -4,6 +4,7 @@ import Spinner from "../components/Spinner";
 import { showToast } from '../utils/toast';
 import { bookingService } from "../services/bookingService";
 import { formatDateTime } from '../utils/date';
+import { formatINR } from '../utils/currency';
 
 const UserDashboard = () => {
   const [bookings, setBookings] = useState([]);
@@ -149,7 +150,7 @@ const UserDashboard = () => {
                 <div key={b._id || b.id} className={cardClasses}>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="font-bold text-blue-600">{b.price ? `$${b.price} per night` : (b.totalPrice ? `$${b.totalPrice}` : '-')}</div>
+                      <div className="font-bold text-blue-600">{b.price ? `${formatINR(b.price)} per night` : (b.totalPrice ? formatINR(b.totalPrice) : '-')}</div>
                       <div className="font-bold text-lg">{b.hotel?.name || b.hotelName || b.title || 'Unknown Hotel'}</div>
                       <div className="text-gray-500 text-sm">{b.hotel?.location || b.location || ''}</div>
                     </div>
@@ -172,8 +173,8 @@ const UserDashboard = () => {
                   <div className="text-sm text-gray-700">{b.nights ? `${b.nights} Days` : ''}</div>
                   <div className="text-sm text-gray-700">{b.hotel?.address || b.address || ''}</div>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div className="text-sm">Initial Payment {b.initialPayment ? `$${b.initialPayment}` : '-'}</div>
-                    <div className="text-sm">Total Payment {b.totalPrice ? `$${b.totalPrice}` : '-'}</div>
+                    <div className="text-sm">Initial Payment {b.initialPayment ? formatINR(b.initialPayment) : '-'}</div>
+                    <div className="text-sm">Total Payment {b.totalPrice ? formatINR(b.totalPrice) : '-'}</div>
                   </div>
 
                   <div className="flex items-center justify-end gap-2 mt-3">
@@ -185,7 +186,7 @@ const UserDashboard = () => {
                         ) : null}
                         {b.refundAmount > 0 ? (
                           <div className="text-xs text-right">
-                            <span className="font-semibold">Refund:</span>{' '}{'$' + (Number(b.refundAmount || 0).toFixed(2))}
+                            <span className="font-semibold">Refund:</span>{' '}{formatINR(Number(b.refundAmount || 0))}
                             <span className={`ml-2 inline-block text-xs px-3 py-1 rounded-lg font-semibold shadow-sm ${
                               b.refundStatus === 'pending' ? 'bg-linear-to-r from-yellow-400 to-yellow-500 text-white' : 'bg-linear-to-r from-green-400 to-green-500 text-white'
                             }`}>

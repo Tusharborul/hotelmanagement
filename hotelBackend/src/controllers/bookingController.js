@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking');
 const Hotel = require('../models/Hotel');
 const Stripe = require('stripe');
+const { inrToUsd } = require('../utils/currency');
 
 // @desc    Get all bookings
 // @route   GET /api/bookings
@@ -163,7 +164,9 @@ exports.createBooking = async (req, res) => {
           return res.status(402).json({ success: false, message: 'Payment not completed' });
         }
         // Verify amount roughly matches initialPayment (allow tiny rounding)
-        const expected = Math.round(initialPayment * 100);
+        // Stored prices are in INR; Stripe amount is in USD cents
+        const usd = await inrToUsd(Number(initialPayment));
+        const expected = Math.round(Number(usd) * 100);
         if (Math.abs((pi.amount || 0) - expected) > 5) {
           // potential mismatch
           return res.status(400).json({ success: false, message: 'Payment amount mismatch' });

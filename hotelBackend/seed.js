@@ -9,8 +9,8 @@ const User = require('./src/models/User');
 const sampleHotels = [
   {
     name: "Blue Origin Fams",
-    location: "Galle, Sri Lanka",
-    address: "123 Beach Road, Galle",
+    location: "Goa, India",
+    address: "Baga Beach Road, Goa",
     description: "A beautiful beachfront property with stunning ocean views. Perfect for families and couples looking for a relaxing getaway.",
     price: 50,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-1.png", public_id: null },
@@ -56,8 +56,8 @@ const sampleHotels = [
   },
   {
     name: "Shangri-La Resort",
-    location: "Colombo, Sri Lanka",
-    address: "456 City Center, Colombo",
+    location: "Mumbai, India",
+    address: "Bandra West, Mumbai",
     description: "Luxury resort in the heart of Colombo with world-class amenities and services.",
     price: 120,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-2.png", public_id: null },
@@ -97,8 +97,8 @@ const sampleHotels = [
   },
   {
     name: "Green Villa",
-    location: "Kandy, Sri Lanka",
-    address: "789 Hill View, Kandy",
+    location: "Manali, India",
+    address: "Old Manali Road, Manali",
     description: "Peaceful hill country retreat surrounded by lush tea plantations.",
     price: 75,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-3.png", public_id: null },
@@ -138,8 +138,8 @@ const sampleHotels = [
   },
   {
     name: "Ocean Breeze",
-    location: "Hikkaduwa, Sri Lanka",
-    address: "321 Beach Front, Hikkaduwa",
+    location: "Varkala, India",
+    address: "North Cliff Beach Road, Varkala",
     description: "Cozy beachside accommodation perfect for surfers and beach lovers.",
     price: 45,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-4.png", public_id: null },
@@ -179,8 +179,8 @@ const sampleHotels = [
   },
   {
     name: "Mountain View Lodge",
-    location: "Nuwara Eliya, Sri Lanka",
-    address: "555 Mountain Road, Nuwara Eliya",
+    location: "Ooty, India",
+    address: "Coonoor Road, Ooty",
     description: "Cool climate mountain lodge with breathtaking views and cozy fireplaces.",
     price: 65,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-5.png", public_id: null },
@@ -220,8 +220,8 @@ const sampleHotels = [
   },
   {
     name: "Top View",
-    location: "Hikkaduwe, Sri Lanka",
-    address: "789 Beach Road, Hikkaduwe",
+    location: "Alappuzha, India",
+    address: "Punnamada, Alappuzha",
     description: "Beautiful property with panoramic ocean views and modern amenities.",
     price: 55,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Top%20View.png", public_id: null },
@@ -242,9 +242,9 @@ const sampleHotels = [
   },
   {
     name: "Wodden Pit",
-    location: "Ambalangode, Sri Lanka",
-    address: "234 Coastal Road, Ambalangode",
-    description: "Charming wooden cottage with traditional Sri Lankan architecture.",
+    location: "Munnar, India",
+    address: "Tea Estate Road, Munnar",
+    description: "Charming wooden cottage with traditional Indian architecture.",
     price: 40,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Wodden%20Pit.png", public_id: null },
     isMostPicked: false,
@@ -264,9 +264,9 @@ const sampleHotels = [
   },
   {
     name: "Boutiqe",
-    location: "Kandy, Sri Lanka",
-    address: "567 Temple Street, Kandy",
-    description: "Boutique hotel in the cultural heart of Sri Lanka.",
+    location: "Jaipur, India",
+    address: "MI Road, Jaipur",
+    description: "Boutique hotel in the cultural heart of India.",
     price: 80,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Boutiqe.png", public_id: null },
     isMostPicked: false,
@@ -286,8 +286,8 @@ const sampleHotels = [
   },
   {
     name: "Modern",
-    location: "Nuwereilya, Sri Lanka",
-    address: "890 Hill Station Road, Nuwara Eliya",
+    location: "Shimla, India",
+    address: "Mall Road, Shimla",
     description: "Contemporary design meets mountain tranquility.",
     price: 70,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Modern.png", public_id: null },
@@ -308,8 +308,8 @@ const sampleHotels = [
   },
   {
     name: "Silver Rain",
-    location: "Dehiwala, Sri Lanka",
-    address: "345 Marine Drive, Dehiwala",
+    location: "Chennai, India",
+    address: "ECR, Chennai",
     description: "Elegant seaside property with modern comforts.",
     price: 60,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Silver%20Rain.png", public_id: null },
@@ -330,8 +330,8 @@ const sampleHotels = [
   },
   {
     name: "Cashville",
-    location: "Ampara, Sri Lanka",
-    address: "678 Lake View, Ampara",
+    location: "Udaipur, India",
+    address: "Lake Pichola, Udaipur",
     description: "Peaceful lakeside retreat surrounded by nature.",
     price: 50,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Cashville.png", public_id: null },
@@ -368,9 +368,9 @@ const seedDatabase = async () => {
       adminUser = await User.create({
         name: 'Admin User',
         email: 'admin@lankatstay.com',
-        phone: '0771234567',
-        countryCode: '+94',
-        country: 'Sri Lanka',
+        phone: '0912345678',
+        countryCode: '+91',
+        country: 'India',
         username: 'admin',
         password: 'admin123',
         role: 'admin'
@@ -386,9 +386,9 @@ const seedDatabase = async () => {
       hotelOwner = await User.create({
         name: 'John Silva',
         email: 'john.silva@hotels.lk',
-        phone: '0771234568',
-        countryCode: '+94',
-        country: 'Sri Lanka',
+        phone: '0912345679',
+        countryCode: '+91',
+        country: 'India',
         username: 'hotelowner',
         password: 'owner123',
         role: 'hotelOwner'
@@ -404,9 +404,9 @@ const seedDatabase = async () => {
       testUser = await User.create({
         name: 'Test User',
         email: 'testuser@example.com',
-        phone: '0770000000',
-        countryCode: '+94',
-        country: 'Sri Lanka',
+        phone: '0910000000',
+        countryCode: '+91',
+        country: 'India',
         username: 'testuser',
         password: 'test123',
         role: 'user'

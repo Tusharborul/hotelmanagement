@@ -7,6 +7,7 @@ import FilterControls from '../components/FilterControls';
 import { formatDateTime } from '../../utils/date';
 import Spinner from '../../components/Spinner';
 import Pagination from '../../components/Pagination';
+import { formatINR } from '../../utils/currency';
 
 export default function OwnerRefunds() {
 	const [hotels, setHotels] = useState([]);
@@ -164,11 +165,11 @@ export default function OwnerRefunds() {
 									<div className="grid grid-cols-2 gap-2">
 										<div>
 											<span className="text-xs text-gray-500">Total:</span>
-											<div className="text-sm font-semibold">${b.totalPrice}</div>
+											<div className="text-sm font-semibold">{formatINR(b.totalPrice)}</div>
 										</div>
 										<div>
 											<span className="text-xs text-gray-500">Refund Amount:</span>
-											<div className="text-sm font-semibold text-blue-600">{b.refundAmount ? ('$' + Number(b.refundAmount).toFixed(2)) : '-'}</div>
+											<div className="text-sm font-semibold text-blue-600">{b.refundAmount ? formatINR(Number(b.refundAmount)) : '-'}</div>
 										</div>
 									</div>
 
@@ -204,8 +205,8 @@ export default function OwnerRefunds() {
 											<td className="py-4 px-6 text-gray-600">{b.hotel?.name || b.hotelName || '-'}</td>
 											<td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
 											<td className="py-4 px-6 text-gray-600">{b.refundedAt ? formatDateTime(b.refundedAt) : '-'}</td>
-											<td className="py-4 px-6 font-semibold text-green-600">${b.totalPrice}</td>
-											<td className="py-4 px-6 font-semibold text-teal-600">{b.refundAmount ? ('$' + Number(b.refundAmount).toFixed(2)) : '-'}</td>
+											<td className="py-4 px-6 font-semibold text-green-600">{formatINR(b.totalPrice)}</td>
+											<td className="py-4 px-6 font-semibold text-teal-600">{b.refundAmount ? formatINR(Number(b.refundAmount)) : '-'}</td>
 											<td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${
 												(b.refundStatus || 'none') === 'completed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
 												(b.refundStatus || 'none') === 'pending' ? 'bg-linear-to-r from-yellow-400 to-yellow-500 text-white' :

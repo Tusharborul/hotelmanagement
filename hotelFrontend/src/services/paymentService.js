@@ -1,7 +1,7 @@
 import api from './api';
 
-const createPaymentIntent = async ({ amount, currency = 'usd', metadata = {} }) => {
-  const response = await api.post('/payments/create-payment-intent', { amount, currency, metadata });
+const createPaymentIntent = async ({ amount, metadata = {} }) => {
+  const response = await api.post('/payments/create-payment-intent', { amount, metadata });
   return response.data;
 };
 

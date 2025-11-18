@@ -1,10 +1,11 @@
 const Stripe = require('stripe');
 const Booking = require('../models/Booking');
+const { inrToUsd } = require('../utils/currency');
 
 // Create Payment Intent for frontend to confirm
 exports.createPaymentIntent = async (req, res) => {
   try {
-    const { amount, currency = 'usd', metadata = {} } = req.body;
+    const { amount, metadata = {} } = req.body;
 
     if (!amount || Number(amount) <= 0) {
       return res.status(400).json({ success: false, message: 'Invalid amount' });
@@ -16,12 +17,13 @@ exports.createPaymentIntent = async (req, res) => {
 
     const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-    // Stripe expects amount in cents
-    const amountInCents = Math.round(Number(amount) * 100);
+    // Convert INR -> USD for Stripe; Stripe expects amount in cents
+    const usd = await inrToUsd(Number(amount));
+    const amountInCents = Math.round(Number(usd) * 100);
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
-      currency,
+      currency: 'usd',
       metadata
     });
 
@@ -111,7 +113,9 @@ exports.refundPayment = async (req, res) => {
     const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
     let refund = null;
     try {
-      const amount = Math.round(Number(booking.refundAmount) * 100);
+      // booking.refundAmount is stored in INR; convert to USD cents for Stripe
+      const usd = await inrToUsd(Number(booking.refundAmount || 0));
+      const amount = Math.round(Number(usd) * 100);
       if (stripeChargeId) {
         refund = await stripe.refunds.create({ charge: stripeChargeId, amount });
       } else {

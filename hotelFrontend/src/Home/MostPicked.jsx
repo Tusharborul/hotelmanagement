@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { hotelService } from "../services/hotelService";
 import location1 from "../assets/location/pic-1.png"
 import getImageUrl from '../utils/getImageUrl';
+import { formatINR } from '../utils/currency';
 
 const MostPicked = () => {
   const [places, setPlaces] = useState([]);
@@ -18,7 +19,7 @@ const MostPicked = () => {
             id: hotel._id,
             name: hotel.name,
             location: hotel.location,
-            price: `$${hotel.price} per night`,
+            price: `${formatINR(hotel.price)} per night`,
             image: hotel.mainImage ? getImageUrl(hotel.mainImage, location1) : location1
           }));
           setPlaces(hotels);
@@ -61,7 +62,7 @@ const MostPicked = () => {
         <div className="absolute top-0 right-0 bg-linear-to-br from-[#3256e2] to-[#5b7cff] text-white px-5 py-3 rounded-bl-3xl font-semibold shadow-lg">
           {places[0]?.price}
         </div>
-        <div className="absolute bottom-0 left-0 p-6 text-white transform group-hover:translate-y-[-8px] transition-transform duration-300">
+        <div className="absolute bottom-0 left-0 p-6 text-white transform group-hover:-translate-y-2 transition-transform duration-300">
           <div className="text-xl font-bold mb-1">{places[0]?.name}</div>
           <div className="text-sm flex items-center gap-2">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -83,7 +84,7 @@ const MostPicked = () => {
           <div className="absolute top-0 right-0 bg-linear-to-br from-[#3256e2] to-[#5b7cff] text-white px-5 py-3 rounded-bl-3xl font-semibold shadow-lg">
             {place?.price}
           </div>
-          <div className="absolute bottom-0 left-0 p-5 text-white transform group-hover:translate-y-[-8px] transition-transform duration-300">
+          <div className="absolute bottom-0 left-0 p-5 text-white transform group-hover:-translate-y-2 transition-transform duration-300">
             <div className="text-lg font-bold mb-1">{place?.name}</div>
             <div className="text-sm flex items-center gap-2">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

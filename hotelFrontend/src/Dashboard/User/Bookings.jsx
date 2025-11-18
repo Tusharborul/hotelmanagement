@@ -4,6 +4,7 @@ import { bookingService } from '../../services/bookingService';
 import { formatDateTime } from '../../utils/date';
 import Spinner from '../../components/Spinner';
 import Pagination from '../../components/Pagination';
+import { formatINR } from '../../utils/currency';
 
 export default function UserBookings() {
   const [bookings, setBookings] = useState([]);
@@ -97,7 +98,7 @@ export default function UserBookings() {
                     </div>
                     <div>
                       <span className="text-xs text-gray-500">Total:</span>
-                      <div className="text-sm font-semibold">${b.totalPrice}</div>
+                      <div className="text-sm font-semibold">{formatINR(b.totalPrice)}</div>
                     </div>
                     <div>
                       <span className="text-xs text-gray-500">Status:</span>
@@ -128,7 +129,7 @@ export default function UserBookings() {
                       <td className="py-4 px-6 font-medium text-gray-800">{b.hotel?.name || '-'}</td>
                       <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
                       <td className="py-4 px-6 text-gray-600">{b.days}</td>
-                      <td className="py-4 px-6 font-semibold text-green-600">${b.totalPrice}</td>
+                      <td className="py-4 px-6 font-semibold text-green-600">{formatINR(b.totalPrice)}</td>
                       <td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${
                         b.status === 'confirmed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
                         b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' :

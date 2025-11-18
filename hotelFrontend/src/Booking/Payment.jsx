@@ -5,6 +5,7 @@ import { paymentService } from "../services/paymentService";
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import FullScreenLoader from '../components/FullScreenLoader';
+import { formatINR } from '../utils/currency';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 
@@ -68,7 +69,7 @@ const Payment = () => {
       try {
         // Hard guard against concurrent submissions (rapid double-clicks, hot reload quirks)
         const initialPayment = Math.round(totalPrice / 2);
-        const intentResp = await paymentService.createPaymentIntent({ amount: initialPayment, currency: 'usd', metadata: { hotelId } });
+        const intentResp = await paymentService.createPaymentIntent({ amount: initialPayment, metadata: { hotelId } });
         const secret = intentResp?.data?.clientSecret || intentResp?.clientSecret;
         if (!secret) {
           setError('Could not start payment. Please try again.');
@@ -153,7 +154,7 @@ const Payment = () => {
             type="submit"
             disabled={processing || !stripe || publishableKeyMissing}
           >
-            {processing ? 'Processing...' : `Pay $${Math.round(totalPrice / 2)} Now`}
+            {processing ? 'Processing...' : `Pay ${formatINR(Math.round(totalPrice / 2))} Now`}
           </button>
           <button
             className="bg-gray-100 text-gray-400 text-base sm:text-lg font-medium rounded-lg py-2.5 sm:py-3 w-full shadow"
@@ -217,10 +218,10 @@ const Payment = () => {
             Check-out: <span className="font-bold">{checkOutDate || '-'}</span>
           </span>
           <span className="text-base sm:text-lg text-[#1a237e] mb-2">
-            Total: <span className="font-bold">${totalPrice} USD</span>
+            Total: <span className="font-bold">{formatINR(totalPrice)}</span>
           </span>
           <span className="text-base sm:text-lg text-[#1a237e] mb-2">
-            Initial Payment: <span className="font-bold">${Math.round((totalPrice/2))}</span>
+            Initial Payment: <span className="font-bold">{formatINR(Math.round(totalPrice/2))}</span>
           </span>
         </div>
 

@@ -4,6 +4,7 @@ import { bookingService } from '../../services/bookingService';
 import { formatDateTime } from '../../utils/date';
 import Spinner from '../../components/Spinner';
 import Pagination from '../../components/Pagination';
+import { formatINR } from '../../utils/currency';
 
 export default function UserRefunds() {
   const [bookings, setBookings] = useState([]);
@@ -76,7 +77,7 @@ export default function UserRefunds() {
                     </div>
                     <div>
                       <span className="text-xs text-gray-500">Refund Amount:</span>
-                      <div className="text-sm font-semibold text-purple-600">{b.refundAmount ? ('$' + Number(b.refundAmount).toFixed(2)) : '-'}</div>
+                      <div className="text-sm font-semibold text-purple-600">{b.refundAmount ? formatINR(Number(b.refundAmount)) : '-'}</div>
                     </div>
                     {b.cancelledAt && (
                       <div>
@@ -122,7 +123,7 @@ export default function UserRefunds() {
                           <span className="text-sm text-gray-500">{(b.status || '').charAt(0).toUpperCase() + (b.status || '').slice(1) || '-'}</span>
                         )}
                       </td>
-                      <td className="py-4 px-6 font-semibold text-purple-600">{b.refundAmount ? ('$' + Number(b.refundAmount).toFixed(2)) : '-'}</td>
+                      <td className="py-4 px-6 font-semibold text-purple-600">{b.refundAmount ? formatINR(Number(b.refundAmount)) : '-'}</td>
                       <td className="py-4 px-6 text-gray-600">{b.cancelledAt ? formatDateTime(b.cancelledAt) : '-'}</td>
                       <td className="py-4 px-6 text-gray-600">{b.refundedAt ? formatDateTime(b.refundedAt) : '-'}</td>
                     </tr>

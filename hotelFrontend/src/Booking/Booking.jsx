@@ -4,6 +4,7 @@ import placeImg from "../assets/location/Shangri-La.png"; // Use your actual ima
 import { hotelService } from "../services/hotelService";
 import { authService } from "../services/authService";
 import getImageUrl from '../utils/getImageUrl';
+import { formatINR } from '../utils/currency';
 
 const Booking = () => {
   const navigate = useNavigate();
@@ -200,7 +201,7 @@ const Booking = () => {
         {/* Price Info */}
         <div className="text-sm sm:text-base">
           <span className="text-gray-400 text-base sm:text-lg">You will pay</span>
-          <span className="text-[#1a237e] font-bold text-xl sm:text-2xl ml-2">${totalPrice} USD</span>
+          <span className="text-[#1a237e] font-bold text-xl sm:text-2xl ml-2">{formatINR(totalPrice)}</span>
           <span className="text-gray-400 text-base sm:text-lg ml-2">for</span>
           <span className="text-[#1a237e] font-bold text-xl sm:text-2xl ml-2">{days} Day{days > 1 ? 's' : ''}</span>
         </div>

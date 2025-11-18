@@ -5,6 +5,7 @@ import location from "../assets/Logos/add_location_alt.png";
 import calendar from "../assets/Logos/Frame.png";
 import { hotelService } from '../services/hotelService';
 import getImageUrl from '../utils/getImageUrl';
+import { formatINR } from '../utils/currency';
 
 
 const SearchBar = () => {
@@ -122,7 +123,7 @@ const SearchBar = () => {
         <div>
           <label htmlFor="persons" className="text-xs text-gray-500 mb-1 inline-block">Persons</label>
           <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-inner border border-gray-100">
-            <img src={person} alt="Person" width={20} height={20} className="mr-3 flex-shrink-0" />
+            <img src={person} alt="Person" width={20} height={20} className="mr-3 shrink-0" />
             <select
               id="persons"
               name="persons"
@@ -254,7 +255,7 @@ const SearchBar = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-2xl font-bold text-blue-600">
-                    ${hotel.price}
+                    {formatINR(hotel.price)}
                   </span>
                   <span className="text-gray-500 text-sm ml-1">
                     per night

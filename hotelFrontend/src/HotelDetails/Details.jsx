@@ -1,4 +1,5 @@
 import React from "react";
+import { formatINR } from "../utils/currency";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
 import bedroom from "../assets/Details/ic_bedroom.png";
@@ -63,14 +64,14 @@ const Details = ({ hotel, hotelId }) => {
                     )}
                 </div>
                 {/* Right: Booking Card */}
-                <div className="w-full lg:w-[487px] h-auto lg:h-[240px] bg-white rounded-2xl shadow-xl flex flex-col justify-center border border-gray-200 p-6 lg:p-20 hover:shadow-2xl transition-shadow duration-300">
+                <div className="w-full lg:w-[487px] h-auto lg:h-60 bg-white rounded-2xl shadow-xl flex flex-col justify-center border border-gray-200 p-6 lg:p-20 hover:shadow-2xl transition-shadow duration-300">
                     <div className="text-[20px] text-[#1a237e] font-bold mb-3">Start Booking</div>
                     <div className="text-[38px] font-bold text-[#3256e2] mb-3">
-                        {hotel.price ? `$${hotel.price}` : 'Price not available'} 
+                        {hotel.price ? `${formatINR(hotel.price)}` : 'Price not available'}
                         {hotel.price && <span className="text-[18px] text-gray-500 font-normal"> per Day</span>}
                     </div>
                     <button
-                        className="bg-[#3256e2] w-full lg:w-[347px] h-[48px] text-white font-semibold rounded-lg px-8 shadow-md hover:bg-[#2545c8] transition-colors duration-200 mt-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3256e2]"
+                        className="bg-[#3256e2] w-full lg:w-[347px] h-12 text-white font-semibold rounded-lg px-8 shadow-md hover:bg-[#2545c8] transition-colors duration-200 mt-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3256e2]"
                         onClick={handleBooking}
                         disabled={!hotel.price}
                     >
