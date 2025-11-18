@@ -3,6 +3,7 @@ import pic1 from "../assets/Home/Rectangle 5.png";
 import pic2 from "../assets/Home/bedroom.png";
 import pic3 from "../assets/Home/washroom.png";
 import getImageUrl from '../utils/getImageUrl';
+import Breadcrumb from '../Dashboard/components/Breadcrumb';
 
 const Photos = ({ hotel }) => {
     if (!hotel) return null;
@@ -59,10 +60,9 @@ const Photos = ({ hotel }) => {
         <div className="w-full flex flex-col">
             {/* Breadcrumb and Title */}
             <div className="mb-8 mt-8">
-                <div className="text-gray-500 text-base mb-6 flex items-center gap-2">
-                    <span className="hover:text-[#3256e2] transition-colors cursor-pointer">Home</span>
-                    <span className="text-gray-400">→</span>
-                    <span className="text-[#1a237e] font-semibold">Hotel Details</span>
+                <div className="text-gray-500 text-base mb-6">
+                    {/* Use shared Breadcrumb component for consistency */}
+                    <Breadcrumb showHome />
                 </div>
                 <div className="flex flex-col items-center">
                     <h1 className="text-3xl md:text-[42px] font-bold text-[#1a237e] mb-3 text-center">{hotel.name}</h1>
@@ -87,7 +87,7 @@ const Photos = ({ hotel }) => {
                     {/* Slides */}
                     <div className="flex transition-transform duration-700" style={{ transform: `translateX(-${index * 100}%)` }}>
                         {imgs.map((src, i) => (
-                            <div key={i} className="flex-shrink-0 w-full h-64 md:h-96 lg:h-[520px] overflow-hidden">
+                            <div key={i} className="shrink-0 w-full h-64 md:h-96 lg:h-[520px] overflow-hidden">
                                 <img src={src} alt={`${hotel.name} ${i + 1}`} className="w-full h-full object-cover" />
                             </div>
                         ))}

@@ -28,6 +28,8 @@ export default function AdminRefunds() {
       const s = overrides.start !== undefined ? overrides.start : start;
       const e = overrides.end !== undefined ? overrides.end : end;
       const f = overrides.field !== undefined ? overrides.field : field;
+      // allow caller to pass hotels list (useful when loading immediately after fetching hotels)
+      const hotelsList = overrides.hotels !== undefined ? overrides.hotels : hotels;
 
       // helper to check date range for createdAt or checkInDate
       const inRange = (b) => {
@@ -57,7 +59,7 @@ export default function AdminRefunds() {
         });
       } else {
         // aggregate across all hotels (admin-wide): fetch hotels then bookings per hotel
-        for (const h of (hotels || [])) {
+        for (const h of (hotelsList || [])) {
           try {
             const res = await bookingService.getHotelBookings(h._id || h.id);
             const list = Array.isArray(res) ? res : (res?.data || []);
@@ -100,9 +102,12 @@ export default function AdminRefunds() {
     (async ()=>{
       try {
         const res = await adminService.getHotels({ page:1, limit: 1000 });
-        setHotels(res.data || []);
+        const list = res.data || [];
+        setHotels(list);
         // default to All Hotels when hotels are loaded
         setSelectedHotel('');
+        // immediately load refunds now that we have hotels available
+        load(1, { hotels: list });
       } catch(e){ console.warn('Failed to load hotels for admin refunds', e); }
     })();
   }, []);
@@ -131,8 +136,8 @@ export default function AdminRefunds() {
             onChangeStart={(v) => { setStart(v); load(1, { start: v }); }}
             onChangeEnd={(v) => { setEnd(v); load(1, { end: v }); }}
             onChangeField={(v) => { setField(v); load(1, { field: v }); }}
-            onChangeSelectedHotel={(v) => { setSelectedHotel(v); load(1, { selected: v }); }}
-            onReset={() => { setStart(''); setEnd(''); setField('created'); setSelectedHotel(''); load(1, { start: '', end: '', field: 'created', selected: '' }); }}
+            onChangeSelectedHotel={(v) => { setSelectedHotel(v); load(1, { selectedHotel: v }); }}
+            onReset={() => { setStart(''); setEnd(''); setField('created'); setSelectedHotel(''); load(1, { start: '', end: '', field: 'created', selectedHotel: '' }); }}
             onFilter={() => load(1)}
           />
         </div>

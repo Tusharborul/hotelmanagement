@@ -14,6 +14,7 @@ import RegisterSucess from './Register/RegisterSucess.jsx';
 import AdminDashboard from './Dashboard/AdminDashboard.jsx';
 import OwnerDashboard from './Dashboard/OwnerDashboard.jsx';
 import UserDashboard from './Dashboard/UserDashboard.jsx';
+import DashboardEntry from './Dashboard/DashboardEntry.jsx';
 // Admin pages
 import AdminUsers from './Dashboard/Admin/Users.jsx';
 import AdminOwners from './Dashboard/Admin/Owners.jsx';
@@ -52,7 +53,7 @@ function App() {
           {/* Dashboards */}
           <Route path="/dashboard" element={
             <ProtectedRoute roles={["user","admin","hotelOwner"]}>
-              <UserDashboard />
+              <DashboardEntry />
             </ProtectedRoute>
           } />
           <Route path="/dashboard/admin" element={
@@ -86,32 +87,32 @@ function App() {
             </ProtectedRoute>
           } />
           <Route path="/dashboard/owner" element={
-            <ProtectedRoute roles={["hotelOwner","admin"]}>
+            <ProtectedRoute roles={["hotelOwner"]}>
               <OwnerDashboard />
             </ProtectedRoute>
           } />
           <Route path="/dashboard/owner/objectives" element={
-            <ProtectedRoute roles={["hotelOwner","admin"]}>
+            <ProtectedRoute roles={["hotelOwner"]}>
               <OwnerObjectives />
             </ProtectedRoute>
           } />
           <Route path="/dashboard/owner/bookings" element={
-            <ProtectedRoute roles={["hotelOwner","admin"]}>
+            <ProtectedRoute roles={["hotelOwner"]}>
               <OwnerBookings />
             </ProtectedRoute>
           } />
           <Route path="/dashboard/owner/photos" element={
-            <ProtectedRoute roles={["hotelOwner","admin"]}>
+            <ProtectedRoute roles={["hotelOwner"]}>
               <OwnerPhotos />
             </ProtectedRoute>
           } />
           <Route path="/dashboard/owner/treasures" element={
-            <ProtectedRoute roles={["hotelOwner","admin"]}>
+            <ProtectedRoute roles={["hotelOwner"]}>
               <OwnerTreasures />
             </ProtectedRoute>
           } />
           <Route path="/dashboard/owner/refunds" element={
-            <ProtectedRoute roles={["hotelOwner","admin"]}>
+            <ProtectedRoute roles={["hotelOwner"]}>
               <OwnerRefunds />
             </ProtectedRoute>
           } />

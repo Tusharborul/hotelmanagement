@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { authService } from '../../services/authService';
 import ProfileEditor from './ProfileEditor';
+import Breadcrumb from './Breadcrumb';
 
 export default function Header({ title, subtitle, onMenuClick }) {
   const [user, setUser] = React.useState(authService.getCurrentUser());
@@ -30,9 +31,10 @@ export default function Header({ title, subtitle, onMenuClick }) {
             </button>
             
             <div>
-              <h1 className="text-xl lg:text-2xl xl:text-3xl font-bold bg-linear-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent">
-                {`Hello, ${user?.name || 'User'}`}
-              </h1>
+             
+            
+                <Breadcrumb />
+              
             </div>
           </div>
 
