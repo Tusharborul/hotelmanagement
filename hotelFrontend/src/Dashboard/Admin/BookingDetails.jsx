@@ -12,7 +12,10 @@ export default function AdminBookingDetails() {
   const [field, setField] = useState('created');
   const [data, setData] = useState([]);
   const [hotels, setHotels] = useState([]);
+  const [allHotels, setAllHotels] = useState([]);
   const [selectedHotel, setSelectedHotel] = useState('');
+  const [owners, setOwners] = useState([]);
+  const [selectedOwner, setSelectedOwner] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 10;
@@ -23,6 +26,7 @@ export default function AdminBookingDetails() {
     const e = overrides.end !== undefined ? overrides.end : end;
     const sel = overrides.selectedHotel !== undefined ? overrides.selectedHotel : selectedHotel;
     const f = overrides.field !== undefined ? overrides.field : field;
+    const hotelsList = overrides.hotels !== undefined ? overrides.hotels : hotels;
 
     // If the user asked to filter by 'checkin' we want occupancy-overlap semantics
     // (bookings that overlap the selected range). The server's `field=checkin`
@@ -40,6 +44,16 @@ export default function AdminBookingDetails() {
     // client-side hotel filter: if selectedHotel is empty -> all hotels
     if (sel) {
       items = (items || []).filter(b => (b.hotel && (b.hotel._id || b.hotel.id) === sel) || b.hotelId === sel);
+    }
+
+    // If an owner is selected and no specific hotel is selected, filter bookings to hotels owned by that owner
+    const selOwner = overrides.selectedOwner !== undefined ? overrides.selectedOwner : selectedOwner;
+    if (selOwner && !sel) {
+      const ownerHotelIds = (hotelsList || []).map(h => h._id || h.id);
+      items = (items || []).filter(b => {
+        const hid = (b.hotel && (b.hotel._id || b.hotel.id)) || b.hotelId;
+        return ownerHotelIds.includes(hid);
+      });
     }
 
     // Client-side fallback: if 'checkin' filter selected, ensure we filter by booking.checkInDate
@@ -73,18 +87,56 @@ export default function AdminBookingDetails() {
     setEnd('');
     setField('created');
     setSelectedHotel('');
-    load(1, { start: '', end: '', field: 'created', selectedHotel: '' });
+    setSelectedOwner('');
+    load(1, { start: '', end: '', field: 'created', selectedHotel: '', selectedOwner: '' });
   };
   useEffect(()=>{
     (async ()=>{
       try {
-        const r = await adminService.getHotels({ page:1, limit: 1000 });
-        setHotels(r.data || []);
-        // default to All Hotels
+        const [hRes, oRes] = await Promise.all([
+          adminService.getHotels({ page:1, limit: 1000 }),
+          adminService.getOwners({ page:1, limit: 1000 })
+        ]);
+        const all = hRes.data || [];
+        setAllHotels(all);
+        setHotels(all); // default to all hotels until an owner is selected
+        setOwners(oRes.data || []);
+        // default to All Hotels / All Owners
         setSelectedHotel('');
-      } catch (err) { console.warn('Failed to load hotels', err); }
+        setSelectedOwner('');
+      } catch (err) { console.warn('Failed to load hotels or owners', err); }
     })();
   }, []);
+
+  // when owner changes, if selectedOwner is set fetch owner's hotels; otherwise reset to all hotels
+  useEffect(()=>{
+    (async ()=>{
+      if (!selectedOwner) {
+        setHotels(allHotels);
+        load(1, { hotels: allHotels, selectedOwner: '' });
+        return;
+      }
+      try {
+        const r = await adminService.getOwnerHotels(selectedOwner);
+        const ownerList = r && r.data ? r.data : [];
+        // merge with allHotels to ensure hotel name is available (owner endpoint returns minimal fields)
+        const merged = (ownerList || []).map(h => {
+          const id = h._id || h.id;
+          const full = (allHotels || []).find(x => (x._id || x.id) === id) || {};
+          return { _id: id, name: full.name || h.name || id, status: h.status };
+        });
+        setHotels(merged);
+        // when switching owner, clear selected hotel
+        setSelectedHotel('');
+        // reload bookings filtered to this owner's hotels
+        load(1, { hotels: merged, selectedOwner });
+      } catch (err) {
+        console.warn('Failed to load owner hotels', err);
+        setHotels([]);
+        load(1, { hotels: [], selectedOwner });
+      }
+    })();
+  }, [selectedOwner]);
 
 
 
@@ -97,11 +149,14 @@ export default function AdminBookingDetails() {
           end={end}
           field={field}
           selectedHotel={selectedHotel}
-          hotels={hotels}
+          hotels={Array.isArray(owners) && owners.length > 0 && !selectedOwner ? [] : hotels}
+          owners={owners}
+          selectedOwner={selectedOwner}
           onChangeStart={(v) => { setStart(v); load(1, { start: v }); }}
           onChangeEnd={(v) => { setEnd(v); load(1, { end: v }); }}
           onChangeField={(v) => { setField(v); load(1, { field: v }); }}
           onChangeSelectedHotel={(v) => { setSelectedHotel(v); load(1, { selectedHotel: v }); }}
+          onChangeSelectedOwner={(v) => { setSelectedOwner(v); setSelectedHotel(''); load(1, { selectedOwner: v, selectedHotel: '', hotels: v ? [] : allHotels }); }}
           onReset={onReset}
           onFilter={() => load(1)}
         />
