@@ -113,7 +113,7 @@ export default function UserRefunds() {
               </table>
 
               {/* Scrollable body */}
-              <div className="max-h-[60vh] overflow-auto scrollbar-custom">
+              <div className="max-h-[55vh] overflow-auto scrollbar-custom">
                 <table className="w-full table-fixed">
                   <tbody>
                     {bookings.map(b => (

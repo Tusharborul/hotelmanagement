@@ -111,7 +111,7 @@ export default function OwnerRefunds() {
 
 	return (
 		<Layout role="owner" title="Hello, Owner" subtitle="Refunds">
-				<div className="bg-linear-to-r from-green-600 to-teal-600 bg-clip-text text-transparent font-bold mb-6 text-2xl">Refunds Management</div>
+				<div className="bg-linear-to-r from-green-600 to-teal-600 bg-clip-text text-transparent font-bold  text-2xl">Refunds Management</div>
 				<div>
 					<FilterControls
 						start={start}

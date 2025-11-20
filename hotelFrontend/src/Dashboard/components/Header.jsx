@@ -15,7 +15,7 @@ export default function Header({ title, subtitle, onMenuClick }) {
   }, [showProfile]);
   
   return (
-    <div className="bg-linear-to-r from-white to-blue-50 border-b-2 border-blue-100 sticky top-0 z-10 shadow-md">
+    <div className="bg-linear-to-r from-white to-blue-50 border-b-2 border-blue-100 sticky top-0 z-100  shadow-md">
       <div className="flex px-8 w-full lg:px-12 h-16">
         <div className="flex items-center space-x-4 justify-between w-full">
           {/* Mobile menu button + Title */}
