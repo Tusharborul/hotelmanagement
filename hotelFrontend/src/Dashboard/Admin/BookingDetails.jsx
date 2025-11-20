@@ -212,26 +212,31 @@ export default function AdminBookingDetails() {
           </div>
 
           {/* Desktop table view */}
-          <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-lg">
-            <table className="w-full text-left">
+          <div className="hidden md:block bg-white rounded-2xl shadow-lg">
+            {/* Header table (keeps column alignment) */}
+            <table className="w-full table-fixed text-left">
               <thead>
                 <tr className="bg-linear-to-r from-orange-50 to-red-50 border-b-2 border-orange-200">
                   <th className="py-4 px-6 font-semibold text-gray-700">User</th>
                   <th className="py-4 px-6 font-semibold text-gray-700">Hotel</th>
-                   <th className="py-4 px-6 font-semibold text-gray-700">Created</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Created</th>
                   <th className="py-4 px-6 font-semibold text-gray-700">Check-in</th>
                   <th className="py-4 px-6 font-semibold text-gray-700">Days</th>
                   <th className="py-4 px-6 font-semibold text-gray-700">Total</th>
                   <th className="py-4 px-6 font-semibold text-gray-700">Status</th>
-                 
                 </tr>
               </thead>
-              <tbody>
+            </table>
+
+            {/* Scrollable body - scrollbar only appears here */}
+            <div className="max-h-[45vh] overflow-auto scrollbar-custom">
+              <table className="w-full table-fixed">
+                <tbody>
                 {data?.map(b => (
                   <tr key={b._id} className="border-b border-gray-100 hover:bg-orange-50 transition-colors duration-200">
                     <td className="py-4 px-6 text-gray-800 font-medium">{b.user?.name || b.user?.username}</td>
                     <td className="py-4 px-6 text-gray-600">{b.hotel?.name}</td>
-                     <td className="py-4 px-6 text-gray-600">{formatDateTime(b.createdAt)}</td>
+                    <td className="py-4 px-6 text-gray-600">{formatDateTime(b.createdAt)}</td>
                     <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
                     <td className="py-4 px-6 text-gray-600">{b.days}</td>
                     <td className="py-4 px-6 font-semibold text-green-600">{formatINR(b.totalPrice)}</td>
@@ -240,11 +245,11 @@ export default function AdminBookingDetails() {
                       b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' : 
                       'bg-linear-to-r from-yellow-400 to-yellow-500 text-white'
                     }`}>{b.status}</span>{b.refundStatus && b.refundStatus !== 'none' ? <span className="ml-2 px-2 py-1 rounded-lg text-xs bg-blue-100 text-blue-700 font-semibold">{b.refundStatus}</span> : ''}</td>
-                   
                   </tr>
                 ))}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 

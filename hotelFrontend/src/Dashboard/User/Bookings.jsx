@@ -118,29 +118,42 @@ export default function UserBookings() {
             </div>
 
             {/* Desktop table view */}
-            <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-lg">
-              <table className="w-full text-left">
+            <div className="hidden md:block bg-white rounded-2xl shadow-lg">
+              {/* Header table to keep header static and aligned */}
+              <table className="w-full table-fixed text-left">
                 <thead>
-                  <tr className="bg-linear-to-r from-blue-50 to-cyan-50 border-b-2 border-blue-200"><th className="py-4 px-6 font-semibold text-gray-700">Hotel</th><th className="py-4 px-6 font-semibold text-gray-700">Check-in</th><th className="py-4 px-6 font-semibold text-gray-700">Days</th><th className="py-4 px-6 font-semibold text-gray-700">Total</th><th className="py-4 px-6 font-semibold text-gray-700">Status</th></tr>
+                  <tr className="bg-linear-to-r from-blue-50 to-cyan-50 border-b-2 border-blue-200">
+                    <th className="py-4 px-6 font-semibold text-gray-700">Hotel</th>
+                    <th className="py-4 px-6 font-semibold text-gray-700">Check-in</th>
+                    <th className="py-4 px-6 font-semibold text-gray-700">Days</th>
+                    <th className="py-4 px-6 font-semibold text-gray-700">Total</th>
+                    <th className="py-4 px-6 font-semibold text-gray-700">Status</th>
+                  </tr>
                 </thead>
-                <tbody>
-                  {bookings.map(b => (
-                    <tr key={b._id} className="border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200">
-                      <td className="py-4 px-6 font-medium text-gray-800">{b.hotel?.name || '-'}</td>
-                      <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
-                      <td className="py-4 px-6 text-gray-600">{b.days}</td>
-                      <td className="py-4 px-6 font-semibold text-green-600">{formatINR(b.totalPrice)}</td>
-                      <td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${
-                        b.status === 'confirmed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
-                        b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' :
-                        'bg-linear-to-r from-yellow-400 to-yellow-500 text-white'
-                      }`}>
-                        {(b.status || '').charAt(0).toUpperCase() + (b.status || '').slice(1) || '-'}
-                      </span></td>
-                    </tr>
-                  ))}
-                </tbody>
               </table>
+
+              {/* Scrollable body (scrollbar-custom applied) */}
+              <div className="max-h-[60vh] overflow-auto scrollbar-custom">
+                <table className="w-full table-fixed">
+                  <tbody>
+                    {bookings.map(b => (
+                      <tr key={b._id} className="border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200">
+                        <td className="py-4 px-6 font-medium text-gray-800">{b.hotel?.name || '-'}</td>
+                        <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
+                        <td className="py-4 px-6 text-gray-600">{b.days}</td>
+                        <td className="py-4 px-6 font-semibold text-green-600">{formatINR(b.totalPrice)}</td>
+                        <td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${
+                          b.status === 'confirmed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
+                          b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' :
+                          'bg-linear-to-r from-yellow-400 to-yellow-500 text-white'
+                        }`}>
+                          {(b.status || '').charAt(0).toUpperCase() + (b.status || '').slice(1) || '-'}
+                        </span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}

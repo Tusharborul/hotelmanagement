@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import person from "../assets/Logos/Vector.png";
 import location from "../assets/Logos/add_location_alt.png";
 import calendar from "../assets/Logos/Frame.png";
+import Select from '../components/Select';
 import { hotelService } from '../services/hotelService';
 import getImageUrl from '../utils/getImageUrl';
 import { formatINR } from '../utils/currency';
@@ -124,25 +125,16 @@ const SearchBar = () => {
           <label htmlFor="persons" className="text-xs text-gray-500 mb-1 inline-block">Persons</label>
           <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-inner border border-gray-100">
             <img src={person} alt="Person" width={20} height={20} className="mr-3 shrink-0" />
-            <select
+            <Select
               id="persons"
               name="persons"
               value={persons}
-              onChange={(e) => setPersons(Number(e.target.value))}
-              className="text-sm font-medium text-gray-700 bg-transparent outline-none w-full cursor-pointer appearance-none pr-2"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                backgroundPosition: 'right center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: '1.5em 1.5em',
-                paddingRight: '2rem'
-              }}
-            >
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-              <option value={3}>3</option>
-              <option value={4}>4</option>
-            </select>
+              unstyled={true}
+              onChange={(v) => setPersons(Number(v))}
+              options={[{ value: 1, label: '1' }, { value: 2, label: '2' }, { value: 3, label: '3' }, { value: 4, label: '4' }]}
+              className="text-sm font-medium text-gray-700 bg-transparent outline-none w-full"
+              placeholder={null}
+            />
           </div>
           {errors.persons && <div className="text-red-500 text-xs mt-1">{errors.persons}</div>}
         </div>
@@ -152,25 +144,16 @@ const SearchBar = () => {
           <label htmlFor="locationValue" className="text-xs text-gray-500 mb-1 inline-block">Location</label>
           <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-inner border border-gray-100">
             <img src={location} alt="Location" width={20} height={20} className="mr-3 shrink-0" />
-            <select
+            <Select
               id="locationValue"
               name="locationValue"
               value={locationValue}
-              onChange={(e) => setLocationValue(e.target.value)}
-              className="text-sm font-medium text-gray-700 bg-transparent outline-none w-full cursor-pointer appearance-none pr-2"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                backgroundPosition: 'right center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: '1.5em 1.5em',
-                paddingRight: '2rem'
-              }}
-            >
-              <option value="">All locations</option>
-              {locations.map((loc) => (
-                <option key={loc} value={loc}>{loc}</option>
-              ))}
-            </select>
+              unstyled={true}
+              onChange={(v) => setLocationValue(v)}
+              options={[{ value: '', label: 'All locations' }, ...(locations || []).map((loc) => ({ value: loc, label: loc }))]}
+              className="text-sm font-medium text-gray-700 bg-transparent outline-none w-full"
+              placeholder={null}
+            />
           </div>
           {errors.location && <div className="text-red-500 text-xs mt-1">{errors.location}</div>}
         </div>

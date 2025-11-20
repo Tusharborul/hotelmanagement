@@ -134,58 +134,10 @@ export default function OwnerRefunds() {
 					<div className="text-gray-500 text-center py-8">No refunds for this hotel.</div>
 				) : (
 					<div className="space-y-3">
-						{/* Mobile card view */}
-						<div className="block md:hidden space-y-3">
-							{data.map(b => (
-								<div key={b._id} className="border-2 border-green-100 rounded-xl p-4 space-y-3 bg-white shadow-md hover:shadow-xl hover:border-green-300 transition-all duration-300">
-									<div className="flex justify-between items-start">
-										<div>
-											<span className="text-xs text-gray-500">User:</span>
-											<div className="font-medium text-sm">{b.user?.name || b.user?.username}</div>
-										</div>
-										<span className={`text-xs px-3 py-1.5 rounded-lg font-semibold shadow-sm ${
-											b.refundStatus === 'completed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
-											b.refundStatus === 'pending' ? 'bg-linear-to-r from-yellow-400 to-yellow-500 text-white' :
-											'bg-gray-100 text-gray-700'
-										}`}>
-											{(b.refundStatus || 'none').charAt(0).toUpperCase() + (b.refundStatus || '').slice(1)}
-										</span>
-									</div>
-
-									<div>
-										<span className="text-xs text-gray-500">Hotel:</span>
-										<div className="text-sm">{b.hotel?.name || b.hotelName || '-'}</div>
-									</div>
-
-									<div>
-										<span className="text-xs text-gray-500">Check-in:</span>
-										<div className="text-sm">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</div>
-									</div>
-
-									<div className="grid grid-cols-2 gap-2">
-										<div>
-											<span className="text-xs text-gray-500">Total:</span>
-											<div className="text-sm font-semibold">{formatINR(b.totalPrice)}</div>
-										</div>
-										<div>
-											<span className="text-xs text-gray-500">Refund Amount:</span>
-											<div className="text-sm font-semibold text-blue-600">{b.refundAmount ? formatINR(Number(b.refundAmount)) : '-'}</div>
-										</div>
-									</div>
-
-									{b.refundedAt && (
-										<div>
-											<span className="text-xs text-gray-500">Refunded:</span>
-											<div className="text-sm">{formatDateTime(b.refundedAt)}</div>
-										</div>
-									)}
-								</div>
-							))}
-						</div>
-
 						{/* Desktop table view */}
-						<div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-lg">
-							<table className="w-full text-left">
+						<div className="hidden md:block bg-white rounded-2xl shadow-lg">
+							{/* Header table */}
+							<table className="w-full table-fixed text-left">
 								<thead>
 									<tr className="bg-linear-to-r from-green-50 to-teal-50 border-b-2 border-green-200">
 										<th className="py-4 px-6 font-semibold text-gray-700">User</th>
@@ -195,30 +147,34 @@ export default function OwnerRefunds() {
 										<th className="py-4 px-6 font-semibold text-gray-700">Total</th>
 										<th className="py-4 px-6 font-semibold text-gray-700">Refund Amount</th>
 										<th className="py-4 px-6 font-semibold text-gray-700">Refund Status</th>
-										
 									</tr>
 								</thead>
-								<tbody>
-									{data.map(b => (
-										<tr key={b._id} className="border-b border-gray-100 hover:bg-green-50 transition-colors duration-200">
-											<td className="py-4 px-6 font-medium text-gray-800">{b.user?.name || b.user?.username}</td>
-											<td className="py-4 px-6 text-gray-600">{b.hotel?.name || b.hotelName || '-'}</td>
-											<td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
-											<td className="py-4 px-6 text-gray-600">{b.refundedAt ? formatDateTime(b.refundedAt) : '-'}</td>
-											<td className="py-4 px-6 font-semibold text-green-600">{formatINR(b.totalPrice)}</td>
-											<td className="py-4 px-6 font-semibold text-teal-600">{b.refundAmount ? formatINR(Number(b.refundAmount)) : '-'}</td>
-											<td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${
-												(b.refundStatus || 'none') === 'completed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
-												(b.refundStatus || 'none') === 'pending' ? 'bg-linear-to-r from-yellow-400 to-yellow-500 text-white' :
-												'bg-gray-200 text-gray-700'
-											}`}>{(b.refundStatus || 'none').charAt(0).toUpperCase() + (b.refundStatus || '').slice(1)}</span></td>
-											
-										</tr>
-									))}
-								</tbody>
 							</table>
+
+							{/* Scrollable body - scrollbar only here */}
+							<div className="max-h-[45vh] overflow-auto scrollbar-custom">
+								<table className="w-full table-fixed">
+									<tbody>
+										{data?.map(b => (
+											<tr key={b._id} className="border-b border-gray-100 hover:bg-green-50 transition-colors duration-200">
+												<td className="py-4 px-6 font-medium text-gray-800">{b.user?.name || b.user?.username}</td>
+												<td className="py-4 px-6 text-gray-600">{b.hotel?.name || b.hotelName || '-'}</td>
+												<td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
+												<td className="py-4 px-6 text-gray-600">{b.refundedAt ? formatDateTime(b.refundedAt) : '-'}</td>
+												<td className="py-4 px-6 font-semibold text-green-600">{formatINR(b.totalPrice)}</td>
+												<td className="py-4 px-6 font-semibold text-teal-600">{b.refundAmount ? formatINR(Number(b.refundAmount)) : '-'}</td>
+												<td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${
+													(b.refundStatus || 'none') === 'completed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
+													(b.refundStatus || 'none') === 'pending' ? 'bg-linear-to-r from-yellow-400 to-yellow-500 text-white' :
+													'bg-gray-200 text-gray-700'
+												}`}>{(b.refundStatus || 'none').charAt(0).toUpperCase() + (b.refundStatus || '').slice(1)}</span></td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+								</div>
+							</div>
 						</div>
-					</div>
 				)}
 			
 			<Pagination page={page} total={total} limit={limit} onPageChange={(p)=>loadRefunds(p)} className="mt-6" />

@@ -178,10 +178,25 @@ export default function OwnerBookings() {
           </div>
 
           {/* Desktop table view */}
-          <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-lg">
-            <table className="w-full text-left">
-              <thead><tr className="bg-linear-to-r from-blue-50 to-indigo-50 border-b-2 border-blue-200"><th className="py-4 px-6 font-semibold text-gray-700">User</th><th className="py-4 px-6 font-semibold text-gray-700">Hotel</th><th className="py-4 px-6 font-semibold text-gray-700">Check-in</th><th className="py-4 px-6 font-semibold text-gray-700">Days</th><th className="py-4 px-6 font-semibold text-gray-700">Total</th><th className="py-4 px-6 font-semibold text-gray-700">Status</th></tr></thead>
-              <tbody>
+          <div className="hidden md:block bg-white rounded-2xl shadow-lg">
+            {/* Header table */}
+            <table className="w-full table-fixed text-left">
+              <thead>
+                <tr className="bg-linear-to-r from-blue-50 to-indigo-50 border-b-2 border-blue-200">
+                  <th className="py-4 px-6 font-semibold text-gray-700">User</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Hotel</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Check-in</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Days</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Total</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Status</th>
+                </tr>
+              </thead>
+            </table>
+
+            {/* Scrollable body */}
+            <div className="max-h-[45vh] overflow-auto scrollbar-custom">
+              <table className="w-full table-fixed">
+                <tbody>
                 {bookings.map(b => (
                   <tr key={b._id} className="border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200">
                     <td className="py-4 px-6 font-medium text-gray-800">{b.user?.name || b.user?.username}</td>
@@ -196,8 +211,9 @@ export default function OwnerBookings() {
                     }`}>{b.status}</span></td>
                   </tr>
                 ))}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
         <Pagination page={page} total={total} limit={limit} onPageChange={(p)=>applyFilter({ page: p })} className="mt-6" />

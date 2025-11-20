@@ -240,8 +240,9 @@ export default function AdminRefunds() {
             </div>
 
             {/* Desktop table view */}
-            <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-lg">
-              <table className="w-full text-left">
+            <div className="hidden md:block bg-white rounded-2xl shadow-lg">
+              {/* Header table */}
+              <table className="w-full table-fixed text-left">
                 <thead>
                   <tr className="bg-linear-to-r from-pink-50 to-rose-50 border-b-2 border-pink-200">
                     <th className="py-4 px-6 font-semibold text-gray-700">User</th>
@@ -253,30 +254,36 @@ export default function AdminRefunds() {
                     <th className="py-4 px-6 font-semibold text-gray-700">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {data?.map(b => (
-                    <tr key={b._id} className="border-b border-gray-100 hover:bg-pink-50 transition-colors duration-200">
-                      <td className="py-4 px-6 font-medium text-gray-800">{b.user?.name || b.user?.username}</td>
-                      <td className="py-4 px-6 text-gray-600">{b.hotel?.name}</td>
-                      <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
-                      <td className="py-4 px-6 font-semibold text-green-600">{formatINR(b.totalPrice)}</td>
-                      <td className="py-4 px-6 font-semibold text-pink-600">{b.refundAmount ? formatINR(Number(b.refundAmount)) : '-'}</td>
-                      <td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${
-                        (b.refundStatus || 'none') === 'completed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
-                        (b.refundStatus || 'none') === 'pending' ? 'bg-linear-to-r from-yellow-400 to-yellow-500 text-white' :
-                        'bg-gray-200 text-gray-700'
-                      }`}>{(b.refundStatus || 'none').charAt(0).toUpperCase() + (b.refundStatus || '').slice(1)}</span></td>
-                      <td className="py-4 px-6">
-                        {b.refundStatus === 'pending' ? (
-                          <button className="px-4 py-2 bg-linear-to-r from-pink-500 to-rose-500 text-white rounded-xl text-sm font-medium hover:scale-105 transition-transform duration-300 shadow-md" onClick={async () => { const { confirmAsync } = await import('../../utils/confirm'); if (await confirmAsync('Issue refund?')) { await adminIssueRefund(b._id); } }}>Issue</button>
-                        ) : (
-                          <span className="text-sm text-gray-400">-</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
               </table>
+
+              {/* Scrollable body - scrollbar only here */}
+              <div className="max-h-[45vh] overflow-auto scrollbar-custom">
+                <table className="w-full table-fixed">
+                  <tbody>
+                    {data?.map(b => (
+                      <tr key={b._id} className="border-b border-gray-100 hover:bg-pink-50 transition-colors duration-200">
+                        <td className="py-4 px-6 font-medium text-gray-800">{b.user?.name || b.user?.username}</td>
+                        <td className="py-4 px-6 text-gray-600">{b.hotel?.name}</td>
+                        <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
+                        <td className="py-4 px-6 font-semibold text-green-600">{formatINR(b.totalPrice)}</td>
+                        <td className="py-4 px-6 font-semibold text-pink-600">{b.refundAmount ? formatINR(Number(b.refundAmount)) : '-'}</td>
+                        <td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${
+                          (b.refundStatus || 'none') === 'completed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
+                          (b.refundStatus || 'none') === 'pending' ? 'bg-linear-to-r from-yellow-400 to-yellow-500 text-white' :
+                          'bg-gray-200 text-gray-700'
+                        }`}>{(b.refundStatus || 'none').charAt(0).toUpperCase() + (b.refundStatus || '').slice(1)}</span></td>
+                        <td className="py-4 px-6">
+                          {b.refundStatus === 'pending' ? (
+                            <button className="px-4 py-2 bg-linear-to-r from-pink-500 to-rose-500 text-white rounded-xl text-sm font-medium hover:scale-105 transition-transform duration-300 shadow-md" onClick={async () => { const { confirmAsync } = await import('../../utils/confirm'); if (await confirmAsync('Issue refund?')) { await adminIssueRefund(b._id); } }}>Issue</button>
+                          ) : (
+                            <span className="text-sm text-gray-400">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <Pagination page={page} total={total} limit={limit} onPageChange={(p)=>load(p)} className="mt-6" />
