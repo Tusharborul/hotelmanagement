@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export default function Modal({ title, children, open, onClose, size = 'md' }) {
   if (!open) return null;
@@ -39,6 +39,15 @@ export default function Modal({ title, children, open, onClose, size = 'md' }) {
       hasInitializedRef.current = false;
     }
   }, [open]);
+
+  // Prevent background scrolling while modal is mounted
+  useEffect(() => {
+    // When the modal mounts (component rendered) add class; cleanup removes it
+    document.body.classList.add('modal-open');
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, []);
 
   return (
     <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center px-4 py-6 md:py-12 animate-fade-in">

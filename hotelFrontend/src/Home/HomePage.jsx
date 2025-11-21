@@ -7,7 +7,7 @@ import MostPicked from "./MostPicked.jsx";
 import Popular from "./Popular.jsx";
 const HomePage = () => {
     return (
-        <>
+        <div>
             <Head />
             <div className="bg-linear-to-b from-white via-blue-50/30 to-white min-h-screen">
                 <div className="max-w-7xl mx-auto px-8 w-full">
@@ -18,7 +18,7 @@ const HomePage = () => {
                 </div>
             </div>
             <Foot />
-        </>
+        </ div>
     )
 
 
