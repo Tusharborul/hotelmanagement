@@ -88,7 +88,19 @@ export default function AdminRefunds() {
       }
 
       // filter refunds and by range
-      const refunds = (all || []).filter(b => (Number(b.refundAmount || 0) > 0 || (b.refundStatus && b.refundStatus !== 'none')) && inRange(b));
+      let refunds = (all || []).filter(b => (Number(b.refundAmount || 0) > 0 || (b.refundStatus && b.refundStatus !== 'none')) && inRange(b));
+      // Sort: pending/issued first, then by most recent
+      refunds = refunds.sort((a, b) => {
+        const statusA = (a.refundStatus || 'none').toLowerCase();
+        const statusB = (b.refundStatus || 'none').toLowerCase();
+        if (statusA === 'pending' && statusB !== 'pending') return -1;
+        if (statusA !== 'pending' && statusB === 'pending') return 1;
+        if (statusA === 'issued' && statusB !== 'issued' && statusB !== 'pending') return -1;
+        if (statusA !== 'issued' && statusB === 'issued' && statusA !== 'pending') return 1;
+        const timeA = a.cancelledAt ? new Date(a.cancelledAt).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+        const timeB = b.cancelledAt ? new Date(b.cancelledAt).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+        return timeB - timeA;
+      });
 
       // pagination: client-side slicing (we aggregated)
       const tot = refunds.length;

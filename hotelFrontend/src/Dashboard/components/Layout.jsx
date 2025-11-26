@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
 export default function Layout({ role, title, subtitle, children }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Default sidebar state: open on desktop (lg+), closed on mobile
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    // Initialize based on current screen size
+    return typeof window !== 'undefined' && window.innerWidth >= 1024;
+  });
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
       {/* Mobile overlay (only visible on small screens when sidebarOpen) */}
       {sidebarOpen && (
         <div

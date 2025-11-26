@@ -84,6 +84,16 @@ const bookingSchema = new mongoose.Schema({
     ],
     default: []
   },
+  // Track who created the booking if different from the booked user (offline owner/admin action)
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  // Flag offline cash booking
+  offlineCash: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now

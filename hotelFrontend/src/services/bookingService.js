@@ -38,6 +38,13 @@ export const bookingService = {
     return response.data;
   },
 
+  // Create offline booking (cash) by hotel owner/admin
+  createOfflineBooking: async (payload) => {
+    // payload may contain: hotel, checkInDate, days, guestName, guestPhone, guestEmail, guestCountry, userId
+    const response = await api.post('/bookings/offline', payload);
+    return response.data; // includes guestCredentials when new user created
+  },
+
   // Admin date-wise bookings
   getAdminBookings: async (params) => {
     const search = new URLSearchParams(params || {});

@@ -8,7 +8,8 @@ const {
   // we'll add hardDeleteBooking and issueRefund below
   hardDeleteBooking,
   issueRefund,
-  getHotelBookings
+  getHotelBookings,
+  createOfflineBooking
 } = require('../controllers/bookingController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -31,5 +32,8 @@ router.post('/:id/refund', protect, authorize('admin'), issueRefund);
 
 // Get bookings for a specific hotel
 router.get('/hotel/:hotelId', protect, authorize('hotelOwner', 'admin'), getHotelBookings);
+
+// Offline booking (cash) by hotel owner/admin
+router.post('/offline', protect, authorize('hotelOwner', 'admin'), createOfflineBooking);
 
 module.exports = router;

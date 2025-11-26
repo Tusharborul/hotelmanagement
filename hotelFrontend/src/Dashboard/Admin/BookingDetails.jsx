@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import FilterControls from '../components/FilterControls';
 import Layout from '../components/Layout';
 import { adminService } from '../../services/adminService';
+import { bookingService } from '../../services/bookingService';
 import Pagination from '../../components/Pagination';
 import { formatDateTime } from '../../utils/date';
 import { formatINR } from '../../utils/currency';
+import Modal from '../../components/Modal';
 
 export default function AdminBookingDetails() {
   const [start, setStart] = useState('');
@@ -19,6 +21,22 @@ export default function AdminBookingDetails() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 10;
+  const [showOfflineModal, setShowOfflineModal] = useState(false);
+  const [offlineForm, setOfflineForm] = useState({
+    hotel: '',
+    guestName: '',
+    guestPhone: '',
+    guestEmail: '',
+    guestCountry: 'India',
+    guestCountryCode: '+91',
+    guestUsername: '',
+    guestPassword: '',
+    checkInDate: '',
+    days: 1
+  });
+  const [offlineErrors, setOfflineErrors] = useState({});
+  const [estimatedTotal, setEstimatedTotal] = useState(0);
+  const [ratePerNight, setRatePerNight] = useState(0);
 
   // load supports overrides so callers can trigger filtering immediately
   const load = async (p = 1, overrides = {}) => {
@@ -40,6 +58,12 @@ export default function AdminBookingDetails() {
     }
     const res = await adminService.getBookings(apiParams);
     let items = res.data || [];
+    // Sort by createdAt descending (most recent first)
+    items = [...items].sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return timeB - timeA;
+    });
 
     // client-side hotel filter: if selectedHotel is empty -> all hotels
     if (sel) {
@@ -138,12 +162,46 @@ export default function AdminBookingDetails() {
     })();
   }, [selectedOwner]);
 
+  // Recalculate estimated total when hotel or days change
+  useEffect(() => {
+    try {
+      const h = (allHotels || []).find(x => (x._id || x.id) === offlineForm.hotel);
+      const price = Number(h?.price || 0);
+      const d = Number(offlineForm.days) || 1;
+      setRatePerNight(price);
+      setEstimatedTotal(price * d);
+    } catch (_) {
+      setRatePerNight(0);
+      setEstimatedTotal(0);
+    }
+  }, [offlineForm.hotel, offlineForm.days, allHotels]);
+
 
 
   return (
     <Layout role="admin" title="Hello, Admin" subtitle="Booking Details">
-        <div className="bg-linear-to-r from-orange-600 to-red-600 bg-clip-text text-transparent font-bold mb-6 text-2xl">Booking Details</div>
-      
+        <div className="grid grid-cols-1 md:grid-cols-2 items-center justify-between md:gap-4">
+  <div className="bg-linear-to-r from-orange-600 to-red-600 bg-clip-text text-transparent font-bold mb-6 text-2xl">
+    Booking Details
+  </div>
+
+  <div className="mb-4 md:mb-0 flex md:justify-end">
+    <button
+      className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm shadow hover:bg-blue-700 transition"
+      onClick={() => {
+        setOfflineForm(f => ({
+          ...f,
+          hotel: selectedHotel || (allHotels[0]?._id || allHotels[0]?.id || ''),
+        }));
+        setShowOfflineModal(true);
+      }}
+      disabled={allHotels.length === 0}
+    >
+      Add Booking
+    </button>
+  </div>
+</div>
+
         <FilterControls
           start={start}
           end={end}
@@ -234,7 +292,7 @@ export default function AdminBookingDetails() {
                 <tbody>
                 {data?.map(b => (
                   <tr key={b._id} className="border-b border-gray-100 hover:bg-orange-50 transition-colors duration-200">
-                    <td className="py-4 px-6 text-gray-800 font-medium">{b.user?.name || b.user?.username}</td>
+                    <td className="py-4 px-6 text-gray-800 font-medium">{b.user?.name || b.user?.username || b.paymentDetails?.guestName || '-'}{b.offlineCash ? <span className="ml-2 px-2 py-1 rounded bg-yellow-100 text-yellow-700 text-xs font-semibold">Cash</span> : null}</td>
                     <td className="py-4 px-6 text-gray-600">{b.hotel?.name}</td>
                     <td className="py-4 px-6 text-gray-600">{formatDateTime(b.createdAt)}</td>
                     <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
@@ -254,6 +312,136 @@ export default function AdminBookingDetails() {
         </div>
 
         <Pagination page={page} total={total} limit={limit} onPageChange={(p)=>load(p)} className="mt-6" />
+        <Modal title="Add Offline Booking (Cash)" open={showOfflineModal} onClose={()=>setShowOfflineModal(false)} size="md">
+          <form onSubmit={async (e)=>{
+            e.preventDefault();
+            const errs = {};
+            if (!offlineForm.hotel) errs.hotel = 'Hotel is required';
+            if (!offlineForm.checkInDate) errs.checkInDate = 'Check-in is required';
+            if (!offlineForm.days || Number(offlineForm.days) < 1) errs.days = 'Days must be at least 1';
+            if (!offlineForm.guestName) errs.guestName = 'Name is required';
+            if (!offlineForm.guestEmail || !/^\S+@\S+\.\S+$/.test(offlineForm.guestEmail)) errs.guestEmail = 'Valid email is required';
+            if (!offlineForm.guestPhone) errs.guestPhone = 'Phone is required';
+            if (!offlineForm.guestCountry) errs.guestCountry = 'Country is required';
+            if (!offlineForm.guestCountryCode) errs.guestCountryCode = 'Country code is required';
+            if (!offlineForm.guestUsername) errs.guestUsername = 'Username is required';
+            if (!offlineForm.guestPassword || offlineForm.guestPassword.length < 6) errs.guestPassword = 'Password must be at least 6 characters';
+            setOfflineErrors(errs);
+            if (Object.keys(errs).length) return;
+            try {
+              await bookingService.createOfflineBooking({
+                hotel: offlineForm.hotel,
+                guestName: offlineForm.guestName,
+                guestPhone: offlineForm.guestPhone,
+                guestEmail: offlineForm.guestEmail,
+                guestCountry: offlineForm.guestCountry,
+                guestCountryCode: offlineForm.guestCountryCode,
+                guestUsername: offlineForm.guestUsername,
+                guestPassword: offlineForm.guestPassword,
+                checkInDate: offlineForm.checkInDate,
+                days: Number(offlineForm.days) || 1
+              });
+              setShowOfflineModal(false);
+              await load(page);
+            } catch (err) {
+              const status = err?.response?.status;
+              const message = err?.response?.data?.message || err?.message;
+              if (status === 409 && message) {
+                const lower = message.toLowerCase();
+                const dupErrs = {};
+                if (lower.includes('email')) dupErrs.guestEmail = message;
+                if (lower.includes('username')) dupErrs.guestUsername = message;
+                setOfflineErrors(prev => ({ ...prev, ...dupErrs }));
+              } else if (status === 400 && message) {
+                const svErrs = {};
+                if (message.toLowerCase().includes('country code')) svErrs.guestCountryCode = message;
+                if (message.toLowerCase().includes('country')) svErrs.guestCountry = message;
+                if (message.toLowerCase().includes('name')) svErrs.guestName = message;
+                if (message.toLowerCase().includes('email')) svErrs.guestEmail = message;
+                if (message.toLowerCase().includes('phone')) svErrs.guestPhone = message;
+                if (message.toLowerCase().includes('username')) svErrs.guestUsername = message;
+                if (message.toLowerCase().includes('password')) svErrs.guestPassword = message;
+                setOfflineErrors(prev => ({ ...prev, ...svErrs }));
+              } else {
+                alert(message || 'Failed to create offline booking');
+              }
+            }
+          }} className="space-y-3">
+            <div className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              <div className="text-xs text-gray-600">Rate / night</div>
+              <div className="text-sm font-semibold text-gray-800">{formatINR(ratePerNight)}</div>
+            </div>
+            <div className="flex items-center justify-between bg-green-50 border border-green-100 rounded-lg px-3 py-2">
+              <div className="text-xs text-gray-600">Total amount</div>
+              <div className="text-sm font-semibold text-green-700">{formatINR(estimatedTotal)}</div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Hotel</label>
+                <select className="border rounded w-full px-3 py-2 text-sm" name="hotel" value={offlineForm.hotel} onChange={(e)=>setOfflineForm(f=>({ ...f, hotel: e.target.value }))} required>
+                  <option value="">Select a hotel</option>
+                  {(allHotels || []).map(h => <option key={h._id || h.id} value={h._id || h.id}>{h.name}{h.location ? ` - ${h.location}` : ''}</option>)}
+                </select>
+                {offlineErrors.hotel && <div className="text-xs text-red-600 mt-1">{offlineErrors.hotel}</div>}
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Check-in</label>
+                <input type="date" className="border rounded w-full px-3 py-2 text-sm" name="checkInDate" value={offlineForm.checkInDate} min={new Date().toISOString().split('T')[0]} onChange={(e)=>setOfflineForm(f=>({ ...f, checkInDate: e.target.value }))} required />
+                {offlineErrors.checkInDate && <div className="text-xs text-red-600 mt-1">{offlineErrors.checkInDate}</div>}
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Days</label>
+                <input type="number" min="1" className="border rounded w-full px-3 py-2 text-sm" name="days" value={offlineForm.days} onChange={(e)=>setOfflineForm(f=>({ ...f, days: e.target.value }))} required />
+                {offlineErrors.days && <div className="text-xs text-red-600 mt-1">{offlineErrors.days}</div>}
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Guest Name</label>
+                <input type="text" className="border rounded w-full px-3 py-2 text-sm" name="guestName" value={offlineForm.guestName} onChange={(e)=>setOfflineForm(f=>({ ...f, guestName: e.target.value }))} />
+                {offlineErrors.guestName && <div className="text-xs text-red-600 mt-1">{offlineErrors.guestName}</div>}
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Guest Email</label>
+                <input type="email" className="border rounded w-full px-3 py-2 text-sm" name="guestEmail" value={offlineForm.guestEmail} onChange={(e)=>setOfflineForm(f=>({ ...f, guestEmail: e.target.value }))} />
+                {offlineErrors.guestEmail && <div className="text-xs text-red-600 mt-1">{offlineErrors.guestEmail}</div>}
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Country</label>
+                <input type="text" className="border rounded w-full px-3 py-2 text-sm" name="guestCountry" value={offlineForm.guestCountry} onChange={(e)=>setOfflineForm(f=>({ ...f, guestCountry: e.target.value }))} />
+                {offlineErrors.guestCountry && <div className="text-xs text-red-600 mt-1">{offlineErrors.guestCountry}</div>}
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Country Code</label>
+                <input type="text" className="border rounded w-full px-3 py-2 text-sm" name="guestCountryCode" value={offlineForm.guestCountryCode} onChange={(e)=>setOfflineForm(f=>({ ...f, guestCountryCode: e.target.value }))} />
+                {offlineErrors.guestCountryCode && <div className="text-xs text-red-600 mt-1">{offlineErrors.guestCountryCode}</div>}
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Username</label>
+                <input type="text" className="border rounded w-full px-3 py-2 text-sm" name="guestUsername" value={offlineForm.guestUsername} onChange={(e)=>setOfflineForm(f=>({ ...f, guestUsername: e.target.value }))} />
+                {offlineErrors.guestUsername && <div className="text-xs text-red-600 mt-1">{offlineErrors.guestUsername}</div>}
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Guest Phone</label>
+              <input type="tel" className="border rounded w-full px-3 py-2 text-sm" name="guestPhone" value={offlineForm.guestPhone} onChange={(e)=>setOfflineForm(f=>({ ...f, guestPhone: e.target.value }))} />
+              {offlineErrors.guestPhone && <div className="text-xs text-red-600 mt-1">{offlineErrors.guestPhone}</div>}
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Password</label>
+              <input type="password" className="border rounded w-full px-3 py-2 text-sm" name="guestPassword" value={offlineForm.guestPassword} onChange={(e)=>setOfflineForm(f=>({ ...f, guestPassword: e.target.value }))} />
+              {offlineErrors.guestPassword && <div className="text-xs text-red-600 mt-1">{offlineErrors.guestPassword}</div>}
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition">Save</button>
+              <button type="button" className="px-4 py-2 border rounded text-sm" onClick={()=>setShowOfflineModal(false)}>Cancel</button>
+            </div>
+          </form>
+        </Modal>
    
     </Layout>
   );

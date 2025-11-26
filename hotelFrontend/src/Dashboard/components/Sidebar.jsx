@@ -41,7 +41,7 @@ export default function Sidebar({ role = 'user', isOpen, onClose }) {
   return (
     <aside
       className={`
-        fixed inset-y-0 left-0 z-30
+        fixed inset-y-0 left-0 z-100
         w-64 lg:w-72 xl:w-80
         bg-white border-r border-gray-200 shadow-lg
         flex flex-col overflow-hidden

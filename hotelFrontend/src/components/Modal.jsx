@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function Modal({ title, children, open, onClose, size = 'md' }) {
   if (!open) return null;
@@ -49,8 +50,9 @@ export default function Modal({ title, children, open, onClose, size = 'md' }) {
     };
   }, []);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center px-4 py-6 md:py-12 animate-fade-in">
+  // Render in a portal to avoid stacking context issues with fixed headers/sidebars
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center px-4 py-6 md:py-12 animate-fade-in" style={{ zIndex: 9999 }}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       {/* Dialog container */}
@@ -80,6 +82,7 @@ export default function Modal({ title, children, open, onClose, size = 'md' }) {
 
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

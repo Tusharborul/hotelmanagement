@@ -489,3 +489,158 @@ exports.getHotelBookings = async (req, res) => {
     });
   }
 };
+
+// @desc    Create offline booking (cash) by hotel owner/admin
+// @route   POST /api/bookings/offline
+// @access  Private (Hotel Owner, Admin)
+exports.createOfflineBooking = async (req, res) => {
+  try {
+    const { hotel: hotelId, checkInDate, checkOutDate, days, guestName, guestPhone, guestEmail, guestCountry, guestCountryCode, guestUsername, guestPassword, userId } = req.body;
+
+    // Only hotelOwner or admin allowed
+    if (!(req.user && (req.user.role === 'hotelOwner' || req.user.role === 'admin'))) {
+      return res.status(403).json({ success: false, message: 'Not authorized to create offline bookings' });
+    }
+
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
+
+    // If hotelOwner, ensure they own the hotel
+    if (req.user.role === 'hotelOwner' && hotel.owner.toString() !== req.user.id) {
+      return res.status(401).json({ success: false, message: 'Not authorized for this hotel' });
+    }
+
+    // Compute derived values
+    const stayDays = days && Number(days) > 0 ? Number(days) : (() => {
+      if (checkInDate && checkOutDate) {
+        const ci = new Date(checkInDate);
+        const co = new Date(checkOutDate);
+        const diff = Math.ceil((co - ci) / (24 * 60 * 60 * 1000));
+        return Math.max(diff, 1);
+      }
+      return 1;
+    })();
+    const totalPrice = Number(hotel.price || 0) * stayDays;
+    const initialPayment = totalPrice; // cash received fully or partially; default assume full cash
+
+    // Compute normalized check-in and check-out at 10:00 AM
+    let normalizedCheckIn = checkInDate ? new Date(checkInDate) : null;
+    if (normalizedCheckIn) normalizedCheckIn.setHours(10, 0, 0, 0);
+    let normalizedCheckOut = checkOutDate ? new Date(checkOutDate) : null;
+    if (!normalizedCheckOut && normalizedCheckIn && stayDays) {
+      const co = new Date(normalizedCheckIn);
+      co.setDate(co.getDate() + stayDays);
+      co.setHours(10, 0, 0, 0);
+      normalizedCheckOut = co;
+    } else if (normalizedCheckOut) {
+      normalizedCheckOut.setHours(10, 0, 0, 0);
+    }
+
+    // Capacity enforcement (same logic as online create)
+    try {
+      if (hotel.dailyCapacity && hotel.dailyCapacity > 0 && normalizedCheckIn) {
+        // Determine normalized check-out
+        const start = new Date(normalizedCheckIn);
+        const end = new Date(normalizedCheckOut);
+        for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+          const day = new Date(d);
+          day.setHours(10, 0, 0, 0);
+          const existingCount = await Booking.countDocuments({
+            hotel: hotel._id,
+            status: 'confirmed',
+            checkInDate: { $lte: day },
+            checkOutDate: { $gt: day }
+          });
+          if (existingCount >= hotel.dailyCapacity) {
+            const msgDate = day.toISOString().split('T')[0];
+            return res.status(409).json({ success: false, message: `Hotel is fully booked for ${msgDate}.` });
+          }
+        }
+      }
+    } catch (capErr) {
+      console.error('Capacity check error (offline):', capErr);
+    }
+
+    // Create booking: store guest details in paymentDetails meta
+    // Validate required guest fields when not using an existing userId
+    if (!userId) {
+      const missing = [];
+      if (!guestName) missing.push('guestName');
+      if (!guestEmail) missing.push('guestEmail');
+      if (!guestPhone) missing.push('guestPhone');
+      const country = guestCountry || 'India';
+      if (!country) missing.push('guestCountry');
+      if (!guestCountryCode) missing.push('guestCountryCode');
+      if (!guestUsername) missing.push('guestUsername');
+      if (!guestPassword) missing.push('guestPassword');
+      if (missing.length) {
+        return res.status(400).json({ success:false, message:`Missing required fields: ${missing.join(', ')}` });
+      }
+    }
+
+    // Determine / create target user for the booking
+    const User = require('../models/User');
+    let targetUser = null;
+
+    if (userId) {
+      targetUser = await User.findById(userId);
+    } else {
+      // Try reuse by email/username
+      if (guestEmail) {
+        const existingByEmail = await User.findOne({ email: guestEmail.toLowerCase() });
+        if (existingByEmail) {
+          return res.status(409).json({ success:false, message:'User already exists with this email. Please use the existing account.' });
+        }
+      }
+      if (guestUsername) {
+        const existingByUsername = await User.findOne({ username: guestUsername });
+        if (existingByUsername) {
+          return res.status(409).json({ success:false, message:'Username already taken. Choose a different username.' });
+        }
+      }
+      // Create a new user with provided credentials
+      targetUser = await User.create({
+        name: guestName,
+        email: guestEmail.toLowerCase(),
+        phone: guestPhone,
+        country: guestCountry || 'India',
+        countryCode: guestCountryCode,
+        username: guestUsername,
+        password: guestPassword,
+        role: 'user'
+      });
+    }
+
+    if (!targetUser) {
+      return res.status(400).json({ success:false, message:'Unable to resolve user for offline booking' });
+    }
+
+    const booking = await Booking.create({
+      user: targetUser._id,
+      hotel: hotel._id,
+      checkInDate: normalizedCheckIn ? normalizedCheckIn.toISOString() : undefined,
+      checkOutDate: normalizedCheckOut ? normalizedCheckOut.toISOString() : undefined,
+      days: stayDays,
+      totalPrice,
+      initialPayment,
+      paymentDetails: {
+        method: 'cash',
+        received: true,
+        guestName: guestName || targetUser.name,
+        guestPhone: guestPhone || targetUser.phone
+      },
+      status: 'confirmed',
+      createdBy: req.user.id,
+      offlineCash: true
+    });
+
+    const populated = await Booking.findById(booking._id)
+      .populate('user', 'name email phone')
+      .populate('hotel', 'name location price mainImage');
+
+    return res.status(201).json({ success: true, data: populated });
+  } catch (error) {
+    console.error('createOfflineBooking error', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

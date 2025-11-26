@@ -87,7 +87,19 @@ export default function OwnerRefunds() {
 			}
 
 			// filter refunds and by range
-			const refunds = (all || []).filter(b => (Number(b.refundAmount || 0) > 0 || (b.refundStatus && b.refundStatus !== 'none')) && inRange(b));
+			let refunds = (all || []).filter(b => (Number(b.refundAmount || 0) > 0 || (b.refundStatus && b.refundStatus !== 'none')) && inRange(b));
+			// Sort: pending/issued first, then by most recent
+			refunds = refunds.sort((a, b) => {
+				const statusA = (a.refundStatus || 'none').toLowerCase();
+				const statusB = (b.refundStatus || 'none').toLowerCase();
+				if (statusA === 'pending' && statusB !== 'pending') return -1;
+				if (statusA !== 'pending' && statusB === 'pending') return 1;
+				if (statusA === 'issued' && statusB !== 'issued' && statusB !== 'pending') return -1;
+				if (statusA !== 'issued' && statusB === 'issued' && statusA !== 'pending') return 1;
+				const timeA = a.cancelledAt ? new Date(a.cancelledAt).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+				const timeB = b.cancelledAt ? new Date(b.cancelledAt).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+				return timeB - timeA;
+			});
 
 			// pagination: when aggregating (or even for single hotel), slice client-side
 			const tot = refunds.length;
@@ -157,7 +169,7 @@ export default function OwnerRefunds() {
 									<tbody>
 										{data?.map(b => (
 											<tr key={b._id} className="border-b border-gray-100 hover:bg-green-50 transition-colors duration-200">
-												<td className="py-4 px-6 font-medium text-gray-800">{b.user?.name || b.user?.username}</td>
+												<td className="py-4 px-6 font-medium text-gray-800">{b.user?.name || b.user?.username || b.paymentDetails?.guestName || '-'}{b.offlineCash ? <span className="ml-2 px-2 py-1 rounded bg-yellow-100 text-yellow-700 text-xs font-semibold">Cash</span> : null}</td>
 												<td className="py-4 px-6 text-gray-600">{b.hotel?.name || b.hotelName || '-'}</td>
 												<td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
 												<td className="py-4 px-6 text-gray-600">{b.refundedAt ? formatDateTime(b.refundedAt) : '-'}</td>
