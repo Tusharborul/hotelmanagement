@@ -19,7 +19,9 @@ exports.sendTokenResponse = (user, statusCode, res) => {
       name: user.name,
       email: user.email,
       username: user.username,
-      role: user.role
+      role: user.role,
+      // include avatar so frontend has immediate access after login/register
+      avatar: user.avatar || { url: '', public_id: '' }
     }
   });
 };

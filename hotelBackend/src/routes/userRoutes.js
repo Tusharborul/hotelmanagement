@@ -3,7 +3,8 @@ const {
   register,
   login,
   getMe,
-  updateUser
+  updateUser,
+  changePassword
 } = require('../controllers/userController');
 const { protect } = require('../middleware/auth');
 
@@ -15,5 +16,6 @@ router.post('/login', login);
 router.get('/me', protect, getMe);
 // allow profile photo upload as `image` field (multipart/form-data)
 router.put('/me', protect, upload.single('image'), updateUser);
+router.post('/change-password', protect, changePassword);
 
 module.exports = router;

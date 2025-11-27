@@ -10,6 +10,10 @@ export default function ProfileEditor({ open, onClose }) {
   const [preview, setPreview] = useState('');
   const [filename, setFilename] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
     const u = authService.getCurrentUser();
@@ -65,6 +69,36 @@ export default function ProfileEditor({ open, onClose }) {
     }
   };
 
+  const changePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      showToast('Please fill all password fields', 'error');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showToast('New passwords do not match', 'error');
+      return;
+    }
+    if (newPassword.length < 6) {
+      showToast('Password must be at least 6 characters', 'error');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await authService.changePassword(currentPassword, newPassword);
+      showToast('Password changed successfully', 'success');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setShowPasswordSection(false);
+    } catch (err) {
+      console.error('Failed to change password', err);
+      showToast(err?.response?.data?.message || 'Failed to change password', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Modal open={open} onClose={onClose} title="Edit Profile">
       <div className="space-y-6">
@@ -94,6 +128,63 @@ export default function ProfileEditor({ open, onClose }) {
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">Display name</label>
           <input value={name} onChange={(e) => setName(e.target.value)} className="w-full border-2 border-blue-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-300" />
+        </div>
+
+        {/* Password Change Section */}
+        <div className="border-t-2 border-gray-200 pt-4">
+          <button
+            type="button"
+            onClick={() => setShowPasswordSection(!showPasswordSection)}
+            className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${showPasswordSection ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            Change Password
+          </button>
+
+          {showPasswordSection && (
+            <div className="mt-4 space-y-4 bg-gray-50 p-4 rounded-xl">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full border-2 border-blue-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-300"
+                  placeholder="Enter current password"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full border-2 border-blue-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-300"
+                  placeholder="Enter new password (min 6 characters)"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full border-2 border-blue-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-300"
+                  placeholder="Confirm new password"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={changePassword}
+                disabled={saving}
+                className="w-full px-4 py-2.5 bg-linear-to-r from-green-500 to-green-600 text-white rounded-xl hover:scale-105 transition-transform duration-300 shadow-md hover:shadow-lg font-medium disabled:opacity-50 disabled:hover:scale-100"
+              >
+                {saving ? 'Changing...' : 'Change Password'}
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
