@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { hotelService } from "../services/hotelService";
 import Header from "../head";
 import SearchBar from "./SearchBar";
+import Spinner from '../components/Spinner';
 import getImageUrl from '../utils/getImageUrl';
 import { formatINR } from '../utils/currency';
 
@@ -71,7 +72,7 @@ const Hotels = () => {
       <div className="min-h-screen bg-linear-to-b from-white via-blue-50/30 to-white">
         <Header />
         <div className="flex items-center justify-center h-96">
-          <div className="text-xl font-medium bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent animate-pulse">Loading hotels...</div>
+          <Spinner label="Loading hotels..." />
         </div>
       </div>
     );

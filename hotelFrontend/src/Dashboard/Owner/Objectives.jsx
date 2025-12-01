@@ -4,6 +4,10 @@ import { showToast } from '../../utils/toast';
 import { hotelService } from '../../services/hotelService';
 import getImageUrl from '../../utils/getImageUrl';
 import Modal from '../../components/Modal';
+import Spinner from '../../components/Spinner';
+import Photos from '../../HotelDetails/photos.jsx';
+import Details from '../../HotelDetails/Details.jsx';
+import Treasure from '../../HotelDetails/Treasure.jsx';
 
 export default function OwnerObjectives() {
   const [hotels, setHotels] = useState([]);
@@ -24,6 +28,9 @@ export default function OwnerObjectives() {
   // modal state
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewHotel, setViewHotel] = useState(null);
+  const [viewLoading, setViewLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -39,6 +46,7 @@ export default function OwnerObjectives() {
     setEditId(h._id);
     setForm({
       name: h.name || '',
+      price: h.price || '',
       location: h.location || '',
       description: h.description || '',
       facilities: {
@@ -124,6 +132,7 @@ export default function OwnerObjectives() {
   const saveEdit = async (id) => {
     const payload = {
       name: form.name,
+      price: Number(form.price) || 0,
       location: form.location,
       description: form.description,
       dailyCapacity: Number(form.dailyCapacity) || 0,
@@ -151,6 +160,21 @@ export default function OwnerObjectives() {
     load();
   };
 
+  const startView = async (h) => {
+    // fetch fresh hotel details and open modal
+    setViewLoading(true);
+    setShowViewModal(true);
+    try {
+      const res = await hotelService.getHotel(h._id || h.id);
+      setViewHotel(res.data);
+    } catch (err) {
+      console.error('Failed to load hotel for view modal', err);
+      setViewHotel(h);
+    } finally {
+      setViewLoading(false);
+    }
+  };
+
   return (
     <Layout role="owner" title="Hello, Owner" subtitle="Objectives">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
@@ -176,7 +200,7 @@ export default function OwnerObjectives() {
               <input id="addForm_address" name="address" className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" placeholder="Street address, building or detailed address" value={addForm.address || ''} onChange={(e)=>setAddForm(f=>({ ...f, address: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-xs text-gray-700 mb-2 font-semibold">Price per night (USD)</label>
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Price per night (Rs)</label>
               <input id="addForm_price" name="price" className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 120" value={addForm.price || ''} onChange={(e)=>setAddForm(f=>({ ...f, price: e.target.value }))} />
             </div>
             <div>
@@ -263,22 +287,27 @@ export default function OwnerObjectives() {
         </Modal>
 
         <Modal title="Edit Hotel" open={showEditModal} onClose={() => { setShowEditModal(false); setEditId(null); }} size="lg">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="text-sm font-bold mb-3 text-gray-800">Edit hotel details</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-600 mb-1 font-medium">Hotel name</label>
-              <input className="border rounded px-3 py-2 w-full text-sm" placeholder="e.g. Ocean View Apartments"  name="name" value={form.name} onChange={(e)=>setForm(f=>({ ...f, name: e.target.value }))} />
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Hotel name</label>
+              <input className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" placeholder="e.g. Ocean View Apartments"  name="name" value={form.name} onChange={(e)=>setForm(f=>({ ...f, name: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1 font-medium">Location</label>
-              <input className="border rounded px-3 py-2 w-full text-sm" placeholder="City, Country or address"  name="location" value={form.location} onChange={(e)=>setForm(f=>({ ...f, location: e.target.value }))} />
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Location</label>
+              <input className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" placeholder="City, Country or address"  name="location" value={form.location} onChange={(e)=>setForm(f=>({ ...f, location: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Price per night (Rs)</label>
+              <input id="form_price" name="price" className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 120" value={form.price || ''} onChange={(e)=>setForm(f=>({ ...f, price: e.target.value }))} />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-xs text-gray-600 mb-1 font-medium">Description</label>
-              <textarea className="border rounded px-3 py-2 w-full text-sm" rows={3} placeholder="Short description for guests"  name="description" value={form.description} onChange={(e)=>setForm(f=>({ ...f, description: e.target.value }))} />
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Description</label>
+              <textarea className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" rows={3} placeholder="Short description for guests"  name="description" value={form.description} onChange={(e)=>setForm(f=>({ ...f, description: e.target.value }))} />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-xs text-gray-600 mb-1 font-medium">Daily capacity (0 = unlimited)</label>
-              <input id="form_dailyCapacity" name="dailyCapacity" className="border rounded px-3 py-2 w-full text-sm" type="number" min={0} placeholder="e.g. 5" value={form.dailyCapacity || 0} onChange={(e)=>setForm(f=>({ ...f, dailyCapacity: Number(e.target.value) }))} />
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Daily capacity (0 = unlimited)</label>
+              <input id="form_dailyCapacity" name="dailyCapacity" className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 5" value={form.dailyCapacity || 0} onChange={(e)=>setForm(f=>({ ...f, dailyCapacity: Number(e.target.value) }))} />
             </div>
             <div className="md:col-span-2 mt-2">
               <div className="text-sm font-semibold mb-3">Facilities</div>
@@ -318,14 +347,28 @@ export default function OwnerObjectives() {
               </div>
             </div>
           </div>
-          <div className="mt-4 flex gap-2">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition" onClick={()=>saveEdit(editId)}>Save</button>
-            <button className="px-4 py-2 border rounded text-sm" onClick={()=>{ setShowEditModal(false); setEditId(null); }}>Cancel</button>
+          <div className="mt-4 flex justify-end gap-3">
+            <button className="px-5 py-2 bg-linear-to-r from-green-500 to-green-600 text-white rounded-full shadow-md hover:scale-105 transition-transform" onClick={()=>saveEdit(editId)}>Save</button>
+            <button className="px-5 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 transition" onClick={()=>{ setShowEditModal(false); setEditId(null); }}>Cancel</button>
           </div>
+        </Modal>
+
+        <Modal title="View Hotel" open={showViewModal} onClose={() => { setShowViewModal(false); setViewHotel(null); }} size="xl">
+          {viewLoading ? (
+            <div className="py-8"><Spinner label="Loading hotel..." /></div>
+          ) : viewHotel ? (
+            <div className="space-y-4">
+              <Photos hotel={viewHotel} inModal={true} />
+              <Details hotel={viewHotel} hotelId={viewHotel._id || viewHotel.id} inModal={true} />
+              <Treasure hotel={viewHotel} />
+            </div>
+          ) : (
+            <div className="py-6 text-center">No hotel selected</div>
+          )}
         </Modal>
         
         {loading ? (
-          <div className="text-gray-500">Loading...</div>
+          <div className="flex justify-center py-8"><Spinner label="Loading..." /></div>
         ) : hotels.length === 0 ? (
           <div className="text-gray-500 text-center py-8">No hotels yet.</div>
         ) : (
@@ -361,12 +404,25 @@ export default function OwnerObjectives() {
                   </div>
                 ) : (
                   <div className="mt-auto">
-                    <div className="text-xs text-gray-500 mb-3">
-                      Bedrooms: {h.facilities?.bedrooms ?? '-'} • Baths: {h.facilities?.bathrooms ?? '-'}
-                    </div>
+                   
                     <div className="flex gap-2">
-                      <button className="px-3 py-1.5 border rounded text-sm hover:bg-gray-50 transition flex-1" onClick={()=>startEdit(h)}>Edit</button>
-                      <button className="px-3 py-1.5 border rounded text-sm text-red-600 hover:bg-red-50 transition flex-1" onClick={()=>remove(h._id)}>Delete</button>
+                      <button className="px-3 py-2 border-2 border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition flex items-center justify-center" onClick={()=>startEdit(h)} title="Edit">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+                      <button className="px-3 py-2 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition flex items-center justify-center" onClick={()=>remove(h._id)} title="Delete">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22" />
+                        </svg>
+                      </button>
+                      <button className="px-3 py-2 border-2 border-blue-200 text-blue-600 rounded-xl hover:bg-blue-50 transition flex items-center justify-center" onClick={()=>startView(h)} title="View">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 )}

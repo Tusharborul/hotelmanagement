@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import person from "../assets/Logos/Vector.png";
 import location from "../assets/Logos/add_location_alt.png";
 import calendar from "../assets/Logos/Frame.png";
 import Select from '../components/Select';
+import Spinner from '../components/Spinner';
 import { hotelService } from '../services/hotelService';
 import getImageUrl from '../utils/getImageUrl';
 import { formatINR } from '../utils/currency';
@@ -12,9 +13,10 @@ import { uniqueLocations, formatLocation } from '../utils/location';
 
 const SearchBar = () => {
   const navigate = useNavigate();
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [persons, setPersons] = useState(2);
   const [locationValue, setLocationValue] = useState("");
+  const dateInputRef = useRef(null);
   const [errors, setErrors] = useState({});
   const [locations, setLocations] = useState([]);
   const [hotels, setHotels] = useState([]);
@@ -93,7 +95,7 @@ const SearchBar = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="text-xl text-gray-600">Loading hotels...</div>
+        <Spinner label="Loading hotels..." />
       </div>
     );
   }
@@ -105,35 +107,43 @@ const SearchBar = () => {
         {/* Date */}
         <div>
           <label htmlFor="date" className="text-xs text-gray-500 mb-1 inline-block">Check Available</label>
-          <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-inner border border-gray-100">
-            <img src={calendar} alt="Calendar" width={20} height={20} className="mr-3 shrink-0" />
-            <input
-              id="date"
-              name="date"
-              aria-label="Check Available Date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="bg-transparent outline-none text-sm font-medium text-gray-700 w-full"
-            />
-          </div>
+            <div className="flex items-center bg-white rounded-xl px-3 py-2.5 shadow-inner border-2 border-blue-100 cursor-pointer" onClick={() => {
+              const el = dateInputRef.current;
+              if (!el) return;
+              if (typeof el.showPicker === 'function') {
+                try { el.showPicker(); return; } catch (e) { /* fallthrough */ }
+              }
+              try { el.click(); return; } catch (e) { /* fallthrough */ }
+              el.focus();
+            }}>
+              <img src={calendar} alt="Calendar" width={20} height={20} className="mr-3 shrink-0" />
+              <input
+                id="date"
+                name="date"
+                aria-label="Check Available Date"
+                type="date"
+                ref={dateInputRef}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="bg-transparent outline-none text-sm font-medium text-gray-700 w-full cursor-pointer"
+              />
+            </div>
           {errors.date && <div className="text-red-500 text-xs mt-1">{errors.date}</div>}
         </div>
 
         {/* Persons */}
         <div>
           <label htmlFor="persons" className="text-xs text-gray-500 mb-1 inline-block">Persons</label>
-          <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-inner border border-gray-100">
-            <img src={person} alt="Person" width={20} height={20} className="mr-3 shrink-0" />
+          <div>
             <Select
               id="persons"
               name="persons"
               value={persons}
-              unstyled={true}
               onChange={(v) => setPersons(Number(v))}
               options={[{ value: 1, label: '1' }, { value: 2, label: '2' }, { value: 3, label: '3' }, { value: 4, label: '4' }]}
-              className="text-sm font-medium text-gray-700 bg-transparent outline-none w-full"
               placeholder={null}
+              icon={person}
+              iconAlt="Person"
             />
           </div>
           {errors.persons && <div className="text-red-500 text-xs mt-1">{errors.persons}</div>}
@@ -142,27 +152,26 @@ const SearchBar = () => {
         {/* Location */}
         <div>
           <label htmlFor="locationValue" className="text-xs text-gray-500 mb-1 inline-block">Location</label>
-          <div className="flex items-center bg-white rounded-lg px-3 py-2.5 shadow-inner border border-gray-100">
-            <img src={location} alt="Location" width={20} height={20} className="mr-3 shrink-0" />
+          <div>
             <Select
               id="locationValue"
               name="locationValue"
               value={locationValue}
-              unstyled={true}
               onChange={(v) => setLocationValue(v)}
               options={[{ value: '', label: 'All locations' }, ...(locations || []).map((loc) => ({ value: loc, label: loc }))]}
-              className="text-sm font-medium text-gray-700 bg-transparent outline-none w-full"
               placeholder={null}
+              icon={location}
+              iconAlt="Location"
             />
           </div>
           {errors.location && <div className="text-red-500 text-xs mt-1">{errors.location}</div>}
         </div>
 
         {/* Actions: Reset + Search */}
-        <div className="flex items-center gap-2 ">
+        <div className="flex items-center gap-2">
           <button
             onClick={onReset}
-            className="flex items-center justify-center bg-white border border-gray-300 text-gray-600 rounded-lg px-4 py-2.5 hover:bg-gray-50 transition"
+            className="bg-white border-2 border-blue-100 text-gray-600 rounded-xl px-3 py-2.5 shadow-inner hover:bg-gray-50 transition flex items-center justify-center"
             title="Reset"
             type="button"
           >

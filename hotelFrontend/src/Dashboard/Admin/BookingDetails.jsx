@@ -4,11 +4,14 @@ import Layout from '../components/Layout';
 import { adminService } from '../../services/adminService';
 import { bookingService } from '../../services/bookingService';
 import Pagination from '../../components/Pagination';
+import Spinner from '../../components/Spinner';
 import { formatDateTime } from '../../utils/date';
 import { formatINR } from '../../utils/currency';
 import Modal from '../../components/Modal';
+import Select from '../../components/Select';
 
 export default function AdminBookingDetails() {
+  const [loading, setLoading] = useState(true);
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
   const [field, setField] = useState('created');
@@ -40,6 +43,7 @@ export default function AdminBookingDetails() {
 
   // load supports overrides so callers can trigger filtering immediately
   const load = async (p = 1, overrides = {}) => {
+    setLoading(true);
     const s = overrides.start !== undefined ? overrides.start : start;
     const e = overrides.end !== undefined ? overrides.end : end;
     const sel = overrides.selectedHotel !== undefined ? overrides.selectedHotel : selectedHotel;
@@ -100,6 +104,7 @@ export default function AdminBookingDetails() {
     // If we performed client-side filtering, update total to the filtered count so pagination reflects results
     setTotal((f === 'checkin' && (s || e)) ? items.length : (sel ? items.length : res.total));
     setPage(res.page);
+    setLoading(false);
   };
 
   // initial load
@@ -128,6 +133,8 @@ export default function AdminBookingDetails() {
         // default to All Hotels / All Owners
         setSelectedHotel('');
         setSelectedOwner('');
+        // immediately load bookings now that we have hotels available
+        load(1, { hotels: all });
       } catch (err) { console.warn('Failed to load hotels or owners', err); }
     })();
   }, []);
@@ -219,6 +226,9 @@ export default function AdminBookingDetails() {
           onFilter={() => load(1)}
         />
 
+        {loading ? (
+          <div className="flex justify-center py-10"><Spinner label="Loading bookings..." /></div>
+        ) : (
         <div className="space-y-3">
           {/* Mobile card view */}
           <div className="block md:hidden space-y-3">
@@ -310,8 +320,11 @@ export default function AdminBookingDetails() {
             </div>
           </div>
         </div>
+        )}
 
-        <Pagination page={page} total={total} limit={limit} onPageChange={(p)=>load(p)} className="mt-6" />
+       
+          <Pagination page={page} total={total} limit={limit} onPageChange={(p)=>load(p)} className="mt-6" />
+        
         <Modal title="Add Offline Booking (Cash)" open={showOfflineModal} onClose={()=>setShowOfflineModal(false)} size="md">
           <form onSubmit={async (e)=>{
             e.preventDefault();
@@ -378,10 +391,14 @@ export default function AdminBookingDetails() {
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-semibold text-gray-700">Hotel</label>
-                <select className="border rounded w-full px-3 py-2 text-sm" name="hotel" value={offlineForm.hotel} onChange={(e)=>setOfflineForm(f=>({ ...f, hotel: e.target.value }))} required>
-                  <option value="">Select a hotel</option>
-                  {(allHotels || []).map(h => <option key={h._id || h.id} value={h._id || h.id}>{h.name}{h.location ? ` - ${h.location}` : ''}</option>)}
-                </select>
+                <Select
+                  id="admin-offline-hotel"
+                  name="hotel"
+                  value={offlineForm.hotel}
+                  onChange={(v) => setOfflineForm(f => ({ ...f, hotel: v }))}
+                  options={[{ value: '', label: 'Select a hotel' }, ...(allHotels || []).map(h => ({ value: (h._id || h.id), label: `${h.name}${h.location ? ` - ${h.location}` : ''}` }))]}
+                  placeholder={null}
+                />
                 {offlineErrors.hotel && <div className="text-xs text-red-600 mt-1">{offlineErrors.hotel}</div>}
               </div>
               <div>

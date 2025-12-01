@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { hotelService } from "../services/hotelService";
 import location1 from "../assets/location/pic-1.png"
 import getImageUrl from '../utils/getImageUrl';
+import Spinner from '../components/Spinner';
 import { formatINR } from '../utils/currency';
 
 const MostPicked = () => {
@@ -41,7 +42,11 @@ const MostPicked = () => {
   };
 
   if (loading) {
-    return <div className="mt-12 mb-12 text-center text-lg font-medium bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent animate-pulse">Loading hotels...</div>;
+    return (
+      <div className="mt-12 mb-12 flex justify-center">
+        <Spinner label="Loading hotels..." />
+      </div>
+    );
   }
 
   if (!places || places.length === 0) {

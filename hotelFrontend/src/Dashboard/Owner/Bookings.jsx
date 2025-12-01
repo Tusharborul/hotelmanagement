@@ -7,6 +7,8 @@ import { formatDateTime } from '../../utils/date';
 import Pagination from '../../components/Pagination';
 import { formatINR } from '../../utils/currency';
 import Modal from '../../components/Modal';
+import Select from '../../components/Select';
+import Spinner from '../../components/Spinner';
 
 export default function OwnerBookings() {
   const [hotels, setHotels] = useState([]);
@@ -35,11 +37,22 @@ export default function OwnerBookings() {
   const [offlineErrors, setOfflineErrors] = useState({});
   const [estimatedTotal, setEstimatedTotal] = useState(0);
   const [ratePerNight, setRatePerNight] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      const res = await hotelService.getMyHotels();
-      setHotels(res.data || []);
+      setLoading(true);
+      try {
+        const res = await hotelService.getMyHotels();
+        const list = res?.data || [];
+        setHotels(list);
+        // if no hotels, stop loading so empty state can show
+        if (!list || list.length === 0) setLoading(false);
+      } catch (err) {
+        console.error('Failed to load hotels', err);
+        setHotels([]);
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -93,55 +106,60 @@ export default function OwnerBookings() {
 
   // provide a manual filter action (accepts overrides for immediate filtering)
   const applyFilter = async (overrides = {}) => {
-    const sel = overrides.selected !== undefined ? overrides.selected : selected;
-    const s = overrides.start !== undefined ? overrides.start : start;
-    const e = overrides.end !== undefined ? overrides.end : end;
-    const f = overrides.field !== undefined ? overrides.field : field;
-    const p = overrides.page !== undefined ? overrides.page : 1;
+    setLoading(true);
+    try {
+      const sel = overrides.selected !== undefined ? overrides.selected : selected;
+      const s = overrides.start !== undefined ? overrides.start : start;
+      const e = overrides.end !== undefined ? overrides.end : end;
+      const f = overrides.field !== undefined ? overrides.field : field;
+      const p = overrides.page !== undefined ? overrides.page : 1;
 
-    if (sel) {
-      try {
-        const r = await bookingService.getHotelBookings(sel);
-        const list = Array.isArray(r) ? r : (r?.data || []);
-        const hotelMeta = (hotels || []).find(h => h._id === sel) || { _id: sel, name: '' };
-        let mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: hotelMeta._id, name: hotelMeta.name }, hotelName: (b.hotel && b.hotel.name) || hotelMeta.name }));
+      if (sel) {
+        try {
+          const r = await bookingService.getHotelBookings(sel);
+          const list = Array.isArray(r) ? r : (r?.data || []);
+          const hotelMeta = (hotels || []).find(h => h._id === sel) || { _id: sel, name: '' };
+          let mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: hotelMeta._id, name: hotelMeta.name }, hotelName: (b.hotel && b.hotel.name) || hotelMeta.name }));
+          // Sort by createdAt descending (most recent first)
+          mapped = mapped.sort((a, b) => {
+            const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return timeB - timeA;
+          });
+          const filtered = filterByRange(mapped, s, e, f);
+          const tot = filtered.length;
+          const startIdx = (p - 1) * limit;
+          const pageItems = filtered.slice(startIdx, startIdx + limit);
+          setBookings(pageItems);
+          setTotal(tot);
+          setPage(p);
+        } catch (err) { console.error(err); }
+      } else {
+        const all = [];
+        for (const h of (hotels || [])) {
+          try {
+            const r = await bookingService.getHotelBookings(h._id);
+            const list = Array.isArray(r) ? r : (r?.data || []);
+            const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: h._id, name: h.name }, hotelName: (b.hotel && b.hotel.name) || h.name }));
+            all.push(...mapped);
+          } catch (err) { /* ignore per-hotel errors */ }
+        }
         // Sort by createdAt descending (most recent first)
-        mapped = mapped.sort((a, b) => {
+        all.sort((a, b) => {
           const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
           const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
           return timeB - timeA;
         });
-        const filtered = filterByRange(mapped, s, e, f);
+        const filtered = filterByRange(all, s, e, f);
         const tot = filtered.length;
         const startIdx = (p - 1) * limit;
         const pageItems = filtered.slice(startIdx, startIdx + limit);
         setBookings(pageItems);
         setTotal(tot);
         setPage(p);
-      } catch (err) { console.error(err); }
-    } else {
-      const all = [];
-      for (const h of (hotels || [])) {
-        try {
-          const r = await bookingService.getHotelBookings(h._id);
-          const list = Array.isArray(r) ? r : (r?.data || []);
-          const mapped = (list || []).map(b => ({ ...b, hotel: b.hotel || { _id: h._id, name: h.name }, hotelName: (b.hotel && b.hotel.name) || h.name }));
-          all.push(...mapped);
-        } catch (err) { /* ignore per-hotel errors */ }
       }
-      // Sort by createdAt descending (most recent first)
-      all.sort((a, b) => {
-        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return timeB - timeA;
-      });
-      const filtered = filterByRange(all, s, e, f);
-      const tot = filtered.length;
-      const startIdx = (p - 1) * limit;
-      const pageItems = filtered.slice(startIdx, startIdx + limit);
-      setBookings(pageItems);
-      setTotal(tot);
-      setPage(p);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -250,87 +268,94 @@ export default function OwnerBookings() {
         />
       </div>
 
-      <div className="space-y-3">
-        {/* Mobile card view */}
-        <div className="block md:hidden space-y-3">
-          {bookings.map(b => (
-            <div key={b._id} className="border-2 border-blue-100 rounded-xl p-4 space-y-3 bg-white shadow-md hover:shadow-xl hover:border-blue-300 transition-all duration-300">
-              <div>
-                <span className="text-xs text-gray-500">User:</span>
-                <div className="font-medium text-sm">{b.user?.name || b.user?.username}</div>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500">Hotel:</span>
-                <div className="text-sm">{b.hotel?.name || b.hotelName || '-'}</div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
+      {loading ? (
+        <div className="flex justify-center py-8"><Spinner label="Loading bookings..." /></div>
+      ) : (
+        <div className="space-y-3">
+          {/* Mobile card view */}
+          <div className="block md:hidden space-y-3">
+            {bookings.map(b => (
+              <div key={b._id} className="border-2 border-blue-100 rounded-xl p-4 space-y-3 bg-white shadow-md hover:shadow-xl hover:border-blue-300 transition-all duration-300">
                 <div>
-                  <span className="text-xs text-gray-500">Check-in:</span>
-                  <div className="text-sm">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</div>
+                  <span className="text-xs text-gray-500">User:</span>
+                  <div className="font-medium text-sm">{b.user?.name || b.user?.username}</div>
                 </div>
                 <div>
-                  <span className="text-xs text-gray-500">Days:</span>
-                  <div className="text-sm">{b.days}</div>
+                  <span className="text-xs text-gray-500">Hotel:</span>
+                  <div className="text-sm">{b.hotel?.name || b.hotelName || '-'}</div>
                 </div>
-                <div>
-                  <span className="text-xs text-gray-500">Total:</span>
-                  <div className="text-sm font-semibold">{formatINR(b.totalPrice)}</div>
-                </div>
-                <div>
-                  <span className="text-xs text-gray-500">Status:</span>
+                <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className={`text-xs px-3 py-1.5 rounded-lg font-semibold shadow-sm ${b.status === 'confirmed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
-                        b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' :
-                          'bg-linear-to-r from-yellow-400 to-yellow-500 text-white'
-                      }`}>
-                      {b.status}
-                    </span>
+                    <span className="text-xs text-gray-500">Check-in:</span>
+                    <div className="text-sm">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</div>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500">Days:</span>
+                    <div className="text-sm">{b.days}</div>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500">Total:</span>
+                    <div className="text-sm font-semibold">{formatINR(b.totalPrice)}</div>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500">Status:</span>
+                    <div>
+                      <span className={`text-xs px-3 py-1.5 rounded-lg font-semibold shadow-sm ${b.status === 'confirmed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
+                          b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' :
+                            'bg-linear-to-r from-yellow-400 to-yellow-500 text-white'
+                        }`}>
+                        {b.status}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {/* Desktop table view */}
-        <div className="hidden md:block bg-white rounded-2xl shadow-lg">
-          {/* Header table */}
-          <table className="w-full table-fixed text-left">
-            <thead>
-              <tr className="bg-linear-to-r from-blue-50 to-indigo-50 border-b-2 border-blue-200">
-                <th className="py-4 px-6 font-semibold text-gray-700">User</th>
-                <th className="py-4 px-6 font-semibold text-gray-700">Hotel</th>
-                <th className="py-4 px-6 font-semibold text-gray-700">Check-in</th>
-                <th className="py-4 px-6 font-semibold text-gray-700">Days</th>
-                <th className="py-4 px-6 font-semibold text-gray-700">Total</th>
-                <th className="py-4 px-6 font-semibold text-gray-700">Status</th>
-              </tr>
-            </thead>
-          </table>
-
-          {/* Scrollable body */}
-          <div className="max-h-[45vh] overflow-auto scrollbar-custom">
-            <table className="w-full table-fixed">
-              <tbody>
-                {bookings.map(b => (
-                  <tr key={b._id} className="border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200">
-                    <td className="py-4 px-6 font-medium text-gray-800">{b.user?.name || b.user?.username || b.paymentDetails?.guestName || '-'}{b.offlineCash ? <span className="ml-2 px-2 py-1 rounded bg-yellow-100 text-yellow-700 text-xs font-semibold">Cash</span> : null}</td>
-                    <td className="py-4 px-6 text-gray-600">{b.hotel?.name || b.hotelName || '-'}</td>
-                    <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
-                    <td className="py-4 px-6 text-gray-600">{b.days}</td>
-                    <td className="py-4 px-6 font-semibold text-green-600">{formatINR(b.totalPrice)}</td>
-                    <td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${b.status === 'confirmed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
-                        b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' :
-                          'bg-linear-to-r from-yellow-400 to-yellow-500 text-white'
-                      }`}>{b.status}</span></td>
-                  </tr>
-                ))}
-              </tbody>
+          {/* Desktop table view */}
+          <div className="hidden md:block bg-white rounded-2xl shadow-lg">
+            {/* Header table */}
+            <table className="w-full table-fixed text-left">
+              <thead>
+                <tr className="bg-linear-to-r from-blue-50 to-indigo-50 border-b-2 border-blue-200">
+                  <th className="py-4 px-6 font-semibold text-gray-700">User</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Hotel</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Check-in</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Days</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Total</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Status</th>
+                </tr>
+              </thead>
             </table>
+
+            {/* Scrollable body */}
+            <div className="max-h-[45vh] overflow-auto scrollbar-custom">
+              <table className="w-full table-fixed">
+                <tbody>
+                  {bookings.map(b => (
+                    <tr key={b._id} className="border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200">
+                      <td className="py-4 px-6 font-medium text-gray-800">{b.user?.name || b.user?.username || b.paymentDetails?.guestName || '-'}{b.offlineCash ? <span className="ml-2 px-2 py-1 rounded bg-yellow-100 text-yellow-700 text-xs font-semibold">Cash</span> : null}</td>
+                      <td className="py-4 px-6 text-gray-600">{b.hotel?.name || b.hotelName || '-'}</td>
+                      <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
+                      <td className="py-4 px-6 text-gray-600">{b.days}</td>
+                      <td className="py-4 px-6 font-semibold text-green-600">{formatINR(b.totalPrice)}</td>
+                      <td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${b.status === 'confirmed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
+                          b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' :
+                            'bg-linear-to-r from-yellow-400 to-yellow-500 text-white'
+                        }`}>{b.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
-      <Pagination page={page} total={total} limit={limit} onPageChange={(p) => applyFilter({ page: p })} className="mt-6" />
+      )}
+
+      
+        <Pagination page={page} total={total} limit={limit} onPageChange={(p) => applyFilter({ page: p })} className="mt-6" />
+      
 
       <Modal title="Add Offline Booking (Cash)" open={showOfflineModal} onClose={() => setShowOfflineModal(false)} size="md">
         <form onSubmit={submitOffline} className="space-y-3">
@@ -343,13 +368,17 @@ export default function OwnerBookings() {
             <div className="text-xs text-gray-600">Total amount</div>
             <div className="text-sm font-semibold text-green-700">{formatINR(estimatedTotal)}</div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <label className="text-sm font-semibold text-gray-700">Hotel</label>
-              <select className="border rounded w-full px-3 py-2 text-sm" name="hotel" value={offlineForm.hotel} onChange={(e) => setOfflineForm(f => ({ ...f, hotel: e.target.value }))} required>
-                <option value="">Select a hotel</option>
-                {hotels.map(h => <option key={h._id} value={h._id}>{h.name}{h.location ? ` - ${h.location}` : ''}</option>)}
-              </select>
+              <Select
+                id="owner-offline-hotel"
+                name="hotel"
+                value={offlineForm.hotel}
+                onChange={(v) => setOfflineForm(f => ({ ...f, hotel: v }))}
+                options={[{ value: '', label: 'Select a hotel' }, ...(hotels || []).map(h => ({ value: h._id, label: `${h.name}${h.location ? ` - ${h.location}` : ''}` }))]}
+                placeholder={null}
+              />
               {offlineErrors.hotel && <div className="text-xs text-red-600 mt-1">{offlineErrors.hotel}</div>}
             </div>
             <div>

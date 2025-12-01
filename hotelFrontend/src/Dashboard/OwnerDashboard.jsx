@@ -4,6 +4,7 @@ import Layout from "./components/Layout";
 import { hotelService } from "../services/hotelService";
 import { bookingService } from "../services/bookingService";
 import getImageUrl from '../utils/getImageUrl';
+import Spinner from '../components/Spinner';
 import { formatDateTime } from '../utils/date';
 import { formatINR } from '../utils/currency';
 
@@ -65,6 +66,11 @@ const OwnerDashboard = () => {
           const todayBookings = bookingsPerHotel.reduce((s, p) => {
             return s + (
               (p.bookings || []).filter(b => {
+                // Exclude refunded/cancelled bookings or those with a refund amount
+                const status = (b.status || '').toString().toLowerCase();
+                const refundedAmount = Number(b.refundAmount) || 0;
+                if (status === 'cancelled' || status === 'refunded' || refundedAmount > 0) return false;
+
                 // Prefer checkIn/checkOut range when available
                 const ci = b.checkInDate ? new Date(b.checkInDate) : null;
                 const co = b.checkOutDate ? new Date(b.checkOutDate) : null;
@@ -196,7 +202,7 @@ const OwnerDashboard = () => {
           </div>
 
           {loading ? (
-            <div className="text-gray-500 text-center py-8">Loading properties...</div>
+            <div className="flex justify-center py-8"><Spinner label="Loading properties..." /></div>
           ) : hotels.length === 0 ? (
             <div className="text-gray-500 text-center py-8">You don't have any properties yet.</div>
           ) : (

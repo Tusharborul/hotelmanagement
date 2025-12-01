@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { authService } from '../../services/authService';
 
-export default function Breadcrumb({ showHome = false }) {
+export default function Breadcrumb({ showHome = false, showHereAlso = false }) {
   const location = useLocation();
   const parts = (location.pathname || '/').split('/').filter(Boolean);
 
@@ -60,6 +60,11 @@ export default function Breadcrumb({ showHome = false }) {
           </React.Fragment>
         ))}
       </ol>
+      {showHereAlso && (
+        <div className="ml-3 text-sm text-blue-600">
+          <Link to={`${location.pathname}${location.search}`} className="hover:underline">Here also</Link>
+        </div>
+      )}
     </nav>
   );
 }

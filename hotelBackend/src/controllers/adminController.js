@@ -41,7 +41,7 @@ exports.getUsers = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const fields = {};
-    ['name','username','email','role','phone','country','ownerApproved'].forEach(k=>{
+    ['name','username','email','role','phone','country','countryCode','nic','ownerApproved'].forEach(k=>{
       if (req.body[k] !== undefined) fields[k] = req.body[k];
     });
     const user = await User.findByIdAndUpdate(req.params.id, fields, { new: true, runValidators: true });
@@ -75,7 +75,13 @@ exports.getOwners = async (req, res) => {
       { $lookup: { from: 'hotels', localField: '_id', foreignField: 'owner', as: 'hotels' } },
       { $project: { 
         username: 1, 
-        name:1, 
+        name: 1,
+        email: 1,
+        phone: 1,
+        country: 1,
+        countryCode: 1,
+        nic: 1,
+        role: 1,
         createdAt:1, 
         ownerApproved: 1,
         hotelCount: { $size: '$hotels' }, 

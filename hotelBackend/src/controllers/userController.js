@@ -7,7 +7,7 @@ const { v2: cloudinary } = require('cloudinary');
 // @access  Public
 exports.register = async (req, res) => {
   try {
-    const { name, email, phone, countryCode, country, username, password } = req.body;
+    const { name, email, phone, countryCode, country, nic, username, password, role } = req.body;
 
     // Check if user already exists
     const userExists = await User.findOne({ $or: [{ email }, { username }] });
@@ -25,9 +25,10 @@ exports.register = async (req, res) => {
       phone,
       countryCode,
       country,
+      nic,
       username,
       password,
-      role: 'user'
+      role: role || 'user'
     });
 
     sendTokenResponse(user, 201, res);
@@ -110,7 +111,9 @@ exports.updateUser = async (req, res) => {
       name: req.body.name,
       email: req.body.email,
       phone: req.body.phone,
-      country: req.body.country
+      country: req.body.country,
+      countryCode: req.body.countryCode,
+      nic: req.body.nic
     };
 
     // Load existing user to check for previous avatar

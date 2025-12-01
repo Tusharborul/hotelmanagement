@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { hotelService } from "../../services/hotelService";
 import Layout from "../components/Layout";
+import Spinner from '../../components/Spinner';
 import SearchBar from "../../Home/SearchBar";
 import getImageUrl from '../../utils/getImageUrl';
 
@@ -63,7 +64,9 @@ const Hotels = () => {
     return (
       <Layout role="user" title="Hello, User" subtitle="Hotels">
         <div className="flex items-center justify-center h-48 py-12">
-          <div className="text-xl text-gray-600">Loading hotels...</div>
+          <div className="flex items-center justify-center w-full">
+            <Spinner label="Loading hotels..." />
+          </div>
         </div>
       </Layout>
     );

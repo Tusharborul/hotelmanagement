@@ -19,16 +19,22 @@ export default function OwnerRefunds() {
 	const [page, setPage] = useState(1);
 	const [total, setTotal] = useState(0);
 	const limit = 10;
-	const [loading, setLoading] = useState(false);
+	const [loading, setLoading] = useState(true);
 
 	const loadHotels = async () => {
 		try {
 			const res = await hotelService.getMyHotels();
 			const list = res.data || [];
 			setHotels(list);
+			// If there are no hotels, stop loading so empty state can show
+			if (!list || list.length === 0) {
+				setLoading(false);
+			}
 			// default to All Hotels: do not auto-select the first hotel
 		} catch (err) {
 			console.error('Failed to load hotels', err);
+			// On error, also stop loading to reveal empty/error state
+			setLoading(false);
 		}
 	};
 
@@ -118,8 +124,6 @@ export default function OwnerRefunds() {
 	useEffect(()=>{ loadHotels(); }, []);
 	// when hotels load, run refunds loader (aggregated) with current filters
 	useEffect(()=>{ if (hotels && hotels.length) loadRefunds(1); }, [hotels]);
-	// also run when selected changes
-	useEffect(()=>{ loadRefunds(1, { selected }); }, [selected]);
 
 	return (
 		<Layout role="owner" title="Hello, Owner" subtitle="Refunds">
@@ -189,7 +193,9 @@ export default function OwnerRefunds() {
 						</div>
 				)}
 			
-			<Pagination page={page} total={total} limit={limit} onPageChange={(p)=>loadRefunds(p)} className="mt-6" />
+			
+				<Pagination page={page} total={total} limit={limit} onPageChange={(p)=>loadRefunds(p)} className="mt-6" />
+			
 
 		</Layout>
 	);

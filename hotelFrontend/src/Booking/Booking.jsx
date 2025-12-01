@@ -4,6 +4,7 @@ import placeImg from "../assets/location/Shangri-La.png"; // Use your actual ima
 import { hotelService } from "../services/hotelService";
 import { authService } from "../services/authService";
 import getImageUrl from '../utils/getImageUrl';
+import Spinner from '../components/Spinner';
 import { formatINR } from '../utils/currency';
 
 const Booking = () => {
@@ -61,7 +62,7 @@ const Booking = () => {
   if (loading) {
     return (
       <div className="w-full min-h-screen flex items-center justify-center">
-        <div className="text-xl text-gray-400">Loading booking details...</div>
+        <Spinner label="Loading booking details..." />
       </div>
     );
   }
@@ -294,7 +295,9 @@ const Booking = () => {
     {/* Full-screen loader overlay during checking */}
     {checking && (
       <div className="fixed inset-0 bg-black/20 backdrop-blur-[1px] flex items-center justify-center z-50">
-        <div className="bg-white px-5 py-3 rounded-xl shadow-lg border border-gray-100 text-[#1a237e] font-medium">Checking availability...</div>
+        <div className="bg-white px-5 py-3 rounded-xl shadow-lg border border-gray-100 text-[#1a237e] font-medium">
+          <Spinner label="Checking availability..." />
+        </div>
       </div>
     )}
   </div>

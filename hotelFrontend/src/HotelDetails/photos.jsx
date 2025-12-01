@@ -6,7 +6,7 @@ import pic3 from "../assets/Home/washroom.png";
 import getImageUrl from '../utils/getImageUrl';
 import Breadcrumb from '../Dashboard/components/Breadcrumb';
 
-const Photos = ({ hotel }) => {
+const Photos = ({ hotel, inModal = false }) => {
     if (!hotel) return null;
 
     // Compose images list with fallbacks
@@ -60,11 +60,13 @@ const Photos = ({ hotel }) => {
     return (
         <div className="w-full flex flex-col">
             {/* Breadcrumb and Title */}
-            <div className="mb-8 mt-8">
-                <div className="text-gray-500 text-base mb-6">
-                    {/* Use shared Breadcrumb component for consistency */}
-                    <Breadcrumb showHome />
-                </div>
+                        <div className="mb-8 mt-8">
+                                {!inModal && (
+                                    <div className="text-gray-500 text-base mb-6">
+                                        {/* Use shared Breadcrumb component for consistency */}
+                                        <Breadcrumb showHome />
+                                    </div>
+                                )}
                 <div className="flex flex-col items-center">
                     <h1 className="text-3xl md:text-[42px] font-bold text-[#1a237e] mb-3 text-center">{hotel.name}</h1>
                     <div className="text-[16px] md:text-[18px] text-gray-600 text-center flex items-center gap-2">

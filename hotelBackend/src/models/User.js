@@ -26,6 +26,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide a country']
   },
+  nic: {
+    type: String,
+    default: ''
+  },
   username: {
     type: String,
     required: [true, 'Please provide a username'],

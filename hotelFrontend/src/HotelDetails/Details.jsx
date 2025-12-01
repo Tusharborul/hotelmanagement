@@ -14,10 +14,11 @@ import tv from "../assets/Details/ic_tv.png";
 
 
 
-const Details = ({ hotel, hotelId }) => {
+const Details = ({ hotel, hotelId, inModal = false }) => {
     const navigate = useNavigate();
 
     const handleBooking = () => {
+        if (inModal) return; // disable booking when rendered inside a modal
         // Check if user is authenticated
         const isLoggedIn = authService.isAuthenticated();
         console.log('Is user logged in?', isLoggedIn);
@@ -74,7 +75,7 @@ const Details = ({ hotel, hotelId }) => {
                     <button
                         className="bg-[#3256e2] w-full lg:w-[347px] h-12 text-white font-semibold rounded-lg px-8 shadow-md hover:bg-[#2545c8] transition-colors duration-200 mt-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3256e2]"
                         onClick={handleBooking}
-                        disabled={!hotel.price}
+                        disabled={inModal || !hotel.price}
                     >
                         Book Now!
                     </button>
