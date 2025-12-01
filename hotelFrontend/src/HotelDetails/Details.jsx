@@ -142,7 +142,7 @@ const Details = ({ hotel, hotelId, inModal = false }) => {
                     )}
                     {hotel.facilities.television && (
                         <div className="flex flex-col items-left">
-                            <div className="bg-orange-50 rounded-full p-2.5 w-fit mb-2.5">
+                            <div className="bg-blue-50 rounded-full p-2.5 w-fit mb-2.5">
                                 <img src={tv} alt="Television" className="w-9 h-9" />
                             </div>
                             <span className="text-base text-gray-600"><span className="font-semibold text-[#1a237e]">{hotel.facilities.television}</span> television</span>

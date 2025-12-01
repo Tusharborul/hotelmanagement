@@ -24,6 +24,7 @@ const Booking = () => {
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
+  const [availability, setAvailability] = useState(null);
   
   // Price per day (can be dynamic or fetched from API)
   const pricePerDay = hotel?.price || 200;
@@ -54,6 +55,26 @@ const Booking = () => {
 
     fetchHotel();
   }, [hotelId, navigate]);
+
+  // Fetch availability whenever hotelId, checkInDate or days change
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (!hotelId || !checkInDate || !days) {
+        setAvailability(null);
+        return;
+      }
+      setAvailability({ loading: true });
+      try {
+        const res = await hotelService.checkAvailability(hotelId, checkInDate, days);
+        const payload = res?.data || res;
+        setAvailability({ loading: false, data: payload });
+      } catch (err) {
+        console.error('Availability fetch failed', err);
+        setAvailability({ loading: false, error: true });
+      }
+    };
+    fetchAvailability();
+  }, [hotelId, checkInDate, days]);
 
   const hotelImage = hotel?.mainImage ? getImageUrl(hotel.mainImage, placeImg) : placeImg;
   const hotelName = hotel?.name;
@@ -158,10 +179,11 @@ const Booking = () => {
         </div>
 
         {/* Date Picker */}
-        <div>
+        <div className="relative">
           <label className="block text-gray-700 mb-3 font-medium">
             Pick a Date
           </label>
+
           <div className="flex items-center bg-white rounded-2xl px-4 py-3 shadow-lg border-2 border-gray-200 hover:border-blue-300 transition-colors duration-300">
             <span className="mr-2">
               <svg
@@ -196,15 +218,54 @@ const Booking = () => {
               onChange={e => setCheckInDate(e.target.value)}
             />
             <span className="ml-2 text-gray-500 text-sm">Check-in</span>
+            {/* Availability pill aligned right in date row */}
+            <div className="absolute top-0 right-0 ">
+              {availability ? (
+                availability.loading ? (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-white/90 text-gray-700 shadow-sm border border-gray-100" aria-live="polite">
+                    <svg className="w-3 h-3 animate-spin text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                  </span>
+                ) : availability.error ? (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-yellow-50 text-yellow-800 shadow-sm border border-yellow-100" title="Unavailable">N/A</span>
+                ) : (
+                  (() => {
+                    const av = availability.data || availability;
+                    if (!av) return null;
+                    if (av.dailyCapacity === 0 || av.remaining === null) {
+                      return <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-50 text-green-800 shadow-sm border border-green-100" title="Available">Available</span>;
+                    }
+                    if (av.available) {
+                      return <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-amber-50 text-amber-800 shadow-sm border border-amber-100" title={`${av.remaining} rooms available`}>{av.remaining} rooms</span>;
+                    }
+                    return <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-50 text-red-700 shadow-sm border border-red-100" title={av.date ? `Fully booked for ${av.date}` : 'Fully booked'}>Full</span>;
+                  })()
+                )
+              ) : null}
+            </div>
           </div>
         </div>
 
-        {/* Price Info */}
+        {/* Price Info + Availability (stacked lines) */}
         <div className="text-sm sm:text-base">
-          <span className="text-gray-400 text-base sm:text-lg">You will pay</span>
-          <span className="text-[#1a237e] font-bold text-xl sm:text-2xl ml-2">{formatINR(totalPrice)}</span>
-          <span className="text-gray-400 text-base sm:text-lg ml-2">for</span>
-          <span className="text-[#1a237e] font-bold text-xl sm:text-2xl ml-2">{days} Day{days > 1 ? 's' : ''}</span>
+          <div className="flex flex-col gap-2">
+            {/* Line 1: You will pay */}
+            <div className="flex items-baseline gap-2">
+              <span className="text-gray-400">You will pay</span>
+              <span className="text-[#1a237e] font-bold text-lg sm:text-xl">{formatINR(totalPrice)}</span>
+            </div>
+
+            {/* Line 2: for X Days */}
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400">for</span>
+              <span className="text-[#1a237e] font-bold text-lg sm:text-xl">{days} Day{days > 1 ? 's' : ''}</span>
+            </div>
+
+            {/* Line 3: availability */}
+         
+          </div>
         </div>
       </div>
     </div>

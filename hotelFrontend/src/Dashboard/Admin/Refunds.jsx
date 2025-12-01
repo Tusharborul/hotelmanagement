@@ -166,7 +166,7 @@ export default function AdminRefunds() {
 
   return (
     <Layout role="admin" title="Hello, Admin" subtitle="Refunds">
-      <div className="bg-linear-to-r from-orange-600 to-red-600 bg-clip-text text-transparent font-bold mb-4 text-2xl">Admin Refunds</div>
+      <div className="bg-linear-to-r from-blue-600 to-red-600 bg-clip-text text-transparent font-bold mb-4 text-2xl">Admin Refunds</div>
 
       <FilterControls
         start={start}
@@ -194,7 +194,7 @@ export default function AdminRefunds() {
           <div className="hidden md:block bg-white rounded-2xl shadow-lg">
             <table className="w-full table-fixed text-left">
               <thead>
-                <tr className="bg-linear-to-r from-orange-50 to-red-50 border-b-2 border-orange-200">
+                <tr className="bg-linear-to-r from-blue-50 to-red-50 border-b-2 border-blue-200">
                   <th className="py-4 px-6 font-semibold text-gray-700">User</th>
                   <th className="py-4 px-6 font-semibold text-gray-700">Hotel</th>
                   <th className="py-4 px-6 font-semibold text-gray-700">Check-in</th>
@@ -211,7 +211,7 @@ export default function AdminRefunds() {
               <table className="w-full table-fixed">
                 <tbody>
                   {data?.map(b => (
-                    <tr key={b._id} className="border-b border-gray-100 hover:bg-orange-50 transition-colors duration-200">
+                    <tr key={b._id} className="border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200">
                       <td className="py-4 px-6 font-medium text-gray-800">{b.user?.name || b.user?.username || b.paymentDetails?.guestName || '-'}</td>
                       <td className="py-4 px-6 text-gray-600">{b.hotel?.name || b.hotelName || '-'}</td>
                       <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>

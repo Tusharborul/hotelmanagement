@@ -94,12 +94,24 @@ exports.checkAvailability = async (req, res) => {
     end.setDate(end.getDate() + Number(days));
     end.setHours(10,0,0,0);
 
-    // If no capacity set, always available
+    // If no capacity set (0 or not provided) treat as unlimited/always available
     if (!hotel.dailyCapacity || hotel.dailyCapacity <= 0) {
-      return res.status(200).json({ success: true, data: { available: true } });
+      return res.status(200).json({
+        success: true,
+        data: {
+          available: true,
+          dailyCapacity: 0,
+          bookedCount: 0,
+          remaining: null // null indicates unlimited
+        }
+      });
     }
 
-    // iterate each night
+    // We'll compute counts for each night and return the minimum remaining across the range
+    let minRemaining = Number.POSITIVE_INFINITY;
+    let maxBooked = 0;
+    let fullyBookedDate = null;
+
     for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
       const day = new Date(d);
       day.setHours(10,0,0,0);
@@ -109,13 +121,38 @@ exports.checkAvailability = async (req, res) => {
         checkInDate: { $lte: day },
         checkOutDate: { $gt: day }
       });
-      if (existingCount >= hotel.dailyCapacity) {
-        const msgDate = day.toISOString().split('T')[0];
-        return res.status(200).json({ success: true, data: { available: false, date: msgDate } });
+
+      const remainingForDay = hotel.dailyCapacity - existingCount;
+      if (remainingForDay <= 0 && !fullyBookedDate) {
+        fullyBookedDate = day.toISOString().split('T')[0];
       }
+
+      if (remainingForDay < minRemaining) minRemaining = remainingForDay;
+      if (existingCount > maxBooked) maxBooked = existingCount;
     }
 
-    return res.status(200).json({ success: true, data: { available: true } });
+    if (fullyBookedDate) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          available: false,
+          date: fullyBookedDate,
+          dailyCapacity: hotel.dailyCapacity,
+          bookedCount: maxBooked,
+          remaining: Math.max(0, minRemaining)
+        }
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        available: true,
+        dailyCapacity: hotel.dailyCapacity,
+        bookedCount: maxBooked,
+        remaining: Math.max(0, minRemaining)
+      }
+    });
   } catch (err) {
     console.error('Error in checkAvailability:', err);
     return res.status(500).json({ success: false, message: err.message });

@@ -247,8 +247,8 @@ export default function OwnerBookings() {
       <div className='grid grid-cols-1 md:grid-cols-2 justify-between items-center md:gap-4'>
       <div className="bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent font-bold mb-6 text-2xl">Bookings Management</div>
       <div className="mb-2 md:mb-4 flex md:justify-end">
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm shadow hover:bg-blue-700 transition" onClick={openOfflineModal} disabled={hotels.length === 0}>
-          Add Booking 
+        <button className="px-6 py-3 bg-linear-to-r from-green-500 to-green-600 text-white rounded-xl text-sm font-medium hover:scale-105 transition-transform duration-300 shadow-md hover:shadow-lg w-full sm:w-auto" onClick={openOfflineModal} disabled={hotels.length === 0}>
+          Add Booking
         </button>
       </div>
       </div>
@@ -383,59 +383,59 @@ export default function OwnerBookings() {
             </div>
             <div>
               <label className="text-sm font-semibold text-gray-700">Check-in</label>
-              <input type="date" className="border rounded w-full px-3 py-2 text-sm" name="checkInDate" value={offlineForm.checkInDate} min={new Date().toISOString().split('T')[0]} onChange={(e) => setOfflineForm(f => ({ ...f, checkInDate: e.target.value }))} required />
+              <input type="date" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" name="checkInDate" value={offlineForm.checkInDate} min={new Date().toISOString().split('T')[0]} onChange={(e) => setOfflineForm(f => ({ ...f, checkInDate: e.target.value }))} required />
               {offlineErrors.checkInDate && <div className="text-xs text-red-600 mt-1">{offlineErrors.checkInDate}</div>}
             </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <label className="text-sm font-semibold text-gray-700">Days</label>
-              <input type="number" min="1" className="border rounded w-full px-3 py-2 text-sm" name="days" value={offlineForm.days} onChange={(e) => setOfflineForm(f => ({ ...f, days: e.target.value }))} required />
+              <input type="number" min="1" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" name="days" value={offlineForm.days} onChange={(e) => setOfflineForm(f => ({ ...f, days: e.target.value }))} required />
               {offlineErrors.days && <div className="text-xs text-red-600 mt-1">{offlineErrors.days}</div>}
             </div>
             <div>
               <label className="text-sm font-semibold text-gray-700">Guest Name</label>
-              <input type="text" className="border rounded w-full px-3 py-2 text-sm" name="guestName" value={offlineForm.guestName} onChange={(e) => setOfflineForm(f => ({ ...f, guestName: e.target.value }))} />
+              <input type="text" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" name="guestName" value={offlineForm.guestName} onChange={(e) => setOfflineForm(f => ({ ...f, guestName: e.target.value }))} />
               {offlineErrors.guestName && <div className="text-xs text-red-600 mt-1">{offlineErrors.guestName}</div>}
             </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <label className="text-sm font-semibold text-gray-700">Guest Email</label>
-              <input type="email" className="border rounded w-full px-3 py-2 text-sm" name="guestEmail" value={offlineForm.guestEmail} onChange={(e) => setOfflineForm(f => ({ ...f, guestEmail: e.target.value }))} />
+              <input type="email" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" name="guestEmail" value={offlineForm.guestEmail} onChange={(e) => setOfflineForm(f => ({ ...f, guestEmail: e.target.value }))} />
               {offlineErrors.guestEmail && <div className="text-xs text-red-600 mt-1">{offlineErrors.guestEmail}</div>}
             </div>
             <div>
               <label className="text-sm font-semibold text-gray-700">Country</label>
-              <input type="text" className="border rounded w-full px-3 py-2 text-sm" name="guestCountry" value={offlineForm.guestCountry} onChange={(e) => setOfflineForm(f => ({ ...f, guestCountry: e.target.value }))} />
+              <input type="text" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" name="guestCountry" value={offlineForm.guestCountry} onChange={(e) => setOfflineForm(f => ({ ...f, guestCountry: e.target.value }))} />
               {offlineErrors.guestCountry && <div className="text-xs text-red-600 mt-1">{offlineErrors.guestCountry}</div>}
             </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <label className="text-sm font-semibold text-gray-700">Country Code</label>
-              <input type="text" className="border rounded w-full px-3 py-2 text-sm" name="guestCountryCode" value={offlineForm.guestCountryCode} onChange={(e) => setOfflineForm(f => ({ ...f, guestCountryCode: e.target.value }))} />
+              <input type="text" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" name="guestCountryCode" value={offlineForm.guestCountryCode} onChange={(e) => setOfflineForm(f => ({ ...f, guestCountryCode: e.target.value }))} />
               {offlineErrors.guestCountryCode && <div className="text-xs text-red-600 mt-1">{offlineErrors.guestCountryCode}</div>}
             </div>
             <div>
               <label className="text-sm font-semibold text-gray-700">Username</label>
-              <input type="text" className="border rounded w-full px-3 py-2 text-sm" name="guestUsername" value={offlineForm.guestUsername} onChange={(e) => setOfflineForm(f => ({ ...f, guestUsername: e.target.value }))} />
+              <input type="text" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" name="guestUsername" value={offlineForm.guestUsername} onChange={(e) => setOfflineForm(f => ({ ...f, guestUsername: e.target.value }))} />
               {offlineErrors.guestUsername && <div className="text-xs text-red-600 mt-1">{offlineErrors.guestUsername}</div>}
             </div>
           </div>
           <div>
-            <label className="text-sm font-semibold text-gray-700">Guest Phone</label>
-            <input type="tel" className="border rounded w-full px-3 py-2 text-sm" name="guestPhone" value={offlineForm.guestPhone} onChange={(e) => setOfflineForm(f => ({ ...f, guestPhone: e.target.value }))} />
+              <label className="text-sm font-semibold text-gray-700">Guest Phone</label>
+            <input type="tel" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" name="guestPhone" value={offlineForm.guestPhone} onChange={(e) => setOfflineForm(f => ({ ...f, guestPhone: e.target.value }))} />
             {offlineErrors.guestPhone && <div className="text-xs text-red-600 mt-1">{offlineErrors.guestPhone}</div>}
           </div>
           <div>
             <label className="text-sm font-semibold text-gray-700">Password</label>
-            <input type="password" className="border rounded w-full px-3 py-2 text-sm" name="guestPassword" value={offlineForm.guestPassword} onChange={(e) => setOfflineForm(f => ({ ...f, guestPassword: e.target.value }))} />
+            <input type="password" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" name="guestPassword" value={offlineForm.guestPassword} onChange={(e) => setOfflineForm(f => ({ ...f, guestPassword: e.target.value }))} />
             {offlineErrors.guestPassword && <div className="text-xs text-red-600 mt-1">{offlineErrors.guestPassword}</div>}
           </div>
           <div className="flex gap-2">
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition">Save</button>
-            <button type="button" className="px-4 py-2 border rounded text-sm" onClick={() => setShowOfflineModal(false)}>Cancel</button>
+            <button type="submit" className="px-5 py-2 bg-linear-to-r from-green-500 to-green-600 text-white rounded-full shadow-md hover:scale-105 transition-transform">Save</button>
+            <button type="button" className="px-5 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 transition" onClick={() => setShowOfflineModal(false)}>Cancel</button>
           </div>
         </form>
       </Modal>

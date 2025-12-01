@@ -101,16 +101,16 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          <div className="bg-linear-to-br from-orange-500 to-orange-600 rounded-2xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer">
+          <div className="bg-linear-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-orange-100 text-sm font-medium mb-2">Pending Refunds</div>
+                <div className="text-blue-100 text-sm font-medium mb-2">Pending Refunds</div>
                 <div className="text-3xl font-bold">{counts.pendingRefunds}</div>
               </div>
               <div className="text-5xl opacity-80">💰</div>
             </div>
-            <div className="mt-4 pt-4 border-t border-orange-400">
-              <Link to="/dashboard/admin/refunds" className="text-sm text-orange-100 hover:text-white transition-colors duration-200 flex items-center gap-1">
+            <div className="mt-4 pt-4 border-t border-blue-400">
+              <Link to="/dashboard/admin/refunds" className="text-sm text-blue-100 hover:text-white transition-colors duration-200 flex items-center gap-1">
                 Manage refunds <span>→</span>
               </Link>
             </div>

@@ -178,7 +178,7 @@ export default function OwnerObjectives() {
   return (
     <Layout role="owner" title="Hello, Owner" subtitle="Objectives">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-          <div className="bg-linear-to-r from-orange-600 to-red-600 bg-clip-text text-transparent font-bold text-2xl">Your Properties</div>
+          <div className="bg-linear-to-r from-blue-600 to-red-600 bg-clip-text text-transparent font-bold text-2xl">Your Properties</div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button className="px-6 py-3 bg-linear-to-r from-green-500 to-green-600 text-white rounded-xl text-sm font-medium hover:scale-105 transition-transform duration-300 shadow-md hover:shadow-lg w-full sm:w-auto" onClick={startAdd}>Add Hotel</button>
           </div>
@@ -189,34 +189,34 @@ export default function OwnerObjectives() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-gray-700 mb-2 font-semibold">Hotel name</label>
-              <input className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" placeholder="e.g. Ocean View Apartments"  name="name" value={addForm.name} onChange={(e)=>setAddForm(f=>({ ...f, name: e.target.value }))} />
+              <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" placeholder="e.g. Ocean View Apartments"  name="name" value={addForm.name} onChange={(e)=>setAddForm(f=>({ ...f, name: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs text-gray-700 mb-2 font-semibold">Location</label>
-              <input className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" placeholder="City, Country or address"  name="location" value={addForm.location} onChange={(e)=>setAddForm(f=>({ ...f, location: e.target.value }))} />
+              <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" placeholder="City, Country or address"  name="location" value={addForm.location} onChange={(e)=>setAddForm(f=>({ ...f, location: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs text-gray-700 mb-2 font-semibold">Address</label>
-              <input id="addForm_address" name="address" className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" placeholder="Street address, building or detailed address" value={addForm.address || ''} onChange={(e)=>setAddForm(f=>({ ...f, address: e.target.value }))} />
+              <input id="addForm_address" name="address" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" placeholder="Street address, building or detailed address" value={addForm.address || ''} onChange={(e)=>setAddForm(f=>({ ...f, address: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs text-gray-700 mb-2 font-semibold">Price per night (Rs)</label>
-              <input id="addForm_price" name="price" className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 120" value={addForm.price || ''} onChange={(e)=>setAddForm(f=>({ ...f, price: e.target.value }))} />
+              <input id="addForm_price" name="price" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 120" value={addForm.price || ''} onChange={(e)=>setAddForm(f=>({ ...f, price: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs text-gray-700 mb-2 font-semibold">Daily capacity (0 = unlimited)</label>
-              <input id="addForm_dailyCapacity" name="dailyCapacity" className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 5" value={addForm.dailyCapacity || 0} onChange={(e)=>setAddForm(f=>({ ...f, dailyCapacity: Number(e.target.value) }))} />
+              <input id="addForm_dailyCapacity" name="dailyCapacity" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 5" value={addForm.dailyCapacity || 0} onChange={(e)=>setAddForm(f=>({ ...f, dailyCapacity: Number(e.target.value) }))} />
             </div>
 
             <div className="md:col-span-2">
               <label className="block text-xs text-gray-700 mb-2 font-semibold">Description</label>
-              <textarea className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" rows={3} placeholder="Short description for guests"  name="description" value={addForm.description} onChange={(e)=>setAddForm(f=>({ ...f, description: e.target.value }))} />
+              <textarea className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" rows={3} placeholder="Short description for guests"  name="description" value={addForm.description} onChange={(e)=>setAddForm(f=>({ ...f, description: e.target.value }))} />
             </div>
 
             <div className="md:col-span-2">
               <label className="block text-xs text-gray-700 mb-2 font-semibold">Images</label>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                  <label className="inline-block px-6 py-3 bg-white border-2 border-orange-300 rounded-xl cursor-pointer text-sm hover:bg-orange-50 hover:border-orange-400 transition-all duration-300 w-full sm:w-auto text-center font-medium text-orange-600 shadow-md">Select images
+                  <label className="inline-block px-6 py-3 bg-white border-2 border-blue-300 rounded-xl cursor-pointer text-sm hover:bg-blue-50 hover:border-blue-400 transition-all duration-300 w-full sm:w-auto text-center font-medium text-blue-600 shadow-md">Select images
                   <input id="addForm_images" name="images" type="file" multiple accept="image/*" onChange={(e)=>{
                     const files = e.target.files ? Array.from(e.target.files) : [];
                     setAddForm(f=>({ ...f, images: files }));
@@ -247,42 +247,42 @@ export default function OwnerObjectives() {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Bedrooms</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0}  name="bedrooms" value={addForm.facilities.bedrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, bedrooms: Number(e.target.value) } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0}  name="bedrooms" value={addForm.facilities.bedrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, bedrooms: Number(e.target.value) } }))} />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Bathrooms</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0}  name="bathrooms" value={addForm.facilities.bathrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, bathrooms: Number(e.target.value) } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0}  name="bathrooms" value={addForm.facilities.bathrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, bathrooms: Number(e.target.value) } }))} />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Living rooms</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0}  name="livingrooms" value={addForm.facilities.livingrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, livingrooms: Number(e.target.value) } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0}  name="livingrooms" value={addForm.facilities.livingrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, livingrooms: Number(e.target.value) } }))} />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Dining rooms</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0}  name="diningrooms" value={addForm.facilities.diningrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, diningrooms: Number(e.target.value) } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0}  name="diningrooms" value={addForm.facilities.diningrooms} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, diningrooms: Number(e.target.value) } }))} />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">WiFi (label)</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm"  name="wifi" value={addForm.facilities.wifi} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, wifi: e.target.value } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300"  name="wifi" value={addForm.facilities.wifi} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, wifi: e.target.value } }))} />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Units ready</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0}  name="unitsReady" value={addForm.facilities.unitsReady} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, unitsReady: Number(e.target.value) } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0}  name="unitsReady" value={addForm.facilities.unitsReady} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, unitsReady: Number(e.target.value) } }))} />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Refrigerator (count)</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0}  name="refrigerator" value={addForm.facilities.refrigerator} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, refrigerator: Number(e.target.value) } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0}  name="refrigerator" value={addForm.facilities.refrigerator} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, refrigerator: Number(e.target.value) } }))} />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Television (count)</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0}  name="television" value={addForm.facilities.television} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, television: Number(e.target.value) } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0}  name="television" value={addForm.facilities.television} onChange={(e)=>setAddForm(f=>({ ...f, facilities: { ...f.facilities, television: Number(e.target.value) } }))} />
                 </div>
               </div>
             </div>
           </div>
-          <div className="mt-4 flex gap-2">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition" onClick={saveAdd}>Create</button>
-            <button className="px-4 py-2 border rounded text-sm" onClick={()=>setShowAddModal(false)}>Cancel</button>
+          <div className="mt-4 flex justify-end gap-3">
+            <button className="px-5 py-2 bg-linear-to-r from-green-500 to-green-600 text-white rounded-full shadow-md hover:scale-105 transition-transform" onClick={saveAdd}>Create</button>
+            <button className="px-5 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 transition" onClick={()=>setShowAddModal(false)}>Cancel</button>
           </div>
         </Modal>
 
@@ -291,58 +291,58 @@ export default function OwnerObjectives() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-gray-700 mb-2 font-semibold">Hotel name</label>
-              <input className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" placeholder="e.g. Ocean View Apartments"  name="name" value={form.name} onChange={(e)=>setForm(f=>({ ...f, name: e.target.value }))} />
+              <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" placeholder="e.g. Ocean View Apartments"  name="name" value={form.name} onChange={(e)=>setForm(f=>({ ...f, name: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs text-gray-700 mb-2 font-semibold">Location</label>
-              <input className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" placeholder="City, Country or address"  name="location" value={form.location} onChange={(e)=>setForm(f=>({ ...f, location: e.target.value }))} />
+              <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" placeholder="City, Country or address"  name="location" value={form.location} onChange={(e)=>setForm(f=>({ ...f, location: e.target.value }))} />
             </div>
             <div>
               <label className="block text-xs text-gray-700 mb-2 font-semibold">Price per night (Rs)</label>
-              <input id="form_price" name="price" className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 120" value={form.price || ''} onChange={(e)=>setForm(f=>({ ...f, price: e.target.value }))} />
+              <input id="form_price" name="price" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 120" value={form.price || ''} onChange={(e)=>setForm(f=>({ ...f, price: e.target.value }))} />
             </div>
             <div className="md:col-span-2">
               <label className="block text-xs text-gray-700 mb-2 font-semibold">Description</label>
-              <textarea className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" rows={3} placeholder="Short description for guests"  name="description" value={form.description} onChange={(e)=>setForm(f=>({ ...f, description: e.target.value }))} />
+              <textarea className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" rows={3} placeholder="Short description for guests"  name="description" value={form.description} onChange={(e)=>setForm(f=>({ ...f, description: e.target.value }))} />
             </div>
             <div className="md:col-span-2">
               <label className="block text-xs text-gray-700 mb-2 font-semibold">Daily capacity (0 = unlimited)</label>
-              <input id="form_dailyCapacity" name="dailyCapacity" className="border-2 border-orange-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 hover:border-orange-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 5" value={form.dailyCapacity || 0} onChange={(e)=>setForm(f=>({ ...f, dailyCapacity: Number(e.target.value) }))} />
+              <input id="form_dailyCapacity" name="dailyCapacity" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 5" value={form.dailyCapacity || 0} onChange={(e)=>setForm(f=>({ ...f, dailyCapacity: Number(e.target.value) }))} />
             </div>
             <div className="md:col-span-2 mt-2">
               <div className="text-sm font-semibold mb-3">Facilities</div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Bedrooms</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0}  name="bedrooms" value={form.facilities.bedrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, bedrooms: e.target.value } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0}  name="bedrooms" value={form.facilities.bedrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, bedrooms: e.target.value } }))} />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Bathrooms</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0}  name="bathrooms" value={form.facilities.bathrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, bathrooms: e.target.value } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0}  name="bathrooms" value={form.facilities.bathrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, bathrooms: e.target.value } }))} />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Living rooms</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0}  name="livingrooms" value={form.facilities.livingrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, livingrooms: e.target.value } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0}  name="livingrooms" value={form.facilities.livingrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, livingrooms: e.target.value } }))} />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Dining rooms</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0}  name="diningrooms" value={form.facilities.diningrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, diningrooms: e.target.value } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0}  name="diningrooms" value={form.facilities.diningrooms} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, diningrooms: e.target.value } }))} />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">WiFi</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm"  name="wifi" value={form.facilities.wifi} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, wifi: e.target.value } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300"  name="wifi" value={form.facilities.wifi} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, wifi: e.target.value } }))} />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Units ready</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0}  name="unitsReady" value={form.facilities.unitsReady} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, unitsReady: e.target.value } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0}  name="unitsReady" value={form.facilities.unitsReady} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, unitsReady: e.target.value } }))} />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Refrigerator</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0}  name="refrigerator" value={form.facilities.refrigerator} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, refrigerator: e.target.value } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0}  name="refrigerator" value={form.facilities.refrigerator} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, refrigerator: e.target.value } }))} />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Television</label>
-                  <input className="border rounded px-2 py-1.5 w-full text-sm" type="number" min={0}  name="television" value={form.facilities.television} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, television: e.target.value } }))} />
+                  <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0}  name="television" value={form.facilities.television} onChange={(e)=>setForm(f=>({ ...f, facilities: { ...f.facilities, television: e.target.value } }))} />
                 </div>
               </div>
             </div>

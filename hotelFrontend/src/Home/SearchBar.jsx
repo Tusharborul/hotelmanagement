@@ -21,6 +21,7 @@ const SearchBar = () => {
   const [locations, setLocations] = useState([]);
   const [hotels, setHotels] = useState([]);
   const [filteredHotels, setFilteredHotels] = useState([]);
+  const [availabilityMap, setAvailabilityMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -81,12 +82,50 @@ const SearchBar = () => {
 
   const onReset = (e) => {
     e?.preventDefault();
-    setDate("");
+    // Reset date back to today
+    setDate(new Date().toISOString().split('T')[0]);
     setPersons(2);
     setLocationValue("");
     setErrors({});
     setFilteredHotels(hotels); // Reset to show all hotels
   };
+
+  // Fetch per-hotel availability for selected date (single-night) when date changes
+  React.useEffect(() => {
+    const fetchAvailabilityForHotels = async () => {
+      if (!date) {
+        setAvailabilityMap({});
+        return;
+      }
+      // show loading state per-hotel immediately
+      const initial = {};
+      filteredHotels.forEach(h => { initial[h._id] = { loading: true }; });
+      setAvailabilityMap(initial);
+
+      const map = { ...initial };
+      await Promise.all(
+        filteredHotels.map(async (h) => {
+          try {
+            const res = await hotelService.checkAvailability(h._id, date, 1);
+            if (res && res.success && res.data) {
+              map[h._id] = res.data;
+            } else {
+              // mark as unavailable to indicate fetch finished without data
+              map[h._id] = { error: true };
+            }
+          } catch (err) {
+            console.error('Availability fetch error for', h._id, err?.message || err);
+            map[h._id] = { error: true };
+          }
+        })
+      );
+
+      setAvailabilityMap(map);
+    };
+
+    fetchAvailabilityForHotels();
+    // only when date or filteredHotels change
+  }, [date, filteredHotels]);
 
   const handleHotelClick = (hotelId) => {
     navigate(`/hoteldetails?id=${hotelId}`);
@@ -221,6 +260,39 @@ const SearchBar = () => {
                   Popular Choice
                 </div>
               )}
+              {/* Availability pill overlay (top-right) */}
+              <div className="absolute top-3 right-3">
+                {(() => {
+                  const val = availabilityMap[hotel._id];
+                  if (!val) {
+                    return null;
+                  }
+                  if (val.loading) {
+                    return (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-white/90 text-gray-700 shadow">
+                        <svg className="w-3 h-3 animate-spin text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                      </span>
+                    );
+                  }
+                  if (val.error) {
+                    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-800 shadow">N/A</span>;
+                  }
+                  if (val.dailyCapacity === 0 || val.remaining === null) {
+                    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-800 shadow" title="Available" aria-label="Available">Available</span>;
+                  }
+                  if (val.available) {
+                    return (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 shadow" title={`${val.remaining} rooms available`} aria-label={`${val.remaining} rooms available`}>
+                        {val.remaining} rooms available
+                      </span>
+                    );
+                  }
+                  return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-800 shadow">Full</span>;
+                })()}
+              </div>
             </div>
 
             {/* Hotel Info */}
