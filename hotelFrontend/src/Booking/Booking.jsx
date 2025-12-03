@@ -357,7 +357,7 @@ const Booking = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Room Type</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button type="button" onClick={() => setRoomType('AC')} className={`w-full py-2 px-4 rounded-lg border font-semibold text-sm ${roomType==='AC' ? 'bg-primary/20 border-primary text-primary' : 'bg-white border-gray-200 text-gray-700 hover:border-primary'}`}>AC</button>
-                  <button type="button" onClick={() => setRoomType('Non-AC')} className={`w-full py-2 px-4 rounded-lg border font-semibold text-sm ${roomType==='Non-AC' ? 'bg-primary/20 border-primary text-primary' : 'bg-white border-gray-200 text-gray-700 hover:border-primary'}`}>Non-AC</button>
+                  <button type="button" onClick={() => setRoomType('NON_AC')} className={`w-full py-2 px-4 rounded-lg border font-semibold text-sm ${roomType==='NON_AC' ? 'bg-primary/20 border-primary text-primary' : 'bg-white border-gray-200 text-gray-700 hover:border-primary'}`}>Non-AC</button>
                 </div>
               </div>
 

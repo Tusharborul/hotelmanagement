@@ -14,7 +14,7 @@ const bookingSchema = new mongoose.Schema({
   // Room category and assignment
   roomType: {
     type: String,
-    enum: ['AC', 'Non-AC'],
+    enum: ['AC', 'NON_AC'],
   },
   room: {
     type: mongoose.Schema.Types.ObjectId,

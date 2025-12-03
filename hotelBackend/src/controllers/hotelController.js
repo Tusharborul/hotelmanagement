@@ -103,7 +103,7 @@ exports.checkAvailability = async (req, res) => {
     if (hasRooms) {
       // Compute availability by type
       const totalAc = rooms.filter(r => r.type === 'AC').length;
-      const totalNonAc = rooms.filter(r => r.type === 'Non-AC').length;
+      const totalNonAc = rooms.filter(r => r.type === 'NON_AC').length;
 
       let minRemainingAc = totalAc;
       let minRemainingNonAc = totalNonAc;
@@ -123,7 +123,7 @@ exports.checkAvailability = async (req, res) => {
         const nonAcBookedRooms = await Booking.distinct('room', {
           hotel: hotel._id,
           status: 'confirmed',
-          roomType: 'Non-AC',
+          roomType: 'NON_AC',
           checkInDate: { $lte: day },
           checkOutDate: { $gt: day }
         });
@@ -150,7 +150,7 @@ exports.checkAvailability = async (req, res) => {
       if (roomType === 'AC') {
         response.available = minRemainingAc > 0;
         response.remaining = minRemainingAc;
-      } else if (roomType === 'Non-AC') {
+      } else if (roomType === 'NON_AC') {
         response.available = minRemainingNonAc > 0;
         response.remaining = minRemainingNonAc;
       }
@@ -303,7 +303,7 @@ exports.createHotel = async (req, res) => {
           if (!r) return;
           const number = String(r.number || r.no || '').trim();
           const type = (r.type || r.roomType || '').toUpperCase();
-          if (number && (type === 'AC' || type === 'Non-AC')) {
+          if (number && (type === 'AC' || type === 'NON_AC')) {
             toCreate.push({ hotel: hotel._id, number, type });
           }
         });
@@ -314,7 +314,7 @@ exports.createHotel = async (req, res) => {
           toCreate.push({ hotel: hotel._id, number: `A${i}`, type: 'AC' });
         }
         for (let i = 1; i <= nonN; i++) {
-          toCreate.push({ hotel: hotel._id, number: `N${i}`, type: 'Non-AC' });
+          toCreate.push({ hotel: hotel._id, number: `N${i}`, type: 'NON_AC' });
         }
       }
       if (toCreate.length) {
@@ -361,7 +361,7 @@ exports.addRooms = async (req, res) => {
         if (!r) return;
         const number = String(r.number || r.no || '').trim();
         const type = (r.type || r.roomType || '').toUpperCase();
-        if (number && (type === 'AC' || type === 'Non-AC')) {
+        if (number && (type === 'AC' || type === 'NON_AC')) {
           toCreate.push({ hotel: hotel._id, number, type });
         }
       });
@@ -377,7 +377,7 @@ exports.addRooms = async (req, res) => {
       }
       for (let i = 0; i < nonN; i++) {
         while (usedNumbers.has(`N${ni}`)) ni++;
-        toCreate.push({ hotel: hotel._id, number: `N${ni}`, type: 'Non-AC' }); ni++;
+        toCreate.push({ hotel: hotel._id, number: `N${ni}`, type: 'NON_AC' }); ni++;
       }
     }
     if (!toCreate.length) return res.status(400).json({ success: false, message: 'No rooms to add' });
@@ -505,7 +505,7 @@ exports.calendarAvailability = async (req, res) => {
 
     const rooms = await Room.find({ hotel: hotel._id, active: true }).lean();
     const totalAc = rooms.filter(r => r.type === 'AC').length;
-    const totalNonAc = rooms.filter(r => r.type === 'Non-AC').length;
+    const totalNonAc = rooms.filter(r => r.type === 'NON_AC').length;
 
     const days = [];
     for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
@@ -521,7 +521,7 @@ exports.calendarAvailability = async (req, res) => {
       const nonAcBookedRooms = await Booking.distinct('room', {
         hotel: hotel._id,
         status: 'confirmed',
-        roomType: 'Non-AC',
+        roomType: 'NON_AC',
         checkInDate: { $lte: day },
         checkOutDate: { $gt: day }
       });
