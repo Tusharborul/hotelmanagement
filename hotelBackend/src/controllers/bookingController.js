@@ -103,7 +103,7 @@ exports.createBooking = async (req, res) => {
       if (roomType) {
         const upper = String(roomType).toUpperCase();
         if (upper === 'AC') return Number(hotelData.priceAc) || 0;
-        if (upper === 'NON_AC') return Number(hotelData.priceNonAc) || 0;
+        if (upper === 'Non-AC') return Number(hotelData.priceNonAc) || 0;
       }
       // Require roomType now (legacy base price removed)
       return 0;
@@ -144,8 +144,8 @@ exports.createBooking = async (req, res) => {
 
     if (usesRooms) {
       const wantedType = (roomType || '').toUpperCase();
-      if (!(wantedType === 'AC' || wantedType === 'NON_AC')) {
-        return res.status(400).json({ success: false, message: 'roomType is required (AC or NON_AC)' });
+      if (!(wantedType === 'AC' || wantedType === 'Non-AC')) {
+        return res.status(400).json({ success: false, message: 'roomType is required (AC or Non-AC)' });
       }
       const candidates = rooms.filter(r => r.type === wantedType);
       if (candidates.length === 0) {
@@ -605,7 +605,7 @@ exports.createOfflineBooking = async (req, res) => {
       if (roomType) {
         const upper = String(roomType).toUpperCase();
         if (upper === 'AC') return Number(hotel.priceAc) || 0;
-        if (upper === 'NON_AC') return Number(hotel.priceNonAc) || 0;
+        if (upper === 'Non-AC') return Number(hotel.priceNonAc) || 0;
       }
       return 0;
     })();
@@ -635,8 +635,8 @@ exports.createOfflineBooking = async (req, res) => {
     let assignedRoomNumber = '';
     if (usesRooms) {
       const wantedType = (roomType || '').toUpperCase();
-      if (!(wantedType === 'AC' || wantedType === 'NON_AC')) {
-        return res.status(400).json({ success: false, message: 'roomType is required (AC or NON_AC)' });
+      if (!(wantedType === 'AC' || wantedType === 'Non-AC')) {
+        return res.status(400).json({ success: false, message: 'roomType is required (AC or Non-AC)' });
       }
       const candidates = rooms.filter(r => r.type === wantedType);
       if (!candidates.length) return res.status(409).json({ success: false, message: `No rooms configured for type ${wantedType}` });

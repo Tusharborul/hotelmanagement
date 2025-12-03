@@ -54,7 +54,7 @@ const Rooms = () => {
 
   const stats = useMemo(() => {
     const ac = rooms.filter(r => r.type === 'AC');
-    const nac = rooms.filter(r => r.type === 'NON_AC');
+    const nac = rooms.filter(r => r.type === 'Non-AC');
     const countActive = (arr) => arr.filter(r => r.active).length;
     return {
       total: rooms.length,
@@ -146,7 +146,7 @@ const Rooms = () => {
                   <div>
                     <label className="text-xs font-medium text-slate-500">AC</label>
                     <div className="mt-1">
-                      <Select id="filterType" name="filterType" value={filterType} onChange={v => setFilterType(v)} options={[{ value: 'ALL', label: 'All types' }, { value: 'AC', label: 'AC' }, { value: 'NON_AC', label: 'Non-AC' }]} placeholder={null} />
+                      <Select id="filterType" name="filterType" value={filterType} onChange={v => setFilterType(v)} options={[{ value: 'ALL', label: 'All types' }, { value: 'AC', label: 'AC' }, { value: 'Non-AC', label: 'Non-AC' }]} placeholder={null} />
                     </div>
                   </div>
 
@@ -289,7 +289,7 @@ const Rooms = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Add by Count (Non-AC)</label>
-                    <input className="w-full rounded-lg border-slate-300 bg-white focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3" id="non-ac-count" placeholder="e.g., 3" type="number" value={nonAcCount} onChange={e=>setNonAcCount(e.target.value)} />
+                    <input className="w-full rounded-lg border-slate-300 bg-white focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3" id="Non-AC-count" placeholder="e.g., 3" type="number" value={nonAcCount} onChange={e=>setNonAcCount(e.target.value)} />
                   </div>
                 </div>
 
@@ -308,7 +308,7 @@ const Rooms = () => {
                       <input className="flex-grow rounded-lg border-slate-300 bg-white focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3" placeholder="Room no. (e.g., B101)" type="text" value={nr.number} onChange={e=>updateRow(idx,'number',e.target.value)} />
                       <select className="rounded-lg border-slate-300 bg-white focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3" value={nr.type} onChange={e=>updateRow(idx,'type',e.target.value)}>
                         <option value="AC">AC</option>
-                        <option value="NON_AC">Non-AC</option>
+                        <option value="Non-AC">Non-AC</option>
                       </select>
                       <button className="p-2 text-slate-500 hover:text-red-500" onClick={()=>removeRow(idx)}>
                         <span className="material-symbols-outlined text-xl">delete</span>

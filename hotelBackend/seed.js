@@ -447,18 +447,18 @@ const seedDatabase = async () => {
           owner: hotelOwner._id,
           registrationNo: regNo
         });
-        // Seed rooms: default 5 AC + 6 NON_AC
+        // Seed rooms: default 5 AC + 6 Non-AC
         const baseAc = 5;
         const baseNon = 6;
         const roomDocs = [];
         for (let i = 1; i <= baseAc; i++) roomDocs.push({ hotel: hotel._id, number: `A${i}`, type: 'AC' });
-        for (let i = 1; i <= baseNon; i++) roomDocs.push({ hotel: hotel._id, number: `N${i}`, type: 'NON_AC' });
+        for (let i = 1; i <= baseNon; i++) roomDocs.push({ hotel: hotel._id, number: `N${i}`, type: 'Non-AC' });
         if (roomDocs.length) {
           await Room.insertMany(roomDocs);
-          hotel.dailyCapacity = roomDocs.length; // sync to AC+NON-AC
+          hotel.dailyCapacity = roomDocs.length; // sync to AC+Non-AC
           await hotel.save();
         }
-        console.log(`Added hotel: ${hotelData.name} with ${baseAc} AC and ${baseNon} NON_AC rooms`);
+        console.log(`Added hotel: ${hotelData.name} with ${baseAc} AC and ${baseNon} Non-AC rooms`);
       } else {
         console.log(`Hotel already exists: ${hotelData.name}`);
       }

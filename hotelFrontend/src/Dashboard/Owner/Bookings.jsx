@@ -174,7 +174,7 @@ export default function OwnerBookings() {
   useEffect(() => {
     try {
       const h = (hotels || []).find(x => x._id === offlineForm.hotel);
-      // choose base rate: prefer AC if both exist? Require selection? For offline quick booking, use Non-AC if only non-ac else ac.
+      // choose base rate: prefer AC if both exist? Require selection? For offline quick booking, use Non-AC if only Non-AC else ac.
       const baseRate = h ? (h.priceNonAc ? Number(h.priceNonAc) : (h.priceAc ? Number(h.priceAc) : 0)) : 0;
       const d = Number(offlineForm.days) || 1;
       setRatePerNight(baseRate);

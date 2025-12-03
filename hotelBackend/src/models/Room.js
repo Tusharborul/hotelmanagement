@@ -13,7 +13,7 @@ const roomSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['AC', 'NON_AC'],
+    enum: ['AC', 'Non-AC'],
     required: true
   },
   active: {
