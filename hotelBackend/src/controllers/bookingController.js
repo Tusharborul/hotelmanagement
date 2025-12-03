@@ -1,5 +1,6 @@
 const Booking = require('../models/Booking');
 const Hotel = require('../models/Hotel');
+const Room = require('../models/Room');
 const Stripe = require('stripe');
 const { inrToUsd } = require('../utils/currency');
 
@@ -18,8 +19,9 @@ exports.getBookings = async (req, res) => {
     }
 
     const bookings = await query
-      .populate('user', 'name email phone')
+      .populate('user', 'name email phone username')
       .populate('hotel', 'name location price mainImage')
+      .populate('room', 'number type')
       .populate('cancelledBy', 'name email')
       .populate('refundedBy', 'name email');
 
@@ -42,8 +44,9 @@ exports.getBookings = async (req, res) => {
 exports.getBooking = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
-      .populate('user', 'name email phone')
+      .populate('user', 'name email phone username')
       .populate('hotel', 'name location price mainImage')
+      .populate('room', 'number type')
       .populate('cancelledBy', 'name email')
       .populate('refundedBy', 'name email');
 
@@ -83,7 +86,8 @@ exports.createBooking = async (req, res) => {
     if (req.user && (req.user.role === 'admin' || req.user.role === 'hotelOwner')) {
       return res.status(403).json({ success: false, message: 'Admins and hotel owners are not allowed to create bookings.' });
     }
-    let { hotel, checkInDate, checkOutDate, days, paymentDetails } = req.body;
+    let { hotel, checkInDate, checkOutDate, days, paymentDetails, roomType, roomsCount } = req.body;
+    const qty = Math.max(1, Number(roomsCount) || 1);
 
     // Check if hotel exists
     const hotelData = await Hotel.findById(hotel);
@@ -94,9 +98,20 @@ exports.createBooking = async (req, res) => {
       });
     }
 
-
-    // Calculate total price and initial payment
-    const totalPrice = hotelData.price * days;
+    // Determine per-night price by room type (fallback to base price)
+    const perNight = (() => {
+      if (roomType) {
+        const upper = String(roomType).toUpperCase();
+        if (upper === 'AC') return Number(hotelData.priceAc) || 0;
+        if (upper === 'NON_AC') return Number(hotelData.priceNonAc) || 0;
+      }
+      // Require roomType now (legacy base price removed)
+      return 0;
+    })();
+    if (perNight <= 0) {
+      return res.status(400).json({ success:false, message:'Invalid or missing pricing for selected room type.' });
+    }
+    const totalPrice = perNight * days * qty;
     const initialPayment = Math.round(totalPrice / 2);
 
     // Normalize check-in/out times to 10:00 AM
@@ -119,37 +134,71 @@ exports.createBooking = async (req, res) => {
       calculatedCheckOutDate = checkOut.toISOString();
     }
 
-    // Enforce per-day capacity across the whole stay (each night) when configured (>0)
-    try {
-      if (hotelData.dailyCapacity && hotelData.dailyCapacity > 0 && checkInDate && calculatedCheckOutDate) {
-        const start = new Date(checkInDate);
-        start.setHours(10, 0, 0, 0);
-        const end = new Date(calculatedCheckOutDate);
-        end.setHours(10, 0, 0, 0);
+    // Room-based availability and assignment
+    const rooms = await Room.find({ hotel: hotelData._id, active: true }).lean();
+    const usesRooms = rooms && rooms.length > 0;
 
-        // iterate over each night: from start (inclusive) to end (exclusive)
-        for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
-          const day = new Date(d);
-          day.setHours(10, 0, 0, 0);
+    let assignedRoom = null;
+    let assignedRoomNumber = '';
+    let availableRooms = [];
 
-          // Count bookings that occupy this night: booking.checkInDate <= day < booking.checkOutDate
-          const existingCount = await Booking.countDocuments({
-            hotel: hotelData._id,
-            status: 'confirmed',
-            checkInDate: { $lte: day },
-            checkOutDate: { $gt: day }
-          });
-
-          if (existingCount >= hotelData.dailyCapacity) {
-            // Format date for message
-            const msgDate = day.toISOString().split('T')[0];
-            return res.status(409).json({ success: false, message: `Hotel is fully booked for ${msgDate}.` });
+    if (usesRooms) {
+      const wantedType = (roomType || '').toUpperCase();
+      if (!(wantedType === 'AC' || wantedType === 'NON_AC')) {
+        return res.status(400).json({ success: false, message: 'roomType is required (AC or NON_AC)' });
+      }
+      const candidates = rooms.filter(r => r.type === wantedType);
+      if (candidates.length === 0) {
+        return res.status(409).json({ success: false, message: `No rooms configured for type ${wantedType}` });
+      }
+      const start = new Date(checkInDate);
+      const end = new Date(calculatedCheckOutDate);
+      // Count how many rooms are available across the entire range
+      let availableCount = 0;
+      availableRooms = [];
+      for (const r of candidates) {
+        const overlap = await Booking.findOne({
+          hotel: hotelData._id,
+          room: r._id,
+          status: 'confirmed',
+          // overlap if (existing.checkIn < new.checkOut) && (existing.checkOut > new.checkIn)
+          checkInDate: { $lt: end },
+          checkOutDate: { $gt: start }
+        }).select('_id');
+        if (!overlap) { availableCount++; availableRooms.push(r); }
+      }
+      if (availableCount < qty) {
+        return res.status(409).json({ success: false, message: `Only ${availableCount} ${wantedType} room(s) available for the selected dates.` });
+      }
+      // Assign the first available room as primary (for backward compat), and keep list for multi-booking
+      assignedRoom = availableRooms[0]._id;
+      assignedRoomNumber = availableRooms[0].number;
+    } else {
+      // Legacy per-day capacity across the whole stay when configured (>0)
+      try {
+        if (checkInDate && calculatedCheckOutDate) {
+          const start = new Date(checkInDate);
+          start.setHours(10, 0, 0, 0);
+          const end = new Date(calculatedCheckOutDate);
+          end.setHours(10, 0, 0, 0);
+          for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+            const day = new Date(d);
+            day.setHours(10, 0, 0, 0);
+            const existingCount = await Booking.countDocuments({
+              hotel: hotelData._id,
+              status: 'confirmed',
+              checkInDate: { $lte: day },
+              checkOutDate: { $gt: day }
+            });
+            if (hotelData.dailyCapacity <= 0 || existingCount + qty > hotelData.dailyCapacity) {
+              const msgDate = day.toISOString().split('T')[0];
+              return res.status(409).json({ success: false, message: `Hotel is fully booked for ${msgDate}.` });
+            }
           }
         }
+      } catch (capErr) {
+        console.error('Capacity check error:', capErr);
       }
-    } catch (capErr) {
-      console.error('Capacity check error:', capErr);
-      // don't block booking on capacity-check error; allow create and log
     }
 
     // If paymentDetails contains a Stripe payment intent id, verify payment succeeded
@@ -178,30 +227,60 @@ exports.createBooking = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Error verifying payment' });
       }
     }
+    // Create one or multiple bookings based on qty
+    if (qty === 1 || !usesRooms) {
+      const booking = await Booking.create({
+        user: req.user.id,
+        hotel,
+        roomType: usesRooms ? (roomType || '').toUpperCase() : undefined,
+        room: usesRooms ? assignedRoom : undefined,
+        roomNumber: usesRooms ? assignedRoomNumber : '',
+        roomsCount: qty,
+        checkInDate,
+        checkOutDate: calculatedCheckOutDate,
+        days,
+        totalPrice,
+        initialPayment,
+        paymentDetails,
+        status: 'confirmed'
+      });
+      const populatedBooking = await Booking.findById(booking._id)
+        .populate('user', 'name email phone username')
+        .populate('hotel', 'name location priceAc priceNonAc mainImage')
+        .populate('room', 'number type')
+        .populate('cancelledBy', 'name email')
+        .populate('refundedBy', 'name email');
+      return res.status(201).json({ success: true, data: populatedBooking });
+    }
 
-    // Create booking
-    const booking = await Booking.create({
-      user: req.user.id,
-      hotel,
-      checkInDate,
-      checkOutDate: calculatedCheckOutDate,
-      days,
-      totalPrice,
-      initialPayment,
-      paymentDetails,
-      status: 'confirmed'
-    });
-
-    const populatedBooking = await Booking.findById(booking._id)
-      .populate('user', 'name email phone')
-      .populate('hotel', 'name location price mainImage')
-      .populate('cancelledBy', 'name email')
-      .populate('refundedBy', 'name email');
-
-    res.status(201).json({
-      success: true,
-      data: populatedBooking
-    });
+    // Multi-room: create N bookings, each with per-room totals; verify Stripe PI only once above
+    const perRoomTotal = perNight * days;
+    const perRoomInitial = Math.round(perRoomTotal / 2);
+    const created = [];
+    for (let i = 0; i < qty; i++) {
+      const r = availableRooms[i];
+      const booking = await Booking.create({
+        user: req.user.id,
+        hotel,
+        roomType: (roomType || '').toUpperCase(),
+        room: r._id,
+        roomNumber: r.number,
+        roomsCount: 1,
+        checkInDate,
+        checkOutDate: calculatedCheckOutDate,
+        days,
+        totalPrice: perRoomTotal,
+        initialPayment: perRoomInitial,
+        paymentDetails,
+        status: 'confirmed'
+      });
+      const populated = await Booking.findById(booking._id)
+        .populate('user', 'name email phone username')
+        .populate('hotel', 'name location priceAc priceNonAc mainImage')
+        .populate('room', 'number type');
+      created.push(populated);
+    }
+    return res.status(201).json({ success: true, count: created.length, data: created });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -305,8 +384,8 @@ exports.deleteBooking = async (req, res) => {
   booking.status = 'cancelled';
   booking.cancelledAt = new Date();
   booking.cancelledBy = req.user.id;
-  // Record cancellation reason without exposing actor names: user.near (user), lankastay (admin)
-  booking.cancellationReason = req.user.role === 'admin' ? 'lankastay' : 'user.near';
+  // Record cancellation reason without exposing actor names: user.near (user), Indiastay (admin)
+  booking.cancellationReason = req.user.role === 'admin' ? 'Indiastay' : 'user.near';
   // Calculate refund: policy = full initialPayment refund if cancelled >24h before check-in (or admin cancels)
   try {
     const now = Date.now();
@@ -335,7 +414,8 @@ exports.deleteBooking = async (req, res) => {
     // Return the updated populated booking so the frontend can reflect exact server state
     const populated = await Booking.findById(booking._id)
       .populate('user', 'name email phone')
-      .populate('hotel', 'name location price mainImage');
+      .populate('hotel', 'name location priceAc priceNonAc mainImage')
+      .populate('room', 'number type');
 
     res.status(200).json({
       success: true,
@@ -495,7 +575,8 @@ exports.getHotelBookings = async (req, res) => {
 // @access  Private (Hotel Owner, Admin)
 exports.createOfflineBooking = async (req, res) => {
   try {
-    const { hotel: hotelId, checkInDate, checkOutDate, days, guestName, guestPhone, guestEmail, guestCountry, guestCountryCode, guestUsername, guestPassword, userId } = req.body;
+    const { hotel: hotelId, checkInDate, checkOutDate, days, guestName, guestPhone, guestEmail, guestCountry, guestCountryCode, guestUsername, guestPassword, userId, roomType, roomsCount } = req.body;
+    const qty = Math.max(1, Number(roomsCount) || 1);
 
     // Only hotelOwner or admin allowed
     if (!(req.user && (req.user.role === 'hotelOwner' || req.user.role === 'admin'))) {
@@ -520,7 +601,18 @@ exports.createOfflineBooking = async (req, res) => {
       }
       return 1;
     })();
-    const totalPrice = Number(hotel.price || 0) * stayDays;
+    const perNightOffline = (() => {
+      if (roomType) {
+        const upper = String(roomType).toUpperCase();
+        if (upper === 'AC') return Number(hotel.priceAc) || 0;
+        if (upper === 'NON_AC') return Number(hotel.priceNonAc) || 0;
+      }
+      return 0;
+    })();
+    if (perNightOffline <= 0) {
+      return res.status(400).json({ success:false, message:'Invalid or missing pricing for selected room type.' });
+    }
+    const totalPrice = perNightOffline * stayDays * qty;
     const initialPayment = totalPrice; // cash received fully or partially; default assume full cash
 
     // Compute normalized check-in and check-out at 10:00 AM
@@ -536,29 +628,68 @@ exports.createOfflineBooking = async (req, res) => {
       normalizedCheckOut.setHours(10, 0, 0, 0);
     }
 
-    // Capacity enforcement (same logic as online create)
-    try {
-      if (hotel.dailyCapacity && hotel.dailyCapacity > 0 && normalizedCheckIn) {
-        // Determine normalized check-out
-        const start = new Date(normalizedCheckIn);
-        const end = new Date(normalizedCheckOut);
-        for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
-          const day = new Date(d);
-          day.setHours(10, 0, 0, 0);
-          const existingCount = await Booking.countDocuments({
-            hotel: hotel._id,
-            status: 'confirmed',
-            checkInDate: { $lte: day },
-            checkOutDate: { $gt: day }
-          });
-          if (existingCount >= hotel.dailyCapacity) {
-            const msgDate = day.toISOString().split('T')[0];
-            return res.status(409).json({ success: false, message: `Hotel is fully booked for ${msgDate}.` });
+    // Room-based assignment or legacy capacity
+    const rooms = await Room.find({ hotel: hotel._id, active: true }).lean();
+    const usesRooms = rooms && rooms.length > 0;
+    let assignedRoom = null;
+    let assignedRoomNumber = '';
+    if (usesRooms) {
+      const wantedType = (roomType || '').toUpperCase();
+      if (!(wantedType === 'AC' || wantedType === 'NON_AC')) {
+        return res.status(400).json({ success: false, message: 'roomType is required (AC or NON_AC)' });
+      }
+      const candidates = rooms.filter(r => r.type === wantedType);
+      if (!candidates.length) return res.status(409).json({ success: false, message: `No rooms configured for type ${wantedType}` });
+      const start = normalizedCheckIn;
+      const end = normalizedCheckOut;
+      // Ensure qty rooms available for full range
+      let availableCount = 0;
+      for (const r of candidates) {
+        const overlap = await Booking.findOne({
+          hotel: hotel._id,
+          room: r._id,
+          status: 'confirmed',
+          checkInDate: { $lt: end },
+          checkOutDate: { $gt: start }
+        }).select('_id');
+        if (!overlap) availableCount++;
+      }
+      if (availableCount < qty) return res.status(409).json({ success: false, message: `Only ${availableCount} ${wantedType} room(s) available for the selected dates.` });
+      // Assign at least one room
+      for (const r of candidates) {
+        const overlap = await Booking.findOne({
+          hotel: hotel._id,
+          room: r._id,
+          status: 'confirmed',
+          checkInDate: { $lt: end },
+          checkOutDate: { $gt: start }
+        }).select('_id');
+        if (!overlap) { assignedRoom = r._id; assignedRoomNumber = r.number; break; }
+      }
+      if (!assignedRoom) return res.status(409).json({ success: false, message: `No available ${wantedType} rooms for selected dates.` });
+    } else {
+      try {
+        if (hotel.dailyCapacity && hotel.dailyCapacity > 0 && normalizedCheckIn) {
+          const start = new Date(normalizedCheckIn);
+          const end = new Date(normalizedCheckOut);
+          for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+            const day = new Date(d);
+            day.setHours(10, 0, 0, 0);
+            const existingCount = await Booking.countDocuments({
+              hotel: hotel._id,
+              status: 'confirmed',
+              checkInDate: { $lte: day },
+              checkOutDate: { $gt: day }
+            });
+            if (existingCount > (hotel.dailyCapacity - qty)) {
+              const msgDate = day.toISOString().split('T')[0];
+              return res.status(409).json({ success: false, message: `Hotel is fully booked for ${msgDate}.` });
+            }
           }
         }
+      } catch (capErr) {
+        console.error('Capacity check error (offline):', capErr);
       }
-    } catch (capErr) {
-      console.error('Capacity check error (offline):', capErr);
     }
 
     // Create booking: store guest details in paymentDetails meta
@@ -618,9 +749,13 @@ exports.createOfflineBooking = async (req, res) => {
     const booking = await Booking.create({
       user: targetUser._id,
       hotel: hotel._id,
+      roomType: usesRooms ? (roomType || '').toUpperCase() : undefined,
+      room: usesRooms ? assignedRoom : undefined,
+      roomNumber: usesRooms ? assignedRoomNumber : '',
       checkInDate: normalizedCheckIn ? normalizedCheckIn.toISOString() : undefined,
       checkOutDate: normalizedCheckOut ? normalizedCheckOut.toISOString() : undefined,
       days: stayDays,
+      roomsCount: qty,
       totalPrice,
       initialPayment,
       paymentDetails: {
@@ -636,7 +771,7 @@ exports.createOfflineBooking = async (req, res) => {
 
     const populated = await Booking.findById(booking._id)
       .populate('user', 'name email phone')
-      .populate('hotel', 'name location price mainImage');
+      .populate('hotel', 'name location priceAc priceNonAc mainImage');
 
     return res.status(201).json({ success: true, data: populated });
   } catch (error) {

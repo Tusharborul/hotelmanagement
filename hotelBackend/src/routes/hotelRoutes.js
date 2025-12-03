@@ -13,7 +13,12 @@ const {
   addTreasure,
   updateTreasure,
   deleteTreasure,
-  checkAvailability
+  checkAvailability,
+  addRooms,
+  listRooms,
+  deleteRoom,
+  updateRoom,
+  calendarAvailability
 } = require('../controllers/hotelController');
 const { protect, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -56,6 +61,14 @@ router.post('/:id/reviews', protect, addReview);
 
 // Availability check (public)
 router.get('/:id/availability', checkAvailability);
+// Calendar availability (public)
+router.get('/:id/calendar-availability', calendarAvailability);
+
+// Rooms management
+router.post('/:id/rooms', protect, authorize('hotelOwner','admin'), addRooms);
+router.get('/:id/rooms', protect, authorize('hotelOwner','admin'), listRooms);
+router.put('/:id/rooms/:roomId', protect, authorize('hotelOwner','admin'), updateRoom);
+router.delete('/:id/rooms/:roomId', protect, authorize('hotelOwner','admin'), deleteRoom);
 
 // Generic hotel CRUD - MUST be last to avoid capturing specific routes
 router

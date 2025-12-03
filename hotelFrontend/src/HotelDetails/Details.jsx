@@ -68,14 +68,31 @@ const Details = ({ hotel, hotelId, inModal = false }) => {
                 {/* Right: Booking Card */}
                 <div className="w-full lg:w-[487px] h-auto lg:h-60 bg-white rounded-2xl shadow-xl flex flex-col justify-center border border-gray-200 p-6 lg:p-20 hover:shadow-2xl transition-shadow duration-300">
                     <div className="text-[20px] text-[#1a237e] font-bold mb-3">Start Booking</div>
-                    <div className="text-[38px] font-bold text-[#3256e2] mb-3">
-                        {hotel.price ? `${formatINR(hotel.price)}` : 'Price not available'}
-                        {hotel.price && <span className="text-[18px] text-gray-500 font-normal"> per Day</span>}
+                    <div className="mb-4">
+                        {(hotel.priceAc || hotel.priceNonAc) ? (
+                            <div className="flex flex-col gap-1" title="Room type specific nightly rates">
+                                <div className="flex gap-2 flex-wrap">
+                                    {hotel.priceNonAc && (
+                                        <span className="text-2xl font-bold text-[#3256e2] bg-blue-50 px-3 py-1 rounded">
+                                            {formatINR(hotel.priceNonAc)} <span className="text-sm font-normal text-gray-600">Non-AC</span>
+                                        </span>
+                                    )}
+                                    {hotel.priceAc && (
+                                        <span className="text-2xl font-bold text-[#3256e2] bg-indigo-50 px-3 py-1 rounded">
+                                            {formatINR(hotel.priceAc)} <span className="text-sm font-normal text-gray-600">AC</span>
+                                        </span>
+                                    )}
+                                </div>
+                                <span className="text-sm text-gray-500">Per night (room type)</span>
+                            </div>
+                        ) : (
+                            <div className="text-lg text-gray-400 font-medium">Pricing not available</div>
+                        )}
                     </div>
                     <button
                         className="bg-[#3256e2] w-full lg:w-[347px] h-12 text-white font-semibold rounded-lg px-8 shadow-md hover:bg-[#2545c8] transition-colors duration-200 mt-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3256e2]"
                         onClick={handleBooking}
-                        disabled={inModal || !hotel.price}
+                        disabled={inModal || (!hotel.priceAc && !hotel.priceNonAc)}
                     >
                         Book Now!
                     </button>

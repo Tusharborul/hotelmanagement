@@ -174,10 +174,11 @@ export default function OwnerBookings() {
   useEffect(() => {
     try {
       const h = (hotels || []).find(x => x._id === offlineForm.hotel);
-      const price = Number(h?.price || 0);
+      // choose base rate: prefer AC if both exist? Require selection? For offline quick booking, use Non-AC if only non-ac else ac.
+      const baseRate = h ? (h.priceNonAc ? Number(h.priceNonAc) : (h.priceAc ? Number(h.priceAc) : 0)) : 0;
       const d = Number(offlineForm.days) || 1;
-      setRatePerNight(price);
-      setEstimatedTotal(price * d);
+      setRatePerNight(baseRate);
+      setEstimatedTotal(baseRate * d);
     } catch (_) {
       setRatePerNight(0);
       setEstimatedTotal(0);
@@ -324,6 +325,7 @@ export default function OwnerBookings() {
                   <th className="py-4 px-6 font-semibold text-gray-700">Check-in</th>
                   <th className="py-4 px-6 font-semibold text-gray-700">Days</th>
                   <th className="py-4 px-6 font-semibold text-gray-700">Total</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Room</th>
                   <th className="py-4 px-6 font-semibold text-gray-700">Status</th>
                 </tr>
               </thead>
@@ -340,6 +342,7 @@ export default function OwnerBookings() {
                       <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
                       <td className="py-4 px-6 text-gray-600">{b.days}</td>
                       <td className="py-4 px-6 font-semibold text-green-600">{formatINR(b.totalPrice)}</td>
+                      <td className="py-4 px-6 text-gray-600">{b.roomNumber ? `${b.roomNumber}` : '-'} {b.roomType ? `(${b.roomType})` : ''}</td>
                       <td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${b.status === 'confirmed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
                           b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' :
                             'bg-linear-to-r from-yellow-400 to-yellow-500 text-white'

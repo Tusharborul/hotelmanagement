@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import Lanka from "../Register/Lanka";
+import India from "../Register/India";
 
 import LoginImg from '../assets/Login/login.png';
 
@@ -16,7 +16,7 @@ const CompleteHotelRegister = () => {
         <div className="absolute inset-0 bg-white/70 backdrop-blur-lg" />
         <div className="relative z-10 flex flex-col items-center justify-center w-full h-full py-12 px-4">
           <span className="text-[48px] font-bold text-center select-none mb-8">
-            <span className="text-blue-600">Lanka</span><span className="text-gray-900">Stay.</span>
+            <span className="text-blue-600">India</span><span className="text-gray-900">Stay.</span>
           </span>
           {/* Green check icon */}
           <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-8">

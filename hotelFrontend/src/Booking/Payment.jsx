@@ -12,7 +12,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 
 const Payment = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { days = 2, checkInDate, totalPrice = 400, hotelId, hotelName, hotelLocation } = location.state || {};
+  const { days = 2, checkInDate, totalPrice = 400, hotelId, hotelName, hotelLocation, roomType, roomsCount = 1 } = location.state || {};
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -97,7 +97,9 @@ const Payment = () => {
             checkOutDate,
             days,
             totalPrice,
+            roomsCount,
             initialPayment: Math.round(totalPrice / 2),
+            roomType,
             paymentDetails: {
               stripePaymentIntentId: result.paymentIntent.id,
               cardNumber: (result.paymentIntent.charges?.data?.[0]?.payment_method_details?.card?.last4) || ''
@@ -213,6 +215,16 @@ const Payment = () => {
           <span className="text-sm sm:text-base text-[#1a237e] mb-2">
             {days} Day{days > 1 ? 's' : ''} at {hotelName || 'Blue Origin Fams'},<br />{hotelLocation || 'Galle, Sri Lanka'}
           </span>
+          {roomType && (
+            <span className="text-sm sm:text-base text-[#1a237e] mb-2">
+              Room Type: <span className="font-bold">{roomType}</span>
+            </span>
+          )}
+          {roomsCount > 1 && (
+            <span className="text-sm sm:text-base text-[#1a237e] mb-2">
+              Rooms: <span className="font-bold">{roomsCount}</span>
+            </span>
+          )}
           <span className="text-sm sm:text-base text-[#1a237e] mb-2">
             Check-in: <span className="font-bold">{checkInDate || '-'}</span><br />
             Check-out: <span className="font-bold">{checkOutDate || '-'}</span>

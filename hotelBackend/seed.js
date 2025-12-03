@@ -4,6 +4,7 @@ require('dotenv').config();
 // Import models
 const Hotel = require('./src/models/Hotel');
 const User = require('./src/models/User');
+const Room = require('./src/models/Room');
 
 // Sample hotels data
 const sampleHotels = [
@@ -12,7 +13,8 @@ const sampleHotels = [
     location: "Goa, India",
     address: "Baga Beach Road, Goa",
     description: "A beautiful beachfront property with stunning ocean views. Perfect for families and couples looking for a relaxing getaway.",
-    price: 50,
+    priceAc: 55,
+    priceNonAc: 45,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-1.png", public_id: null },
     isMostPicked: true,
     isPopular: false,
@@ -59,7 +61,8 @@ const sampleHotels = [
     location: "Mumbai, India",
     address: "Bandra West, Mumbai",
     description: "Luxury resort in the heart of Colombo with world-class amenities and services.",
-    price: 120,
+    priceAc: 130,
+    priceNonAc: 110,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-2.png", public_id: null },
     isMostPicked: true,
     isPopular: true,
@@ -100,7 +103,8 @@ const sampleHotels = [
     location: "Manali, India",
     address: "Old Manali Road, Manali",
     description: "Peaceful hill country retreat surrounded by lush tea plantations.",
-    price: 75,
+    priceAc: 80,
+    priceNonAc: 70,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-3.png", public_id: null },
     isMostPicked: true,
     isPopular: false,
@@ -141,7 +145,8 @@ const sampleHotels = [
     location: "Varkala, India",
     address: "North Cliff Beach Road, Varkala",
     description: "Cozy beachside accommodation perfect for surfers and beach lovers.",
-    price: 45,
+    priceAc: 50,
+    priceNonAc: 40,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-4.png", public_id: null },
     isMostPicked: true,
     isPopular: true,
@@ -182,7 +187,8 @@ const sampleHotels = [
     location: "Ooty, India",
     address: "Coonoor Road, Ooty",
     description: "Cool climate mountain lodge with breathtaking views and cozy fireplaces.",
-    price: 65,
+    priceAc: 75,
+    priceNonAc: 65,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/pic-5.png", public_id: null },
     isMostPicked: true,
     isPopular: true,
@@ -223,7 +229,8 @@ const sampleHotels = [
     location: "Alappuzha, India",
     address: "Punnamada, Alappuzha",
     description: "Beautiful property with panoramic ocean views and modern amenities.",
-    price: 55,
+    priceAc: 65,
+    priceNonAc: 55,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Top%20View.png", public_id: null },
   isMostPicked: false,
   isPopular: true,
@@ -245,7 +252,8 @@ const sampleHotels = [
     location: "Munnar, India",
     address: "Tea Estate Road, Munnar",
     description: "Charming wooden cottage with traditional Indian architecture.",
-    price: 40,
+    priceAc: 50,
+    priceNonAc: 40,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Wodden%20Pit.png", public_id: null },
     isMostPicked: false,
     isPopular: true,
@@ -267,7 +275,8 @@ const sampleHotels = [
     location: "Jaipur, India",
     address: "MI Road, Jaipur",
     description: "Boutique hotel in the cultural heart of India.",
-    price: 80,
+    priceAc: 95,
+    priceNonAc: 80,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Boutiqe.png", public_id: null },
     isMostPicked: false,
     isPopular: true,
@@ -289,7 +298,8 @@ const sampleHotels = [
     location: "Shimla, India",
     address: "Mall Road, Shimla",
     description: "Contemporary design meets mountain tranquility.",
-    price: 70,
+    priceAc: 82,
+    priceNonAc: 70,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Modern.png", public_id: null },
     isMostPicked: false,
     isPopular: true,
@@ -311,7 +321,8 @@ const sampleHotels = [
     location: "Chennai, India",
     address: "ECR, Chennai",
     description: "Elegant seaside property with modern comforts.",
-    price: 60,
+    priceAc: 72,
+    priceNonAc: 60,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Silver%20Rain.png", public_id: null },
     isMostPicked: false,
     isPopular: true,
@@ -333,7 +344,8 @@ const sampleHotels = [
     location: "Udaipur, India",
     address: "Lake Pichola, Udaipur",
     description: "Peaceful lakeside retreat surrounded by nature.",
-    price: 50,
+    priceAc: 60,
+    priceNonAc: 50,
   mainImage: { url: "https://raw.githubusercontent.com/Tusharborul/hotelmanagement/main/Assets/location/Cashville.png", public_id: null },
     isMostPicked: false,
     isPopular: true,
@@ -355,7 +367,7 @@ const sampleHotels = [
 const seedDatabase = async () => {
   try {
     // Connect to MongoDB
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/lankastay';
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/Indiastay';
     await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true
@@ -367,7 +379,7 @@ const seedDatabase = async () => {
     if (!adminUser) {
       adminUser = await User.create({
         name: 'Admin User',
-        email: 'admin@lankatstay.com',
+        email: 'admin@Indiatstay.com',
         phone: '0912345678',
         countryCode: '+91',
         country: 'India',
@@ -416,9 +428,10 @@ const seedDatabase = async () => {
       console.log('Test user already exists');
     }
 
-    // Clear existing hotels if CLEAR_DB env var is set to 'true'
+    // Clear existing hotels and rooms if CLEAR_DB env var is set to 'true'
     if ((process.env.CLEAR_DB || '').toLowerCase() === 'true') {
       await Hotel.deleteMany({});
+      await Room.deleteMany({});
       console.log('Cleared existing hotels');
     } else {
       console.log('Preserving existing hotels (set CLEAR_DB=true to clear)');
@@ -429,12 +442,23 @@ const seedDatabase = async () => {
       const existingHotel = await Hotel.findOne({ name: hotelData.name });
       if (!existingHotel) {
         const regNo = `REG-${Date.now().toString(36).toUpperCase().slice(-8)}`;
-        await Hotel.create({
+        const hotel = await Hotel.create({
           ...hotelData,
           owner: hotelOwner._id,
           registrationNo: regNo
         });
-        console.log(`Added hotel: ${hotelData.name}`);
+        // Seed rooms: default 5 AC + 6 NON_AC
+        const baseAc = 5;
+        const baseNon = 6;
+        const roomDocs = [];
+        for (let i = 1; i <= baseAc; i++) roomDocs.push({ hotel: hotel._id, number: `A${i}`, type: 'AC' });
+        for (let i = 1; i <= baseNon; i++) roomDocs.push({ hotel: hotel._id, number: `N${i}`, type: 'NON_AC' });
+        if (roomDocs.length) {
+          await Room.insertMany(roomDocs);
+          hotel.dailyCapacity = roomDocs.length; // sync to AC+NON-AC
+          await hotel.save();
+        }
+        console.log(`Added hotel: ${hotelData.name} with ${baseAc} AC and ${baseNon} NON_AC rooms`);
       } else {
         console.log(`Hotel already exists: ${hotelData.name}`);
       }

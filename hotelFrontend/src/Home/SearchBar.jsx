@@ -280,9 +280,7 @@ const SearchBar = () => {
                   if (val.error) {
                     return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-800 shadow">N/A</span>;
                   }
-                  if (val.dailyCapacity === 0 || val.remaining === null) {
-                    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-800 shadow" title="Available" aria-label="Available">Available</span>;
-                  }
+                  // Do not treat dailyCapacity=0 as available; rely on val.available
                   if (val.available) {
                     return (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 shadow" title={`${val.remaining} rooms available`} aria-label={`${val.remaining} rooms available`}>
@@ -315,15 +313,28 @@ const SearchBar = () => {
                 {formatLocation(hotel.location)}
               </p>
 
-              {/* Price */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-2xl font-bold text-blue-600">
-                    {formatINR(hotel.price)}
-                  </span>
-                  <span className="text-gray-500 text-sm ml-1">
-                    per night
-                  </span>
+              {/* Pricing (type-specific) */}
+              <div className="flex items-center justify-between" title="Separate pricing for Non-AC and AC room types">
+                <div className="flex flex-col">
+                  {(hotel.priceAc || hotel.priceNonAc) ? (
+                    <>
+                      <div className="flex items-baseline gap-1.5">
+                        {hotel.priceNonAc && (
+                          <span className="text-lg font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
+                            {formatINR(hotel.priceNonAc)} <span className="text-[10px] font-normal text-gray-600">Non-AC</span>
+                          </span>
+                        )}
+                        {hotel.priceAc && (
+                          <span className="text-lg font-semibold text-blue-700 bg-indigo-50 px-2 py-0.5 rounded">
+                            {formatINR(hotel.priceAc)} <span className="text-[10px] font-normal text-gray-600">AC</span>
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-gray-500 mt-0.5">Per night (room type)</span>
+                    </>
+                  ) : (
+                    <span className="text-sm text-gray-400">Pricing not set</span>
+                  )}
                 </div>
                 <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold">
                   View Details

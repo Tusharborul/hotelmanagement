@@ -18,11 +18,18 @@ const hotelSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  price: {
+  // Separate pricing per room type (required; remove legacy single price)
+  priceAc: {
     type: Number,
-    required: [true, 'Please provide price per night']
+    required: [true, 'Please provide AC room price'],
+    min: 0
   },
-  // per-day capacity: 0 means unlimited
+  priceNonAc: {
+    type: Number,
+    required: [true, 'Please provide Non-AC room price'],
+    min: 0
+  },
+  // per-day capacity: when rooms are configured, equals total rooms; 0 means no capacity
   dailyCapacity: {
     type: Number,
     default: 0,

@@ -87,7 +87,7 @@ const Header = () => {
         
         {/* Logo */}
         <div className="text-[22px] sm:text-[26px] font-bold flex items-center">
-          <span className="bg-linear-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent font-bold">Lanka</span>
+          <span className="bg-linear-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent font-bold">India</span>
           <span className="text-gray-900 font-bold ml-1">Stay.</span>
         </div>
 
@@ -141,7 +141,7 @@ const Header = () => {
             {/* Logo at top */}
             <div className="w-full flex items-center justify-between mb-8">
               <div className="text-[22px] sm:text-[26px] font-bold flex items-center">
-                <span className="bg-linear-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent font-bold">Lanka</span>
+                <span className="bg-linear-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent font-bold">India</span>
                 <span className="text-gray-900 font-bold ml-1">Stay.</span>
               </div>
               {/* Close button */}

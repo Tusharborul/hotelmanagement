@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import { useNavigate, Link } from "react-router-dom";
-import Lanka from "./Lanka";
+import India from "./India";
 import { authService } from '../services/authService';
 
 const Register = () => {
@@ -67,7 +67,7 @@ const Register = () => {
   return (
   <div className="min-h-screen flex flex-col lg:flex-row bg-[#fafafa]">
       {/* Left: Image + Glass + Logo (hidden on small/medium) */}
-    <Lanka /> 
+    <India /> 
       {/* Right: Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center items-center py-8 lg:py-12 lg:h-screen">
         <form onSubmit={handleSubmit} className="w-[90%] sm:w-[85%] lg:w-[80%] max-w-sm flex flex-col gap-3 mt-2">

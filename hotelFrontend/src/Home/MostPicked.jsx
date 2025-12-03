@@ -20,7 +20,8 @@ const MostPicked = () => {
             id: hotel._id,
             name: hotel.name,
             location: hotel.location,
-            price: `${formatINR(hotel.price)} per night`,
+            priceAc: hotel.priceAc,
+            priceNonAc: hotel.priceNonAc,
             image: hotel.mainImage ? getImageUrl(hotel.mainImage, location1) : location1
           }));
           setPlaces(hotels);
@@ -64,8 +65,16 @@ const MostPicked = () => {
       >
         <img src={places[0]?.image} alt={places[0]?.name} className="w-full h-full object-cover min-h-[220px] lg:min-h-[360px] group-hover:scale-110 transition-transform duration-700" />
         <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300"></div>
-        <div className="absolute top-0 right-0 bg-linear-to-br from-[#3256e2] to-[#5b7cff] text-white px-5 py-3 rounded-bl-3xl font-semibold shadow-lg">
-          {places[0]?.price}
+        <div className="absolute top-0 right-0 space-y-1 px-4 py-3 rounded-bl-3xl font-semibold shadow-lg bg-linear-to-br from-[#3256e2] to-[#5b7cff] text-white">
+          {places[0]?.priceNonAc && (
+            <div className="text-sm">{formatINR(places[0].priceNonAc)} <span className="opacity-80 text-xs">Non-AC</span></div>
+          )}
+          {places[0]?.priceAc && (
+            <div className="text-sm">{formatINR(places[0].priceAc)} <span className="opacity-80 text-xs">AC</span></div>
+          )}
+          {(!places[0]?.priceAc && !places[0]?.priceNonAc) && (
+            <div className="text-xs opacity-80">No pricing</div>
+          )}
         </div>
         <div className="absolute bottom-0 left-0 p-6 text-white transform group-hover:-translate-y-2 transition-transform duration-300">
           <div className="text-xl font-bold mb-1">{places[0]?.name}</div>
@@ -86,8 +95,16 @@ const MostPicked = () => {
         >
           <img src={place?.image} alt={place?.name} className="w-full h-full object-cover min-h-[170px] group-hover:scale-110 transition-transform duration-700" />
           <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300"></div>
-          <div className="absolute top-0 right-0 bg-linear-to-br from-[#3256e2] to-[#5b7cff] text-white px-5 py-3 rounded-bl-3xl font-semibold shadow-lg">
-            {place?.price}
+          <div className="absolute top-0 right-0 space-y-1 px-4 py-3 rounded-bl-3xl font-semibold shadow-lg bg-linear-to-br from-[#3256e2] to-[#5b7cff] text-white">
+            {place?.priceNonAc && (
+              <div className="text-xs">{formatINR(place.priceNonAc)} <span className="opacity-80">Non-AC</span></div>
+            )}
+            {place?.priceAc && (
+              <div className="text-xs">{formatINR(place.priceAc)} <span className="opacity-80">AC</span></div>
+            )}
+            {(!place?.priceAc && !place?.priceNonAc) && (
+              <div className="text-[10px] opacity-75">No pricing</div>
+            )}
           </div>
           <div className="absolute bottom-0 left-0 p-5 text-white transform group-hover:-translate-y-2 transition-transform duration-300">
             <div className="text-lg font-bold mb-1">{place?.name}</div>

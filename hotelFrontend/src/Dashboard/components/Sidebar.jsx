@@ -16,6 +16,7 @@ const itemsByRole = {
     { label: 'Objectives', to: '/dashboard/owner/objectives', icon: '🎯' },
     { label: 'Bookings', to: '/dashboard/owner/bookings', icon: '📅' },
     { label: 'Photos', to: '/dashboard/owner/photos', icon: '📷' },
+    { label: 'Rooms', to: '/dashboard/owner/rooms', icon: '🚪' },
     { label: 'Treasures', to: '/dashboard/owner/treasures', icon: '💎' },
     { label: 'Refunds', to: '/dashboard/owner/refunds', icon: '💰' },
   ],
@@ -53,7 +54,7 @@ export default function Sidebar({ role = 'user', isOpen, onClose }) {
       <div className="flex px-6 lg:px-8 h-16 border-b-2 border-blue-100 bg-linear-to-r from-blue-50 to-white">
         <div className="flex items-center space-x-4 justify-between w-full">
           <Link to="/home" className="text-2xl  lg:text-3xl font-bold bg-linear-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
-            LankaStay.
+            IndiaStay.
           </Link>
           <button
             onClick={onClose}

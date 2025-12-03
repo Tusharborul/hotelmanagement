@@ -8,7 +8,7 @@ const Sucess = () => {
         <div className="w-full min-h-screen flex flex-col items-center bg-white pt-4 sm:pt-6 md:pt-8 px-4 sm:px-6">
             {/* Logo */}
             <div className="text-xl sm:text-2xl font-bold text-[#3252DF] mb-6 sm:mb-8">
-                Lanka<span className="text-[#1a237e]">Stay.</span>
+                India<span className="text-[#1a237e]">Stay.</span>
             </div>
 
             {/* Progress Bar */}

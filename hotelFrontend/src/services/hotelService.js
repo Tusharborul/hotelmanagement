@@ -19,12 +19,41 @@ export const hotelService = {
     return response.data;
   },
 
-  // Check availability for a hotel given checkInDate and days
-  checkAvailability: async (id, checkInDate, days) => {
+  // Check availability for a hotel given checkInDate and days (optionally by type)
+  checkAvailability: async (id, checkInDate, days, roomType) => {
     const params = new URLSearchParams();
     params.append('checkInDate', checkInDate);
     params.append('days', String(days));
+    if (roomType) params.append('roomType', roomType);
     const res = await api.get(`/hotels/${id}/availability?${params.toString()}`);
+    return res.data;
+  },
+
+  // Calendar availability between start and end (YYYY-MM-DD)
+  getCalendarAvailability: async (id, start, end) => {
+    const params = new URLSearchParams();
+    params.append('start', start);
+    params.append('end', end);
+    const res = await api.get(`/hotels/${id}/calendar-availability?${params.toString()}`);
+    return res.data;
+  },
+
+  // Rooms management (owner)
+  addRooms: async (hotelId, payload) => {
+    // payload: { rooms: [{number, type}] } OR { acCount, nonAcCount }
+    const res = await api.post(`/hotels/${hotelId}/rooms`, payload);
+    return res.data;
+  },
+  listRooms: async (hotelId) => {
+    const res = await api.get(`/hotels/${hotelId}/rooms`);
+    return res.data;
+  },
+  updateRoom: async (hotelId, roomId, payload) => {
+    const res = await api.put(`/hotels/${hotelId}/rooms/${roomId}`, payload);
+    return res.data;
+  },
+  deleteRoom: async (hotelId, roomId) => {
+    const res = await api.delete(`/hotels/${hotelId}/rooms/${roomId}`);
     return res.data;
   },
 

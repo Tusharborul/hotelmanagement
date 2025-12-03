@@ -281,7 +281,7 @@ const OwnerDashboard = () => {
                           );
                         }
                         if (val.error) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-800 shadow" title="Unavailable" aria-label="Unavailable">N/A</span>;
-                        if (val.dailyCapacity === 0 || val.remaining === null) return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-800 shadow" title="Available" aria-label="Available">Available</span>;
+                        // No unlimited case: 0 means no capacity
                         if (val.available) return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 shadow" title={`${val.remaining} rooms available`} aria-label={`${val.remaining} rooms available`}>{val.remaining} rooms available</span>;
                         return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 shadow" title="Fully booked" aria-label="Fully booked">Full</span>;
                       })()}
@@ -297,6 +297,7 @@ const OwnerDashboard = () => {
                     <div className="flex gap-2">
                       <Link to={`/dashboard/owner/photos?hotel=${h._id}`} className="px-3 py-1.5 border-2 border-blue-300 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-300">Photos</Link>
                       <Link to={`/dashboard/owner/bookings?hotel=${h._id}`} className="px-3 py-1.5 border-2 border-blue-300 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-300">Bookings</Link>
+                      <Link to={`/dashboard/owner/rooms?hotel=${h._id}`} className="px-3 py-1.5 border-2 border-blue-300 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-300">Rooms</Link>
                     </div>
                   </div>
                 </div>

@@ -48,41 +48,10 @@ const UserDashboard = () => {
 
   // Sort: upcoming first (earliest first), prioritize confirmed; then past (latest first)
   const sortedBookings = useMemo(() => {
-    const now = Date.now();
     return [...bookings].sort((a, b) => {
-      const statusA = (a.status || '').toLowerCase();
-      const statusB = (b.status || '').toLowerCase();
-      const cancelledA = statusA === 'cancelled';
-      const cancelledB = statusB === 'cancelled';
-      // Cancelled always at end
-      if (cancelledA && !cancelledB) return 1;
-      if (!cancelledA && cancelledB) return -1;
-
-      const startA = getBookingStart(a);
-      const startB = getBookingStart(b);
-      const tA = startA ? startA.getTime() : null;
-      const tB = startB ? startB.getTime() : null;
-      const upcomingA = tA !== null && tA >= now;
-      const upcomingB = tB !== null && tB >= now;
-
-      // Non-cancelled: upcoming first
-      if (!cancelledA && !cancelledB) {
-        if (upcomingA !== upcomingB) return upcomingA ? -1 : 1;
-        const confirmedA = statusA === 'confirmed';
-        const confirmedB = statusB === 'confirmed';
-        if (confirmedA !== confirmedB) return confirmedA ? -1 : 1;
-        if (tA !== tB) {
-          if (upcomingA) return (tA ?? Infinity) - (tB ?? Infinity); // upcoming earlier first
-          return (tB ?? -Infinity) - (tA ?? -Infinity); // past newer first
-        }
-        return 0;
-      }
-      // Both cancelled: order by cancelledAt newest first; fallback to start time newest first
-      const cancelledAtA = a.cancelledAt ? new Date(a.cancelledAt).getTime() : null;
-      const cancelledAtB = b.cancelledAt ? new Date(b.cancelledAt).getTime() : null;
-      if (cancelledAtA !== cancelledAtB) return (cancelledAtB ?? -Infinity) - (cancelledAtA ?? -Infinity);
-      if (tA !== tB) return (tB ?? -Infinity) - (tA ?? -Infinity);
-      return 0;
+      const ca = a.createdAt ? new Date(a.createdAt).getTime() : -Infinity;
+      const cb = b.createdAt ? new Date(b.createdAt).getTime() : -Infinity;
+      return (cb ?? -Infinity) - (ca ?? -Infinity); // last created first
     });
   }, [bookings]);
 
@@ -150,7 +119,18 @@ const UserDashboard = () => {
                 <div key={b._id || b.id} className={cardClasses}>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="font-bold text-blue-600">{b.price ? `${formatINR(b.price)} per night` : (b.totalPrice ? formatINR(b.totalPrice) : '-')}</div>
+                      <div className="font-bold text-blue-600">
+                        {(() => {
+                          // Prefer explicit per-night derivation from totalPrice and days if present
+                          const days = b.days || b.nights || (b.checkInDate && b.checkOutDate ? Math.max(1, Math.round((new Date(b.checkOutDate).getTime() - new Date(b.checkInDate).getTime()) / (24*60*60*1000))) : null);
+                          if (b.totalPrice && days) {
+                            const perNight = Math.round(Number(b.totalPrice) / Number(days));
+                            return `${formatINR(perNight)} per night`;
+                          }
+                          // Fallback: show total price
+                          return b.totalPrice ? formatINR(b.totalPrice) : '-';
+                        })()}
+                      </div>
                       <div className="font-bold text-lg">{b.hotel?.name || b.hotelName || b.title || 'Unknown Hotel'}</div>
                       <div className="text-gray-500 text-sm">{b.hotel?.location || b.location || ''}</div>
                     </div>
@@ -172,6 +152,11 @@ const UserDashboard = () => {
                   <div className="text-sm">Check-out: {end ? formatDateTime(end) : (b.endDate ? formatDateTime(b.endDate) : '-')}</div>
                   <div className="text-sm text-gray-700">{b.nights ? `${b.nights} Days` : ''}</div>
                   <div className="text-sm text-gray-700">{b.hotel?.address || b.address || ''}</div>
+                  {(b.roomType || b.roomNumber) && (
+                    <div className="text-sm text-gray-700">
+                      {b.roomType ? `Room Type: ${b.roomType}` : ''}{b.roomNumber ? ` | Room No: ${b.roomNumber}` : ''}
+                    </div>
+                  )}
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div className="text-sm">Initial Payment {b.initialPayment ? formatINR(b.initialPayment) : '-'}</div>
                     <div className="text-sm">Total Payment {b.totalPrice ? formatINR(b.totalPrice) : '-'}</div>

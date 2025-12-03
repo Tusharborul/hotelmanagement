@@ -123,8 +123,8 @@ exports.updateHotelStatus = async (req, res) => {
           b.cancelledAt = new Date();
           b.cancelledBy = req.user.id; // admin
           // Use short token to avoid exposing admin/owner names in cancellation reason
-          // tokens: 'user.near' (user), 'lankastay' (admin), 'hotel' (hotel owner)
-          b.cancellationReason = 'lankastay';
+          // tokens: 'user.near' (user), 'IndiaStay' (admin), 'hotel' (hotel owner)
+          b.cancellationReason = 'IndiaStay';
           const refundAmount = b.initialPayment || 0;
           b.refundAmount = refundAmount;
           if (refundAmount > 0) {
@@ -182,7 +182,7 @@ exports.bulkUpdateOwnerHotelsStatus = async (req, res) => {
             b.status = 'cancelled';
             b.cancelledAt = new Date();
             b.cancelledBy = req.user.id;
-            b.cancellationReason = 'lankastay';
+            b.cancellationReason = 'IndiaStay';
             const refundAmount = b.initialPayment || 0;
             b.refundAmount = refundAmount;
             if (refundAmount > 0) {

@@ -1,5 +1,7 @@
 const Hotel = require('../models/Hotel');
 const User = require('../models/User');
+const Room = require('../models/Room');
+const Booking = require('../models/Booking');
 const fs = require('fs');
 const path = require('path');
 const { v2: cloudinary } = require('cloudinary');
@@ -85,7 +87,7 @@ exports.checkAvailability = async (req, res) => {
     const hotel = await Hotel.findById(req.params.id);
     if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
 
-    const { checkInDate, days } = req.query;
+    const { checkInDate, days, roomType } = req.query;
     if (!checkInDate || !days) return res.status(400).json({ success: false, message: 'checkInDate and days are required' });
 
     const start = new Date(checkInDate);
@@ -94,20 +96,72 @@ exports.checkAvailability = async (req, res) => {
     end.setDate(end.getDate() + Number(days));
     end.setHours(10,0,0,0);
 
-    // If no capacity set (0 or not provided) treat as unlimited/always available
-    if (!hotel.dailyCapacity || hotel.dailyCapacity <= 0) {
-      return res.status(200).json({
-        success: true,
-        data: {
-          available: true,
-          dailyCapacity: 0,
-          bookedCount: 0,
-          remaining: null // null indicates unlimited
+    // Determine if hotel uses room-based capacity
+    const rooms = await Room.find({ hotel: hotel._id, active: true }).lean();
+    const hasRooms = rooms && rooms.length > 0;
+
+    if (hasRooms) {
+      // Compute availability by type
+      const totalAc = rooms.filter(r => r.type === 'AC').length;
+      const totalNonAc = rooms.filter(r => r.type === 'NON_AC').length;
+
+      let minRemainingAc = totalAc;
+      let minRemainingNonAc = totalNonAc;
+      let fullyBookedDate = null;
+      for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+        const day = new Date(d);
+        day.setHours(10,0,0,0);
+
+        // Count distinct rooms booked by type for that day
+        const acBookedRooms = await Booking.distinct('room', {
+          hotel: hotel._id,
+          status: 'confirmed',
+          roomType: 'AC',
+          checkInDate: { $lte: day },
+          checkOutDate: { $gt: day }
+        });
+        const nonAcBookedRooms = await Booking.distinct('room', {
+          hotel: hotel._id,
+          status: 'confirmed',
+          roomType: 'NON_AC',
+          checkInDate: { $lte: day },
+          checkOutDate: { $gt: day }
+        });
+
+        const remainingAc = Math.max(0, totalAc - (acBookedRooms?.length || 0));
+        const remainingNonAc = Math.max(0, totalNonAc - (nonAcBookedRooms?.length || 0));
+        if (!fullyBookedDate && remainingAc + remainingNonAc <= 0) {
+          fullyBookedDate = day.toISOString().split('T')[0];
         }
-      });
+        if (remainingAc < minRemainingAc) minRemainingAc = remainingAc;
+        if (remainingNonAc < minRemainingNonAc) minRemainingNonAc = remainingNonAc;
+      }
+
+      const remainingTotal = (minRemainingAc || 0) + (minRemainingNonAc || 0);
+      const overallCap = totalAc + totalNonAc;
+      const response = {
+        available: remainingTotal > 0,
+        dailyCapacity: overallCap,
+        remaining: remainingTotal,
+        remainingAc: minRemainingAc,
+        remainingNonAc: minRemainingNonAc
+      };
+      if (fullyBookedDate) response.date = fullyBookedDate;
+      if (roomType === 'AC') {
+        response.available = minRemainingAc > 0;
+        response.remaining = minRemainingAc;
+      } else if (roomType === 'NON_AC') {
+        response.available = minRemainingNonAc > 0;
+        response.remaining = minRemainingNonAc;
+      }
+      return res.status(200).json({ success: true, data: response });
     }
 
-    // We'll compute counts for each night and return the minimum remaining across the range
+    // Legacy capacity: If no rooms set, use hotel.dailyCapacity strictly (0 means no availability)
+    if (hotel.dailyCapacity <= 0) {
+      return res.status(200).json({ success: true, data: { available: false, dailyCapacity: 0, bookedCount: 0, remaining: 0 } });
+    }
+
     let minRemaining = Number.POSITIVE_INFINITY;
     let maxBooked = 0;
     let fullyBookedDate = null;
@@ -115,7 +169,7 @@ exports.checkAvailability = async (req, res) => {
     for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
       const day = new Date(d);
       day.setHours(10,0,0,0);
-      const existingCount = await require('../models/Booking').countDocuments({
+      const existingCount = await Booking.countDocuments({
         hotel: hotel._id,
         status: 'confirmed',
         checkInDate: { $lte: day },
@@ -187,8 +241,12 @@ exports.createHotel = async (req, res) => {
       location,
       address,
       description,
-      price,
+      priceAc,
+      priceNonAc,
       dailyCapacity,
+      acCount,
+      nonAcCount,
+      rooms: roomsRaw,
       facilities,
       registrationNo,
       ownerNIC
@@ -199,12 +257,26 @@ exports.createHotel = async (req, res) => {
   const documents = req.files?.documents ? req.files.documents.map(file => file.filename) : [];
 
     // Create hotel
+    // Derive required room-type prices; enforce AC > Non-AC if both provided
+    const parsedPriceAc = Number(priceAc);
+    const parsedPriceNonAc = Number(priceNonAc);
+    if (!Number.isFinite(parsedPriceAc) || parsedPriceAc <= 0) {
+      return res.status(400).json({ success:false, message:'AC room price (priceAc) is required and must be > 0' });
+    }
+    if (!Number.isFinite(parsedPriceNonAc) || parsedPriceNonAc <= 0) {
+      return res.status(400).json({ success:false, message:'Non-AC room price (priceNonAc) is required and must be > 0' });
+    }
+    if (parsedPriceAc <= parsedPriceNonAc) {
+      return res.status(400).json({ success:false, message:'AC price must be greater than Non-AC price' });
+    }
+
     const hotel = await Hotel.create({
       name,
       location,
       address,
       description,
-      price,
+      priceAc: parsedPriceAc,
+      priceNonAc: parsedPriceNonAc,
       dailyCapacity: Number(dailyCapacity) || 0,
       facilities: facilities ? JSON.parse(facilities) : {},
       registrationNo,
@@ -218,6 +290,44 @@ exports.createHotel = async (req, res) => {
     // Update user role to hotelOwner
     await User.findByIdAndUpdate(req.user.id, { role: 'hotelOwner' });
 
+    // If owner provided counts or explicit rooms, create Room records
+    try {
+      const toCreate = [];
+      // explicit rooms as JSON or array
+      let roomsPayload = roomsRaw;
+      if (typeof roomsPayload === 'string') {
+        try { roomsPayload = JSON.parse(roomsPayload); } catch (_) { roomsPayload = null; }
+      }
+      if (Array.isArray(roomsPayload)) {
+        roomsPayload.forEach(r => {
+          if (!r) return;
+          const number = String(r.number || r.no || '').trim();
+          const type = (r.type || r.roomType || '').toUpperCase();
+          if (number && (type === 'AC' || type === 'NON_AC')) {
+            toCreate.push({ hotel: hotel._id, number, type });
+          }
+        });
+      } else {
+        const acN = Number(acCount) || 0;
+        const nonN = Number(nonAcCount) || 0;
+        for (let i = 1; i <= acN; i++) {
+          toCreate.push({ hotel: hotel._id, number: `A${i}`, type: 'AC' });
+        }
+        for (let i = 1; i <= nonN; i++) {
+          toCreate.push({ hotel: hotel._id, number: `N${i}`, type: 'NON_AC' });
+        }
+      }
+      if (toCreate.length) {
+        await Room.insertMany(toCreate);
+        // Always sync dailyCapacity to reflect total rooms
+        const total = await Room.countDocuments({ hotel: hotel._id, active: true });
+        hotel.dailyCapacity = total;
+        await hotel.save();
+      }
+    } catch (roomErr) {
+      console.error('createHotel/rooms error', roomErr);
+    }
+
     res.status(201).json({
       success: true,
       data: hotel
@@ -227,6 +337,207 @@ exports.createHotel = async (req, res) => {
       success: false,
       message: error.message
     });
+  }
+};
+
+// @desc    Add rooms (bulk) for a hotel
+// @route   POST /api/hotels/:id/rooms
+// @access  Private (Hotel Owner/Admin)
+exports.addRooms = async (req, res) => {
+  try {
+    const hotel = await Hotel.findById(req.params.id);
+    if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
+    if (hotel.owner.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({ success: false, message: 'Not authorized' });
+    }
+    const { rooms: roomsRaw, acCount, nonAcCount } = req.body;
+    const toCreate = [];
+    let roomsPayload = roomsRaw;
+    if (typeof roomsPayload === 'string') {
+      try { roomsPayload = JSON.parse(roomsPayload); } catch (_) { roomsPayload = null; }
+    }
+    if (Array.isArray(roomsPayload)) {
+      roomsPayload.forEach(r => {
+        if (!r) return;
+        const number = String(r.number || r.no || '').trim();
+        const type = (r.type || r.roomType || '').toUpperCase();
+        if (number && (type === 'AC' || type === 'NON_AC')) {
+          toCreate.push({ hotel: hotel._id, number, type });
+        }
+      });
+    } else {
+      const acN = Number(acCount) || 0;
+      const nonN = Number(nonAcCount) || 0;
+      const existing = await Room.find({ hotel: hotel._id }).lean();
+      const usedNumbers = new Set((existing || []).map(r => r.number));
+      let ai = 1; let ni = 1;
+      for (let i = 0; i < acN; i++) {
+        while (usedNumbers.has(`A${ai}`)) ai++;
+        toCreate.push({ hotel: hotel._id, number: `A${ai}`, type: 'AC' }); ai++;
+      }
+      for (let i = 0; i < nonN; i++) {
+        while (usedNumbers.has(`N${ni}`)) ni++;
+        toCreate.push({ hotel: hotel._id, number: `N${ni}`, type: 'NON_AC' }); ni++;
+      }
+    }
+    if (!toCreate.length) return res.status(400).json({ success: false, message: 'No rooms to add' });
+    const created = await Room.insertMany(toCreate, { ordered: false });
+    // sync dailyCapacity to total active rooms
+    const total = await Room.countDocuments({ hotel: hotel._id, active: true });
+    hotel.dailyCapacity = total;
+    await hotel.save();
+    return res.status(201).json({ success: true, data: created });
+  } catch (err) {
+    console.error('addRooms error', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    List rooms for a hotel
+// @route   GET /api/hotels/:id/rooms
+// @access  Private (Hotel Owner/Admin)
+exports.listRooms = async (req, res) => {
+  try {
+    const hotel = await Hotel.findById(req.params.id);
+    if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
+    if (hotel.owner.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({ success: false, message: 'Not authorized' });
+    }
+    const rooms = await Room.find({ hotel: hotel._id }).sort({ type: 1, number: 1 });
+    return res.status(200).json({ success: true, data: rooms });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Deactivate (remove) a room if no overlapping future bookings
+// @route   DELETE /api/hotels/:id/rooms/:roomId
+// @access  Private (Hotel Owner/Admin)
+exports.deleteRoom = async (req, res) => {
+  try {
+    const hotel = await Hotel.findById(req.params.id);
+    if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
+    if (hotel.owner.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({ success: false, message: 'Not authorized' });
+    }
+    const room = await Room.findOne({ _id: req.params.roomId, hotel: hotel._id });
+    if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
+
+    // If room has never been booked (no booking records), hard delete; otherwise deactivate only
+    const anyBooking = await Booking.findOne({ hotel: hotel._id, room: room._id }).select('_id');
+    let action = 'deactivated';
+    if (!anyBooking) {
+      await room.deleteOne();
+      action = 'deleted';
+    } else {
+      room.active = false;
+      await room.save();
+    }
+    const total = await Room.countDocuments({ hotel: hotel._id, active: true });
+    hotel.dailyCapacity = total;
+    await hotel.save();
+    return res.status(200).json({ success: true, data: room, action });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Update room fields (currently supports toggling active)
+// @route   PUT /api/hotels/:id/rooms/:roomId
+// @access  Private (Hotel Owner/Admin)
+exports.updateRoom = async (req, res) => {
+  try {
+    const hotel = await Hotel.findById(req.params.id);
+    if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
+    if (hotel.owner.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({ success: false, message: 'Not authorized' });
+    }
+
+    const room = await Room.findOne({ _id: req.params.roomId, hotel: hotel._id });
+    if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
+
+    // Toggle active status
+    if (typeof req.body.active !== 'undefined') {
+      const nextActive = Boolean(req.body.active);
+      room.active = nextActive;
+    }
+
+    // Edit room number (ensure uniqueness within hotel)
+    if (typeof req.body.number !== 'undefined') {
+      const nextNumber = String(req.body.number || '').trim();
+      if (!nextNumber) {
+        return res.status(400).json({ success: false, message: 'Room number cannot be empty' });
+      }
+      // If unchanged, skip
+      if (nextNumber !== room.number) {
+        const exists = await Room.findOne({ hotel: hotel._id, number: nextNumber }).select('_id');
+        if (exists) {
+          return res.status(409).json({ success: false, message: 'A room with this number already exists' });
+        }
+        room.number = nextNumber;
+      }
+    }
+
+    await room.save();
+    // Sync hotel's dailyCapacity to active rooms count
+    const total = await Room.countDocuments({ hotel: hotel._id, active: true });
+    hotel.dailyCapacity = total;
+    await hotel.save();
+
+    return res.status(200).json({ success: true, data: room });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Calendar availability (per-day counts, by type)
+// @route   GET /api/hotels/:id/calendar-availability?start=YYYY-MM-DD&end=YYYY-MM-DD
+// @access  Public
+exports.calendarAvailability = async (req, res) => {
+  try {
+    const hotel = await Hotel.findById(req.params.id);
+    if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
+    const { start: startStr, end: endStr } = req.query;
+    if (!startStr || !endStr) return res.status(400).json({ success: false, message: 'start and end are required (YYYY-MM-DD)' });
+    const start = new Date(startStr);
+    const end = new Date(endStr);
+    start.setHours(10,0,0,0); end.setHours(10,0,0,0);
+
+    const rooms = await Room.find({ hotel: hotel._id, active: true }).lean();
+    const totalAc = rooms.filter(r => r.type === 'AC').length;
+    const totalNonAc = rooms.filter(r => r.type === 'NON_AC').length;
+
+    const days = [];
+    for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+      const day = new Date(d);
+      day.setHours(10,0,0,0);
+      const acBookedRooms = await Booking.distinct('room', {
+        hotel: hotel._id,
+        status: 'confirmed',
+        roomType: 'AC',
+        checkInDate: { $lte: day },
+        checkOutDate: { $gt: day }
+      });
+      const nonAcBookedRooms = await Booking.distinct('room', {
+        hotel: hotel._id,
+        status: 'confirmed',
+        roomType: 'NON_AC',
+        checkInDate: { $lte: day },
+        checkOutDate: { $gt: day }
+      });
+      const remainingAc = Math.max(0, totalAc - (acBookedRooms?.length || 0));
+      const remainingNonAc = Math.max(0, totalNonAc - (nonAcBookedRooms?.length || 0));
+      days.push({
+        date: day.toISOString().split('T')[0],
+        availableAc: remainingAc,
+        availableNonAc: remainingNonAc,
+        availableTotal: remainingAc + remainingNonAc
+      });
+    }
+    return res.status(200).json({ success: true, data: { days, totals: { ac: totalAc, nonAc: totalNonAc } } });
+  } catch (err) {
+    console.error('calendarAvailability error', err);
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -252,10 +563,15 @@ exports.updateHotel = async (req, res) => {
       });
     }
 
-    hotel = await Hotel.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
+    const updatePayload = { ...req.body };
+    if (typeof updatePayload.priceAc !== 'undefined' || typeof updatePayload.priceNonAc !== 'undefined') {
+      const pA = Number(updatePayload.priceAc ?? hotel.priceAc);
+      const pN = Number(updatePayload.priceNonAc ?? hotel.priceNonAc);
+      if (!Number.isFinite(pA) || pA <= 0) return res.status(400).json({ success:false, message:'AC room price must be > 0' });
+      if (!Number.isFinite(pN) || pN <= 0) return res.status(400).json({ success:false, message:'Non-AC room price must be > 0' });
+      if (pA <= pN) return res.status(400).json({ success:false, message:'AC price must be greater than Non-AC price' });
+    }
+    hotel = await Hotel.findByIdAndUpdate(req.params.id, updatePayload, { new: true, runValidators: true });
 
     res.status(200).json({
       success: true,

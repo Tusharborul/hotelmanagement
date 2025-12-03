@@ -11,6 +11,24 @@ const bookingSchema = new mongoose.Schema({
     ref: 'Hotel',
     required: true
   },
+  // Room category and assignment
+  roomType: {
+    type: String,
+    enum: ['AC', 'NON_AC'],
+  },
+  room: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Room'
+  },
+  roomNumber: {
+    type: String,
+    default: ''
+  },
+  roomsCount: {
+    type: Number,
+    default: 1,
+    min: 1
+  },
   checkInDate: {
     type: Date,
     required: [true, 'Please provide check-in date']

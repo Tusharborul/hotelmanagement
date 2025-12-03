@@ -6,6 +6,13 @@ import Spinner from '../../components/Spinner';
 import Pagination from '../../components/Pagination';
 import { formatINR } from '../../utils/currency';
 
+const EyeIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    <circle cx="12" cy="12" r="3" strokeWidth="2" />
+  </svg>
+);
+
 export default function UserBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -13,6 +20,7 @@ export default function UserBookings() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 10;
+  const [activeBooking, setActiveBooking] = useState(null);
 
   useEffect(()=>{ (async()=>{
     setLoading(true);
@@ -22,37 +30,9 @@ export default function UserBookings() {
       const data = Array.isArray(res) ? res : (res?.data || []);
       const now = Date.now();
       const sorted = [...data].sort((a, b) => {
-        const statusA = (a.status || '').toLowerCase();
-        const statusB = (b.status || '').toLowerCase();
-        const isCancelledA = statusA === 'cancelled';
-        const isCancelledB = statusB === 'cancelled';
-        // Cancelled bookings always go to the end
-        if (isCancelledA && !isCancelledB) return 1;
-        if (!isCancelledA && isCancelledB) return -1;
-
-        const timeA = a.checkInDate ? new Date(a.checkInDate).getTime() : null;
-        const timeB = b.checkInDate ? new Date(b.checkInDate).getTime() : null;
-        const upcomingA = timeA !== null && timeA >= now;
-        const upcomingB = timeB !== null && timeB >= now;
-        // Among non-cancelled: upcoming first
-        if (!isCancelledA && !isCancelledB) {
-          if (upcomingA !== upcomingB) return upcomingA ? -1 : 1;
-          const confirmedA = statusA === 'confirmed';
-            const confirmedB = statusB === 'confirmed';
-            if (confirmedA !== confirmedB) return confirmedA ? -1 : 1;
-          // If both upcoming: earlier first; if both past: later first
-          if (timeA !== timeB) {
-            if (upcomingA) return (timeA ?? Infinity) - (timeB ?? Infinity);
-            return (timeB ?? -Infinity) - (timeA ?? -Infinity);
-          }
-          return 0;
-        }
-        // Both cancelled: order by cancelledAt newest first, fallback to checkInDate newest first
-        const cancelledAtA = a.cancelledAt ? new Date(a.cancelledAt).getTime() : null;
-        const cancelledAtB = b.cancelledAt ? new Date(b.cancelledAt).getTime() : null;
-        if (cancelledAtA !== cancelledAtB) return (cancelledAtB ?? -Infinity) - (cancelledAtA ?? -Infinity);
-        if (timeA !== timeB) return (timeB ?? -Infinity) - (timeA ?? -Infinity);
-        return 0;
+        const ca = a.createdAt ? new Date(a.createdAt).getTime() : -Infinity;
+        const cb = b.createdAt ? new Date(b.createdAt).getTime() : -Infinity;
+        return (cb ?? -Infinity) - (ca ?? -Infinity); // last created first
       });
       setAllBookings(sorted);
       setTotal(sorted.length);
@@ -69,7 +49,85 @@ export default function UserBookings() {
     setPage(target);
   };
 
+  const closeModal = () => setActiveBooking(null);
+  const downloadTicket = () => {
+    if (!activeBooking) return;
+    // Render a simple JPG via canvas
+    const canvas = document.createElement('canvas');
+    const width = 960; const height = 540; // 16:9 card
+    canvas.width = width; canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    // Background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+    // Header gradient
+    const grad = ctx.createLinearGradient(0,0,width,0);
+    grad.addColorStop(0, '#3b82f6'); // blue-500
+    grad.addColorStop(1, '#06b6d4'); // cyan-500
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, 72);
+    // Title
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 28px Inter, Arial';
+    ctx.fillText('IndiaStay Booking Ticket', 24, 44);
+    // Content
+    const hotelName = activeBooking.hotel?.name || '-';
+    const hotelLoc = activeBooking.hotel?.location || '-';
+    const checkIn = activeBooking.checkInDate ? formatDateTime(activeBooking.checkInDate) : '-';
+    const checkOut = activeBooking.checkOutDate ? formatDateTime(activeBooking.checkOutDate) : '-';
+    const createdAt = activeBooking.createdAt ? formatDateTime(activeBooking.createdAt) : '-';
+    const daysVal = activeBooking.days ?? '-';
+    const roomStr = `${activeBooking.roomNumber ?   activeBooking.roomNumber : '-'}` + `${activeBooking.roomType ? ' (' + activeBooking.roomType + ')' : ''}`;
+    const totalStr = activeBooking.totalPrice ? formatINR(activeBooking.totalPrice) : '-';
+    const initStr = activeBooking.initialPayment ? formatINR(activeBooking.initialPayment) : '-';
+    const trxId = activeBooking.paymentDetails?.stripeChargeId || activeBooking.paymentDetails?.stripePaymentIntentId || '-';
+    const customerName = activeBooking.user?.name || activeBooking.name || '-';
+    const username = activeBooking.user?.username || activeBooking.username || '-';
+
+    ctx.fillStyle = '#111827'; // gray-900
+    ctx.font = 'bold 22px Inter, Arial';
+    ctx.fillText(hotelName, 24, 110);
+    ctx.font = '16px Inter, Arial';
+    ctx.fillStyle = '#6b7280'; // gray-500
+    ctx.fillText(hotelLoc, 24, 136);
+
+    ctx.fillStyle = '#111827';
+    const lines = [
+      `Transaction ID: ${trxId}`,
+      `Booked At: ${createdAt}`,
+      `Name: ${customerName}`,
+      `Username: ${username}`,
+      `Check-in: ${checkIn}`,
+      `Check-out: ${checkOut}`,
+      `Days: ${daysVal}`,
+      `Room: ${roomStr}`,
+      `Total: ${totalStr}`,
+      `Initial Payment: ${initStr}`
+    ];
+    let y = 170;
+    for (const line of lines) {
+      ctx.font = '18px Inter, Arial';
+      ctx.fillText(line, 24, y);
+      y += 28;
+    }
+
+    // Footer
+    ctx.font = '14px Inter, Arial';
+    ctx.fillStyle = '#6b7280';
+    ctx.fillText('Thank you for booking with IndiaStay.', 24, height - 28);
+
+    const id = (activeBooking._id || activeBooking.id || 'booking').toString();
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `ticket-${id}.jpg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   return (
+    <>
     <Layout role="user" title="Hello, User" subtitle="Bookings">
         <div className="bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent font-bold mb-6 text-2xl">Your Bookings</div>
       
@@ -96,6 +154,12 @@ export default function UserBookings() {
                       <span className="text-xs text-gray-500">Days:</span>
                       <div className="text-sm">{b.days}</div>
                     </div>
+                    {(b.roomNumber || b.roomType) && (
+                      <div className="col-span-2">
+                        <span className="text-xs text-gray-500">Room:</span>
+                        <div className="text-sm">{b.roomNumber ? `${b.roomNumber}` : '-'} {b.roomType ? `(${b.roomType})` : ''}</div>
+                      </div>
+                    )}
                     <div>
                       <span className="text-xs text-gray-500">Total:</span>
                       <div className="text-sm font-semibold">{formatINR(b.totalPrice)}</div>
@@ -113,6 +177,14 @@ export default function UserBookings() {
                       </div>
                     </div>
                   </div>
+                  <div className="flex justify-end">
+                    <button
+                      className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-semibold"
+                      onClick={() => setActiveBooking(b)}
+                    >
+                      <EyeIcon className="w-5 h-5" /> View
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -127,7 +199,9 @@ export default function UserBookings() {
                     <th className="py-4 px-6 font-semibold text-gray-700">Check-in</th>
                     <th className="py-4 px-6 font-semibold text-gray-700">Days</th>
                     <th className="py-4 px-6 font-semibold text-gray-700">Total</th>
+                    <th className="py-4 px-6 font-semibold text-gray-700">Room</th>
                     <th className="py-4 px-6 font-semibold text-gray-700">Status</th>
+                    <th className="py-4 px-6 font-semibold text-gray-700">Action</th>
                   </tr>
                 </thead>
               </table>
@@ -142,6 +216,7 @@ export default function UserBookings() {
                         <td className="py-4 px-6 text-gray-600">{b.checkInDate ? formatDateTime(b.checkInDate) : '-'}</td>
                         <td className="py-4 px-6 text-gray-600">{b.days}</td>
                         <td className="py-4 px-6 font-semibold text-green-600">{formatINR(b.totalPrice)}</td>
+                        <td className="py-4 px-6 text-gray-600">{b.roomNumber ? `${b.roomNumber}` : '-'} {b.roomType ? `(${b.roomType})` : ''}</td>
                         <td className="py-4 px-6"><span className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm inline-block ${
                           b.status === 'confirmed' ? 'bg-linear-to-r from-green-400 to-green-500 text-white' :
                           b.status === 'cancelled' ? 'bg-linear-to-r from-red-400 to-red-500 text-white' :
@@ -149,6 +224,14 @@ export default function UserBookings() {
                         }`}>
                           {(b.status || '').charAt(0).toUpperCase() + (b.status || '').slice(1) || '-'}
                         </span></td>
+                        <td className="py-4 px-6">
+                          <button
+                            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-semibold"
+                            onClick={() => setActiveBooking(b)}
+                          >
+                            <EyeIcon className="w-5 h-5" /> View
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -160,5 +243,71 @@ export default function UserBookings() {
         <Pagination page={page} total={total} limit={limit} onPageChange={goPage} className="mt-6" />
      
     </Layout>
+    {activeBooking && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="bg-white rounded-2xl shadow-2xl w-[95%] max-w-2xl p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <div className="text-xl font-bold text-[#1a237e]">Booking Details</div>
+              <div className="text-sm text-gray-500">{activeBooking.hotel?.name || '-'} • {activeBooking.hotel?.location || ''}</div>
+            </div>
+            <button className="text-gray-500 hover:text-gray-700" onClick={closeModal}>✕</button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <div className="text-xs text-gray-500">Check-in</div>
+              <div className="text-sm">{activeBooking.checkInDate ? formatDateTime(activeBooking.checkInDate) : '-'}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Check-out</div>
+              <div className="text-sm">{activeBooking.checkOutDate ? formatDateTime(activeBooking.checkOutDate) : '-'}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Booked At</div>
+              <div className="text-sm">{activeBooking.createdAt ? formatDateTime(activeBooking.createdAt) : '-'}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Days</div>
+              <div className="text-sm">{activeBooking.days}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Room</div>
+              <div className="text-sm">{activeBooking.roomNumber ? `${activeBooking.roomNumber}` : '-'} {activeBooking.roomType ? `(${activeBooking.roomType})` : ''}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Transaction ID</div>
+              <div className="text-sm">{activeBooking.paymentDetails?.stripeChargeId || activeBooking.paymentDetails?.stripePaymentIntentId || '-'}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Name</div>
+              <div className="text-sm">{activeBooking.user?.name || activeBooking.name || '-'}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Username</div>
+              <div className="text-sm">{activeBooking.user?.username || activeBooking.username || '-'}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Total</div>
+              <div className="text-sm font-semibold">{formatINR(activeBooking.totalPrice)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Initial Payment</div>
+              <div className="text-sm">{activeBooking.initialPayment ? formatINR(activeBooking.initialPayment) : '-'}</div>
+            </div>
+            {activeBooking.paymentDetails?.cardNumber && (
+              <div className="sm:col-span-2">
+                <div className="text-xs text-gray-500">Card</div>
+                <div className="text-sm">•••• •••• •••• {activeBooking.paymentDetails.cardNumber}</div>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center justify-end gap-3 mt-6">
+            <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg" onClick={closeModal}>Close</button>
+            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg" onClick={downloadTicket}>Download</button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

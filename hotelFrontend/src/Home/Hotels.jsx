@@ -165,15 +165,28 @@ const Hotels = () => {
                     {formatLocation(hotel.location)}
                   </p>
 
-                  {/* Price */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <span className="text-2xl font-bold text-[#3256e2]">
-                        {formatINR(hotel.price)}
-                      </span>
-                      <span className="text-gray-500 text-sm ml-1.5">
-                        per night
-                      </span>
+                  {/* Pricing: show Non-AC / AC if available */}
+                  <div className="flex items-center justify-between mb-4" title="Type specific pricing: Non-AC and AC rooms have different rates">
+                    <div className="flex flex-col">
+                      {hotel.priceNonAc || hotel.priceAc ? (
+                        <>
+                          <div className="flex items-baseline gap-1">
+                            {hotel.priceNonAc && (
+                              <span className="text-lg font-semibold text-[#1a237e] bg-blue-50 px-2 py-0.5 rounded">
+                                {formatINR(hotel.priceNonAc)} <span className="text-xs font-normal text-gray-600">Non-AC</span>
+                              </span>
+                            )}
+                            {hotel.priceAc && (
+                              <span className="text-lg font-semibold text-[#1a237e] bg-indigo-50 px-2 py-0.5 rounded">
+                                {formatINR(hotel.priceAc)} <span className="text-xs font-normal text-gray-600">AC</span>
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-gray-500 mt-1">Per night (type specific)</span>
+                        </>
+                      ) : (
+                        <span className="text-sm text-gray-400">Pricing not set</span>
+                      )}
                     </div>
                     <button className="bg-[#3256e2] text-white px-4 py-2 rounded-lg hover:bg-[#2545c8] transition-colors text-sm font-semibold">
                       View Details

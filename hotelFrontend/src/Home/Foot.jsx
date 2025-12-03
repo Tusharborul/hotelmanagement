@@ -8,7 +8,7 @@ const Foot = () => {
 			<div className="max-w-7xl mx-auto px-8 w-full flex flex-col md:flex-row justify-between items-start gap-8 pb-16">
 				<div className="flex-1">
 					<h2 className="text-3xl font-bold mb-3">
-						<span className="bg-linear-to-r from-[#3256e2] to-[#5b7cff] bg-clip-text text-transparent">Lanka</span>
+						<span className="bg-linear-to-r from-[#3256e2] to-[#5b7cff] bg-clip-text text-transparent">India</span>
 						<span className="text-[#1a237e]">Stay.</span>
 					</h2>
 					<p className="mt-3 text-gray-600 max-w-xs leading-relaxed">We kaboom your beauty holiday instantly and memorable.</p>

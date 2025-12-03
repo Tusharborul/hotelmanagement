@@ -16,13 +16,12 @@ export default function OwnerObjectives() {
   const [adding, setAdding] = useState(false);
   const [addForm, setAddForm] = useState({
     name: '', location: '', description: '', images: null,
-    dailyCapacity: 0,
+    acCount: 0, nonAcCount: 0,
     facilities: { bedrooms:1, livingrooms:1, bathrooms:1, diningrooms:1, wifi:'10 mbp/s', unitsReady:1, refrigerator:1, television:1 }
   });
   const [addPreviews, setAddPreviews] = useState([]);
   const [form, setForm] = useState({
     name: '', location: '', description: '',
-    dailyCapacity: 0,
     facilities: { bedrooms:1, livingrooms:1, bathrooms:1, diningrooms:1, wifi:'10 mbp/s', unitsReady:1, refrigerator:1, television:1 }
   });
   // modal state
@@ -46,7 +45,8 @@ export default function OwnerObjectives() {
     setEditId(h._id);
     setForm({
       name: h.name || '',
-      price: h.price || '',
+      priceAc: h.priceAc || '',
+      priceNonAc: h.priceNonAc || '',
       location: h.location || '',
       description: h.description || '',
       facilities: {
@@ -59,15 +59,13 @@ export default function OwnerObjectives() {
         refrigerator: h.facilities?.refrigerator ?? 1,
         television: h.facilities?.television ?? 1,
       }
-      ,
-      dailyCapacity: h.dailyCapacity ?? 0
     });
     setShowEditModal(true);
   };
 
   const startAdd = () => {
     setShowAddModal(true);
-    setAddForm({ name:'', location:'', description:'', images: null, dailyCapacity: 0, facilities: { bedrooms:1, livingrooms:1, bathrooms:1, diningrooms:1, wifi:'10 mbp/s', unitsReady:1, refrigerator:1, television:1 } });
+    setAddForm({ name:'', location:'', description:'', images: null, acCount: 0, nonAcCount: 0, facilities: { bedrooms:1, livingrooms:1, bathrooms:1, diningrooms:1, wifi:'10 mbp/s', unitsReady:1, refrigerator:1, television:1 } });
   };
 
   const cancelAdd = () => { setAdding(false); };
@@ -82,8 +80,16 @@ export default function OwnerObjectives() {
       showToast('Please enter the hotel address.', 'warning');
       return;
     }
-    if (!addForm.price || Number(addForm.price) <= 0) {
-      showToast('Please enter a valid price per night.', 'warning');
+    if ((Number(addForm.acCount) > 0) && (!addForm.priceAc || Number(addForm.priceAc) <= 0)) {
+      showToast('Please enter a valid AC price per night.', 'warning');
+      return;
+    }
+    if ((Number(addForm.nonAcCount) > 0) && (!addForm.priceNonAc || Number(addForm.priceNonAc) <= 0)) {
+      showToast('Please enter a valid Non-AC price per night.', 'warning');
+      return;
+    }
+    if ((Number(addForm.acCount) || 0) + (Number(addForm.nonAcCount) || 0) <= 0) {
+      showToast('Please provide at least 1 room (AC or Non-AC).', 'warning');
       return;
     }
 
@@ -92,9 +98,11 @@ export default function OwnerObjectives() {
         name: addForm.name,
         location: addForm.location,
         address: addForm.address,
-        price: Number(addForm.price) || 0,
+        priceAc: Number(addForm.priceAc) || 0,
+        priceNonAc: Number(addForm.priceNonAc) || 0,
         description: addForm.description,
-        dailyCapacity: Number(addForm.dailyCapacity) || 0,
+        acCount: Number(addForm.acCount) || 0,
+        nonAcCount: Number(addForm.nonAcCount) || 0,
         facilities: {
           bedrooms: Number(addForm.facilities.bedrooms) || 0,
           livingrooms: Number(addForm.facilities.livingrooms) || 0,
@@ -132,10 +140,10 @@ export default function OwnerObjectives() {
   const saveEdit = async (id) => {
     const payload = {
       name: form.name,
-      price: Number(form.price) || 0,
+      priceAc: Number(form.priceAc) || 0,
+      priceNonAc: Number(form.priceNonAc) || 0,
       location: form.location,
       description: form.description,
-      dailyCapacity: Number(form.dailyCapacity) || 0,
       facilities: {
         bedrooms: Number(form.facilities.bedrooms),
         livingrooms: Number(form.facilities.livingrooms),
@@ -200,13 +208,22 @@ export default function OwnerObjectives() {
               <input id="addForm_address" name="address" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" placeholder="Street address, building or detailed address" value={addForm.address || ''} onChange={(e)=>setAddForm(f=>({ ...f, address: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-xs text-gray-700 mb-2 font-semibold">Price per night (Rs)</label>
-              <input id="addForm_price" name="price" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 120" value={addForm.price || ''} onChange={(e)=>setAddForm(f=>({ ...f, price: e.target.value }))} />
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">AC Price / night (Rs)</label>
+              <input id="addForm_priceAc" name="priceAc" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 1500" value={addForm.priceAc || ''} onChange={(e)=>setAddForm(f=>({ ...f, priceAc: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-xs text-gray-700 mb-2 font-semibold">Daily capacity (0 = unlimited)</label>
-              <input id="addForm_dailyCapacity" name="dailyCapacity" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 5" value={addForm.dailyCapacity || 0} onChange={(e)=>setAddForm(f=>({ ...f, dailyCapacity: Number(e.target.value) }))} />
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Non-AC Price / night (Rs)</label>
+              <input id="addForm_priceNonAc" name="priceNonAc" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 1200" value={addForm.priceNonAc || ''} onChange={(e)=>setAddForm(f=>({ ...f, priceNonAc: e.target.value }))} />
             </div>
+            <div>
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">AC rooms</label>
+              <input id="addForm_acCount" name="acCount" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 5" value={addForm.acCount || 0} onChange={(e)=>setAddForm(f=>({ ...f, acCount: Number(e.target.value) }))} />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Non-AC rooms</label>
+              <input id="addForm_nonAcCount" name="nonAcCount" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 6" value={addForm.nonAcCount || 0} onChange={(e)=>setAddForm(f=>({ ...f, nonAcCount: Number(e.target.value) }))} />
+            </div>
+            <div className="md:col-span-2 -mt-2 text-xs text-gray-600">Total capacity will be created as AC + Non-AC = {(Number(addForm.acCount)||0) + (Number(addForm.nonAcCount)||0)} rooms. You can rename/add specific rooms later in the Rooms tab.</div>
 
             <div className="md:col-span-2">
               <label className="block text-xs text-gray-700 mb-2 font-semibold">Description</label>
@@ -298,17 +315,19 @@ export default function OwnerObjectives() {
               <input className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" placeholder="City, Country or address"  name="location" value={form.location} onChange={(e)=>setForm(f=>({ ...f, location: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-xs text-gray-700 mb-2 font-semibold">Price per night (Rs)</label>
-              <input id="form_price" name="price" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 120" value={form.price || ''} onChange={(e)=>setForm(f=>({ ...f, price: e.target.value }))} />
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">AC Price / night (Rs)</label>
+              <input id="form_priceAc" name="priceAc" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 1500" value={form.priceAc || ''} onChange={(e)=>setForm(f=>({ ...f, priceAc: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-700 mb-2 font-semibold">Non-AC Price / night (Rs)</label>
+              <input id="form_priceNonAc" name="priceNonAc" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 1200" value={form.priceNonAc || ''} onChange={(e)=>setForm(f=>({ ...f, priceNonAc: e.target.value }))} />
             </div>
             <div className="md:col-span-2">
               <label className="block text-xs text-gray-700 mb-2 font-semibold">Description</label>
               <textarea className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" rows={3} placeholder="Short description for guests"  name="description" value={form.description} onChange={(e)=>setForm(f=>({ ...f, description: e.target.value }))} />
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-xs text-gray-700 mb-2 font-semibold">Daily capacity (0 = unlimited)</label>
-              <input id="form_dailyCapacity" name="dailyCapacity" className="border-2 border-blue-200 rounded-xl px-4 py-2.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors duration-300" type="number" min={0} placeholder="e.g. 5" value={form.dailyCapacity || 0} onChange={(e)=>setForm(f=>({ ...f, dailyCapacity: Number(e.target.value) }))} />
-            </div>
+            {/* Capacity is derived from rooms now; manage rooms in the Rooms tab */}
+            <div className="md:col-span-2 text-xs text-gray-600">Capacity is derived from configured rooms. To change capacity, add/remove rooms in the Rooms tab.</div>
             <div className="md:col-span-2 mt-2">
               <div className="text-sm font-semibold mb-3">Facilities</div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
