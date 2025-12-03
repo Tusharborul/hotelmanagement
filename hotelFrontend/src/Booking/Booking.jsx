@@ -55,6 +55,7 @@ const Booking = () => {
     return roomType === 'AC' ? (hotel.priceAc || 0) : (hotel.priceNonAc || 0);
   }, [hotel, roomType]);
   const totalPrice = days * pricePerDay * roomsCount;
+  const apiRoomType = useMemo(() => (roomType || '').toUpperCase().replace('-', '_'), [roomType]);
 
   // --- fetch hotel --------------------------------------------------------------
   useEffect(() => {
@@ -111,7 +112,7 @@ const Booking = () => {
     let mounted = true;
     (async () => {
       try {
-        const res = await hotelService.checkAvailability(hotelId, checkInDate, days, roomType);
+        const res = await hotelService.checkAvailability(hotelId, checkInDate, days, apiRoomType);
         if (!mounted) return;
         setAvailability({ loading: false, data: res?.data || res });
       } catch (e) {
@@ -121,7 +122,7 @@ const Booking = () => {
       }
     })();
     return () => { mounted = false; };
-  }, [hotelId, checkInDate, days, roomType]);
+  }, [hotelId, checkInDate, days, apiRoomType]);
 
   // --- calendar loading --------------------------------------------------------
   useEffect(() => {
@@ -409,7 +410,7 @@ const Booking = () => {
 
                   try {
                     setChecking(true);
-                    const resp = await hotelService.checkAvailability(hotelId, checkInDate, days, roomType);
+                    const resp = await hotelService.checkAvailability(hotelId, checkInDate, days, apiRoomType);
                     const payload = resp?.data || resp;
                     if (payload && payload.available === false) {
                       const dates = payload.dates || (payload.date ? [payload.date] : []);

@@ -98,17 +98,17 @@ exports.createBooking = async (req, res) => {
       });
     }
 
-    // Determine per-night price by room type (fallback to base price)
+    // Determine per-night price by room type
     const perNight = (() => {
       if (roomType) {
-        const upper = String(roomType).toUpperCase();
+        const upper = String(roomType).toUpperCase().replace('-', '_');
         if (upper === 'AC') return Number(hotelData.priceAc) || 0;
-        if (upper === 'Non-AC') return Number(hotelData.priceNonAc) || 0;
+        if (upper === 'NON_AC') return Number(hotelData.priceNonAc) || 0;
       }
-      // Require roomType now (legacy base price removed)
       return 0;
     })();
     if (perNight <= 0) {
+      console.warn(`[booking] pricing missing: hotel=${hotelData._id} roomType=${String(roomType).toUpperCase().replace('-', '_')} priceAc=${hotelData.priceAc} priceNonAc=${hotelData.priceNonAc}`);
       return res.status(400).json({ success:false, message:'Invalid or missing pricing for selected room type.' });
     }
     const totalPrice = perNight * days * qty;
@@ -143,11 +143,11 @@ exports.createBooking = async (req, res) => {
     let availableRooms = [];
 
     if (usesRooms) {
-      const wantedType = (roomType || '').toUpperCase();
-      if (!(wantedType === 'AC' || wantedType === 'Non-AC')) {
-        return res.status(400).json({ success: false, message: 'roomType is required (AC or Non-AC)' });
+      const wantedType = String(roomType || '').toUpperCase().replace('-', '_');
+      if (!(wantedType === 'AC' || wantedType === 'NON_AC')) {
+        return res.status(400).json({ success: false, message: 'roomType is required (AC or NON_AC)' });
       }
-      const candidates = rooms.filter(r => r.type === wantedType);
+      const candidates = rooms.filter(r => String(r.type || '').toUpperCase().replace('-', '_') === wantedType);
       if (candidates.length === 0) {
         return res.status(409).json({ success: false, message: `No rooms configured for type ${wantedType}` });
       }
@@ -232,7 +232,7 @@ exports.createBooking = async (req, res) => {
       const booking = await Booking.create({
         user: req.user.id,
         hotel,
-        roomType: usesRooms ? (roomType || '').toUpperCase() : undefined,
+        roomType: usesRooms ? String(roomType || '').toUpperCase().replace('-', '_') : undefined,
         room: usesRooms ? assignedRoom : undefined,
         roomNumber: usesRooms ? assignedRoomNumber : '',
         roomsCount: qty,
@@ -262,7 +262,7 @@ exports.createBooking = async (req, res) => {
       const booking = await Booking.create({
         user: req.user.id,
         hotel,
-        roomType: (roomType || '').toUpperCase(),
+        roomType: String(roomType || '').toUpperCase().replace('-', '_'),
         room: r._id,
         roomNumber: r.number,
         roomsCount: 1,
@@ -603,9 +603,9 @@ exports.createOfflineBooking = async (req, res) => {
     })();
     const perNightOffline = (() => {
       if (roomType) {
-        const upper = String(roomType).toUpperCase();
+        const upper = String(roomType).toUpperCase().replace('-', '_');
         if (upper === 'AC') return Number(hotel.priceAc) || 0;
-        if (upper === 'Non-AC') return Number(hotel.priceNonAc) || 0;
+        if (upper === 'NON_AC') return Number(hotel.priceNonAc) || 0;
       }
       return 0;
     })();
@@ -634,11 +634,11 @@ exports.createOfflineBooking = async (req, res) => {
     let assignedRoom = null;
     let assignedRoomNumber = '';
     if (usesRooms) {
-      const wantedType = (roomType || '').toUpperCase();
-      if (!(wantedType === 'AC' || wantedType === 'Non-AC')) {
-        return res.status(400).json({ success: false, message: 'roomType is required (AC or Non-AC)' });
+      const wantedType = String(roomType || '').toUpperCase().replace('-', '_');
+      if (!(wantedType === 'AC' || wantedType === 'NON_AC')) {
+        return res.status(400).json({ success: false, message: 'roomType is required (AC or NON_AC)' });
       }
-      const candidates = rooms.filter(r => r.type === wantedType);
+      const candidates = rooms.filter(r => String(r.type || '').toUpperCase().replace('-', '_') === wantedType);
       if (!candidates.length) return res.status(409).json({ success: false, message: `No rooms configured for type ${wantedType}` });
       const start = normalizedCheckIn;
       const end = normalizedCheckOut;

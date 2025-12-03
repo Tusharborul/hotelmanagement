@@ -101,9 +101,10 @@ exports.checkAvailability = async (req, res) => {
     const hasRooms = rooms && rooms.length > 0;
 
     if (hasRooms) {
-      // Compute availability by type
-      const totalAc = rooms.filter(r => r.type === 'AC').length;
-      const totalNonAc = rooms.filter(r => r.type === 'Non-AC').length;
+      // Compute availability by type (normalized)
+      const normType = t => String(t || '').toUpperCase().replace('-', '_');
+      const totalAc = rooms.filter(r => normType(r.type) === 'AC').length;
+      const totalNonAc = rooms.filter(r => normType(r.type) === 'NON_AC').length;
 
       let minRemainingAc = totalAc;
       let minRemainingNonAc = totalNonAc;
@@ -123,7 +124,7 @@ exports.checkAvailability = async (req, res) => {
         const nonAcBookedRooms = await Booking.distinct('room', {
           hotel: hotel._id,
           status: 'confirmed',
-          roomType: 'Non-AC',
+          roomType: 'NON_AC',
           checkInDate: { $lte: day },
           checkOutDate: { $gt: day }
         });
@@ -147,10 +148,11 @@ exports.checkAvailability = async (req, res) => {
         remainingNonAc: minRemainingNonAc
       };
       if (fullyBookedDate) response.date = fullyBookedDate;
-      if (roomType === 'AC') {
+      const reqType = String(roomType || '').toUpperCase().replace('-', '_');
+      if (reqType === 'AC') {
         response.available = minRemainingAc > 0;
         response.remaining = minRemainingAc;
-      } else if (roomType === 'Non-AC') {
+      } else if (reqType === 'NON_AC') {
         response.available = minRemainingNonAc > 0;
         response.remaining = minRemainingNonAc;
       }
@@ -302,9 +304,9 @@ exports.createHotel = async (req, res) => {
         roomsPayload.forEach(r => {
           if (!r) return;
           const number = String(r.number || r.no || '').trim();
-          const type = (r.type || r.roomType || '').toUpperCase();
-          if (number && (type === 'AC' || type === 'Non-AC')) {
-            toCreate.push({ hotel: hotel._id, number, type });
+          const typeRaw = (r.type || r.roomType || '').toUpperCase().replace('-', '_');
+          if (number && (typeRaw === 'AC' || typeRaw === 'NON_AC')) {
+            toCreate.push({ hotel: hotel._id, number, type: typeRaw });
           }
         });
       } else {
@@ -314,7 +316,7 @@ exports.createHotel = async (req, res) => {
           toCreate.push({ hotel: hotel._id, number: `A${i}`, type: 'AC' });
         }
         for (let i = 1; i <= nonN; i++) {
-          toCreate.push({ hotel: hotel._id, number: `N${i}`, type: 'Non-AC' });
+          toCreate.push({ hotel: hotel._id, number: `N${i}`, type: 'NON_AC' });
         }
       }
       if (toCreate.length) {
@@ -360,9 +362,9 @@ exports.addRooms = async (req, res) => {
       roomsPayload.forEach(r => {
         if (!r) return;
         const number = String(r.number || r.no || '').trim();
-        const type = (r.type || r.roomType || '').toUpperCase();
-        if (number && (type === 'AC' || type === 'Non-AC')) {
-          toCreate.push({ hotel: hotel._id, number, type });
+        const typeRaw = (r.type || r.roomType || '').toUpperCase().replace('-', '_');
+        if (number && (typeRaw === 'AC' || typeRaw === 'NON_AC')) {
+          toCreate.push({ hotel: hotel._id, number, type: typeRaw });
         }
       });
     } else {
@@ -377,7 +379,7 @@ exports.addRooms = async (req, res) => {
       }
       for (let i = 0; i < nonN; i++) {
         while (usedNumbers.has(`N${ni}`)) ni++;
-        toCreate.push({ hotel: hotel._id, number: `N${ni}`, type: 'Non-AC' }); ni++;
+        toCreate.push({ hotel: hotel._id, number: `N${ni}`, type: 'NON_AC' }); ni++;
       }
     }
     if (!toCreate.length) return res.status(400).json({ success: false, message: 'No rooms to add' });
@@ -504,8 +506,9 @@ exports.calendarAvailability = async (req, res) => {
     start.setHours(10,0,0,0); end.setHours(10,0,0,0);
 
     const rooms = await Room.find({ hotel: hotel._id, active: true }).lean();
-    const totalAc = rooms.filter(r => r.type === 'AC').length;
-    const totalNonAc = rooms.filter(r => r.type === 'Non-AC').length;
+    const normType = t => String(t || '').toUpperCase().replace('-', '_');
+    const totalAc = rooms.filter(r => normType(r.type) === 'AC').length;
+    const totalNonAc = rooms.filter(r => normType(r.type) === 'NON_AC').length;
 
     const days = [];
     for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
@@ -521,7 +524,7 @@ exports.calendarAvailability = async (req, res) => {
       const nonAcBookedRooms = await Booking.distinct('room', {
         hotel: hotel._id,
         status: 'confirmed',
-        roomType: 'Non-AC',
+        roomType: 'NON_AC',
         checkInDate: { $lte: day },
         checkOutDate: { $gt: day }
       });

@@ -437,6 +437,12 @@ const seedDatabase = async () => {
       console.log('Preserving existing hotels (set CLEAR_DB=true to clear)');
     }
 
+    // Normalize any legacy room type values from 'Non-AC' -> 'NON_AC'
+    const fixedRooms = await Room.updateMany({ type: 'Non-AC' }, { $set: { type: 'NON_AC' } });
+    if (fixedRooms.modifiedCount) {
+      console.log(`Normalized legacy room types: ${fixedRooms.modifiedCount} updated to NON_AC`);
+    }
+
     // Add hotels with the hotel owner as owner
     for (const hotelData of sampleHotels) {
       const existingHotel = await Hotel.findOne({ name: hotelData.name });
@@ -447,18 +453,18 @@ const seedDatabase = async () => {
           owner: hotelOwner._id,
           registrationNo: regNo
         });
-        // Seed rooms: default 5 AC + 6 Non-AC
-        const baseAc = 5;
-        const baseNon = 6;
+        // Seed rooms: configurable counts via env; defaults AC=5, NON_AC=6
+        const baseAc = Number(process.env.SEED_AC_ROOMS) || 5;
+        const baseNon = Number(process.env.SEED_NON_AC_ROOMS) || 6;
         const roomDocs = [];
         for (let i = 1; i <= baseAc; i++) roomDocs.push({ hotel: hotel._id, number: `A${i}`, type: 'AC' });
-        for (let i = 1; i <= baseNon; i++) roomDocs.push({ hotel: hotel._id, number: `N${i}`, type: 'Non-AC' });
+        for (let i = 1; i <= baseNon; i++) roomDocs.push({ hotel: hotel._id, number: `N${i}`, type: 'NON_AC' });
         if (roomDocs.length) {
           await Room.insertMany(roomDocs);
-          hotel.dailyCapacity = roomDocs.length; // sync to AC+Non-AC
+          hotel.dailyCapacity = roomDocs.length; // sync to AC + NON_AC
           await hotel.save();
         }
-        console.log(`Added hotel: ${hotelData.name} with ${baseAc} AC and ${baseNon} Non-AC rooms`);
+        console.log(`Added hotel: ${hotelData.name} with ${baseAc} AC and ${baseNon} NON_AC rooms`);
       } else {
         console.log(`Hotel already exists: ${hotelData.name}`);
       }
