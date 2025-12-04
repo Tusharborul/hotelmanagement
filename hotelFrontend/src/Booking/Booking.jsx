@@ -36,6 +36,8 @@ const Booking = () => {
   const [rangeEnd, setRangeEnd] = useState(null);
   const [roomType, setRoomType] = useState('AC');
   const [roomsCount, setRoomsCount] = useState(1);
+  // calendar popover state
+  const [showCalendar, setShowCalendar] = useState(false);
 
   // data
   const [hotel, setHotel] = useState(null);
@@ -380,10 +382,180 @@ const Booking = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Check-in Date</label>
-                <input type="date" value={checkInDate} min={isoFromUTC(new Date())} onChange={e => setCheckInDate(e.target.value)} className="w-full p-3 rounded-lg border border-gray-300" />
-              </div>
+              {/* Check-in Date Selector (modern popover) */}
+             <div className="relative">
+  <label className="flex flex-col w-full">
+    <span className="text-gray-900 text-sm font-medium pb-1.5">
+      Check-in Date
+    </span>
+    <div className="relative flex w-full items-stretch">
+      <input
+        className="form-input w-full h-11 md:h-12 rounded-2xl border border-gray-200 bg-white px-4 py-2 text-sm md:text-base text-gray-900 placeholder:text-gray-500 shadow-sm focus:border-primary/60 focus:ring-2 focus:ring-primary/50 cursor-pointer transition"
+        placeholder="Select a date"
+        value={(() => {
+          const dt = new Date(checkInDate + "T00:00:00Z");
+          return dt.toLocaleDateString(undefined, {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          });
+        })()}
+        readOnly
+        onClick={() => setShowCalendar(true)}
+        tabIndex={0}
+      />
+      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+        <span className="material-symbols-outlined text-gray-500 text-xl">
+          calendar_today
+        </span>
+      </div>
+    </div>
+  </label>
+
+  {/* Calendar Popover */}
+  {showCalendar && (
+    <div className="absolute z-50 mt-2 right-0 w-[260px] sm:w-[280px] rounded-2xl border border-gray-200 bg-white p-3 shadow-xl animate-fade-in">
+      <div className="flex flex-col gap-3">
+        {/* Calendar Header */}
+        <div className="flex items-center justify-between px-1">
+          <button
+            type="button"
+            className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100 transition"
+            onClick={() => setViewIndex((i) => Math.max(0, i - 1))}
+          >
+            <span
+              className="material-symbols-outlined text-gray-700"
+              style={{ fontSize: 20 }}
+            >
+              chevron_left
+            </span>
+          </button>
+          <p className="flex-1 text-center text-sm font-semibold text-gray-900">
+            {months[viewIndex] ? monthLabel(months[viewIndex]) : ""}
+          </p>
+          <button
+            type="button"
+            className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100 transition"
+            onClick={() =>
+              setViewIndex((i) =>
+                Math.min(Math.max(0, months.length - 1), i + 1)
+              )
+            }
+          >
+            <span
+              className="material-symbols-outlined text-gray-700"
+              style={{ fontSize: 20 }}
+            >
+              chevron_right
+            </span>
+          </button>
+        </div>
+
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-7 gap-y-1">
+          {["S", "M", "T", "W", "T", "F", "S"].map((d) => (
+            <p
+              key={d}
+              className="flex h-7 items-center justify-center text-[11px] font-semibold text-gray-500"
+            >
+              {d}
+            </p>
+          ))}
+          {/* Dates */}
+          {(() => {
+            const m = months[viewIndex];
+            if (!m) return null;
+            const first = startOfMonthUTC(m.year, m.month);
+            const pad = new Date(first).getUTCDay();
+            const cells = [];
+            for (let i = 0; i < pad; i++)
+              cells.push(<div key={`pad-${i}`} className="h-8" />);
+
+            const daysInMonth = new Date(
+              Date.UTC(m.year, m.month + 1, 0)
+            ).getUTCDate();
+            const todayIso = isoFromUTC(new Date());
+
+            for (let d = 1; d <= daysInMonth; d++) {
+              const dateUTC = new Date(Date.UTC(m.year, m.month, d));
+              const isoUTC = isoFromUTC(dateUTC);
+              const dayData = getDayData(m, isoUTC);
+              const isPast = isoUTC < todayIso;
+              const available =
+                !isPast &&
+                (roomType === "AC"
+                  ? Number(dayData?.availableAc) > 0
+                  : Number(dayData?.availableNonAc) > 0);
+              const isToday = isoUTC === isoFromUTC(new Date());
+              const inRange =
+                !isPast &&
+                (rangeStart && rangeEnd
+                  ? isoUTC >= rangeStart && isoUTC <= rangeEnd
+                  : isoUTC === rangeStart);
+
+              let className =
+                "flex h-8 w-8 mx-auto items-center justify-center text-xs md:text-sm rounded-full transition ";
+
+              if (isPast) {
+                className +=
+                  "bg-gray-100 text-gray-400 cursor-not-allowed";
+              } else if (inRange) {
+                className +=
+                  "bg-blue-400 text-white font-semibold shadow-sm";
+              } else if (available) {
+                className +=
+                  "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 cursor-pointer";
+              } else {
+                className +=
+                  "bg-red-50 text-red-500 cursor-not-allowed";
+              }
+
+              // if (isToday && !inRange && available) {
+              //   className += " ring-1 ring-blue/40";
+              // }
+
+              cells.push(
+                <button
+                  key={isoUTC}
+                  className={className}
+                  onClick={() => {
+                    if (!isPast && available) {
+                      setRangeStart(isoUTC);
+                      setRangeEnd(isoUTC);
+                      setCheckInDate(isoUTC);
+                      setDays(1);
+                      setShowCalendar(false);
+                    }
+                  }}
+                  disabled={isPast || !available}
+                  tabIndex={-1}
+                >
+                  {d}
+                </button>
+              );
+            }
+            return cells;
+          })()}
+        </div>
+      </div>
+
+      {/* Buttons */}
+      <div className="flex justify-end gap-2 pt-3">
+        <button
+          type="button"
+          className="h-9 px-3 rounded-lg bg-gray-100 text-gray-800 text-xs md:text-sm font-medium hover:bg-gray-200 transition"
+          onClick={() => {
+            setShowCalendar(false);
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  )}
+</div>
+
 
               <hr className="border-gray-200" />
 

@@ -4,6 +4,15 @@ const Room = require('../models/Room');
 const Stripe = require('stripe');
 const { inrToUsd } = require('../utils/currency');
 
+// Normalize room type inputs/values to either 'AC' or 'Non-AC'
+const normalizeRoomType = (t) => {
+  if (!t && t !== 0) return '';
+  const s = String(t || '').trim();
+  if (/^ac$/i.test(s)) return 'AC';
+  if (/^non[_\-\s]?ac$/i.test(s) || /^nonac$/i.test(s)) return 'Non-AC';
+  return s;
+};
+
 // @desc    Get all bookings
 // @route   GET /api/bookings
 // @access  Private
@@ -101,9 +110,9 @@ exports.createBooking = async (req, res) => {
     // Determine per-night price by room type
     const perNight = (() => {
       if (roomType) {
-        const upper = String(roomType).toUpperCase().replace('-', '_');
-        if (upper === 'AC') return Number(hotelData.priceAc) || 0;
-        if (upper === 'NON_AC') return Number(hotelData.priceNonAc) || 0;
+        const norm = normalizeRoomType(roomType);
+        if (norm === 'AC') return Number(hotelData.priceAc) || 0;
+        if (norm === 'Non-AC') return Number(hotelData.priceNonAc) || 0;
       }
       return 0;
     })();
@@ -143,11 +152,11 @@ exports.createBooking = async (req, res) => {
     let availableRooms = [];
 
     if (usesRooms) {
-      const wantedType = String(roomType || '').toUpperCase().replace('-', '_');
-      if (!(wantedType === 'AC' || wantedType === 'NON_AC')) {
-        return res.status(400).json({ success: false, message: 'roomType is required (AC or NON_AC)' });
+      const wantedType = normalizeRoomType(roomType);
+      if (!(wantedType === 'AC' || wantedType === 'Non-AC')) {
+        return res.status(400).json({ success: false, message: 'roomType is required (AC or Non-AC)' });
       }
-      const candidates = rooms.filter(r => String(r.type || '').toUpperCase().replace('-', '_') === wantedType);
+      const candidates = rooms.filter(r => normalizeRoomType(r.type) === wantedType);
       if (candidates.length === 0) {
         return res.status(409).json({ success: false, message: `No rooms configured for type ${wantedType}` });
       }
@@ -232,7 +241,7 @@ exports.createBooking = async (req, res) => {
       const booking = await Booking.create({
         user: req.user.id,
         hotel,
-        roomType: usesRooms ? String(roomType || '').toUpperCase().replace('-', '_') : undefined,
+        roomType: usesRooms ? normalizeRoomType(roomType) : undefined,
         room: usesRooms ? assignedRoom : undefined,
         roomNumber: usesRooms ? assignedRoomNumber : '',
         roomsCount: qty,
@@ -262,7 +271,7 @@ exports.createBooking = async (req, res) => {
       const booking = await Booking.create({
         user: req.user.id,
         hotel,
-        roomType: String(roomType || '').toUpperCase().replace('-', '_'),
+        roomType: normalizeRoomType(roomType),
         room: r._id,
         roomNumber: r.number,
         roomsCount: 1,
@@ -603,9 +612,9 @@ exports.createOfflineBooking = async (req, res) => {
     })();
     const perNightOffline = (() => {
       if (roomType) {
-        const upper = String(roomType).toUpperCase().replace('-', '_');
-        if (upper === 'AC') return Number(hotel.priceAc) || 0;
-        if (upper === 'NON_AC') return Number(hotel.priceNonAc) || 0;
+        const norm = normalizeRoomType(roomType);
+        if (norm === 'AC') return Number(hotel.priceAc) || 0;
+        if (norm === 'Non-AC') return Number(hotel.priceNonAc) || 0;
       }
       return 0;
     })();
@@ -634,11 +643,11 @@ exports.createOfflineBooking = async (req, res) => {
     let assignedRoom = null;
     let assignedRoomNumber = '';
     if (usesRooms) {
-      const wantedType = String(roomType || '').toUpperCase().replace('-', '_');
-      if (!(wantedType === 'AC' || wantedType === 'NON_AC')) {
-        return res.status(400).json({ success: false, message: 'roomType is required (AC or NON_AC)' });
+      const wantedType = normalizeRoomType(roomType);
+      if (!(wantedType === 'AC' || wantedType === 'Non-AC')) {
+        return res.status(400).json({ success: false, message: 'roomType is required (AC or Non-AC)' });
       }
-      const candidates = rooms.filter(r => String(r.type || '').toUpperCase().replace('-', '_') === wantedType);
+      const candidates = rooms.filter(r => normalizeRoomType(r.type) === wantedType);
       if (!candidates.length) return res.status(409).json({ success: false, message: `No rooms configured for type ${wantedType}` });
       const start = normalizedCheckIn;
       const end = normalizedCheckOut;
