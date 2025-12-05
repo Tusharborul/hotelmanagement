@@ -6,7 +6,7 @@ import { authService } from "../services/authService";
 import getImageUrl from '../utils/getImageUrl';
 import Spinner from '../components/Spinner';
 import { formatINR } from '../utils/currency';
-import Head from '../head';
+import Layout from '../Dashboard/components/Layout.jsx';
 
 // --- Utility helpers (UTC-safe) -------------------------------------------------
 const isoFromUTC = (date) => {
@@ -58,6 +58,23 @@ const Booking = () => {
   }, [hotel, roomType]);
   const totalPrice = days * pricePerDay * roomsCount;
   const apiRoomType = useMemo(() => (roomType || '').toUpperCase().replace('-', '_'), [roomType]);
+
+  // compute maximum available rooms across the selected range (minimum per-day availability)
+  const maxAvailableForRange = useMemo(() => {
+    if (!rangeStart || !rangeEnd) return null;
+    let min = Infinity;
+    const start = new Date(rangeStart + 'T00:00:00Z');
+    const end = new Date(rangeEnd + 'T00:00:00Z');
+    for (let dt = new Date(start); dt <= end; dt = new Date(dt.getTime() + 24*60*60*1000)) {
+      const iso = isoFromUTC(dt);
+      const m = months.find(mm => mm.days?.some(d => d.isoUTC === iso));
+      const dayData = m ? (m.days || []).find(d => d.isoUTC === iso) : null;
+      const availableRooms = roomType === 'AC' ? Number(dayData?.availableAc || 0) : Number(dayData?.availableNonAc || 0);
+      if (availableRooms === 0) return 0; // fully booked for at least one day
+      if (Number.isFinite(availableRooms)) min = Math.min(min, availableRooms);
+    }
+    return min === Infinity ? null : min;
+  }, [rangeStart, rangeEnd, months, roomType]);
 
   // --- fetch hotel --------------------------------------------------------------
   useEffect(() => {
@@ -250,11 +267,9 @@ const Booking = () => {
   );
 
   return (
-    <div>
-      <div className="fixed top-0 inset-x-0 z-50 bg-white ">
-      <Head />
-      </div>
-      <div className="bg-linear-to-b from-white via-blue-50/30 to-white min-h-screen pt-24">
+    <Layout role="user" title="Book a Room" subtitle={`Booking at ${hotelName || 'Hotel'}`}>
+      
+      <div className="bg-linear-to-b from-white via-blue-50/30 to-white min-h-screen ">
                 <div className="max-w-7xl mx-auto px-8 w-full">
       <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 pt-10 pb-20">
         {/* Left column - image + calendar */}
@@ -283,6 +298,12 @@ const Booking = () => {
                 <button onClick={() => setViewIndex(i => Math.max(0, i - 1))} className="p-2 rounded-full hover:bg-gray-100"><span>◀</span></button>
                 <h3 className=" md:text-lg font-bold">{months[viewIndex] ? monthLabel(months[viewIndex]) : 'Loading...'}</h3>
                 <button onClick={() => setViewIndex(i => Math.min(Math.max(0, months.length - 1), i + 1))} className="p-2 rounded-full hover:bg-gray-100"><span>▶</span></button>
+              </div>
+                <div className="hidden sm:flex absolute left-0 items-center gap-3  text-sm text-gray-600">
+                 
+
+                 <button type="button" onClick={() => setRoomType('AC')} className={`px-3 py-1 rounded-full    ${roomType==='AC' ? 'bg-blue-50 border-blue-600 text-blue-600' : 'bg-white border-gray-200 text-gray-700 hover:border-blue-600'}`}>AC</button>
+                  <button type="button" onClick={() => setRoomType('Non-AC')} className={`px-3 py-1 rounded-full ${roomType==='Non-AC' ? 'bg-blue-50 border-blue-600 text-blue-600' : 'bg-white border-gray-200 text-gray-700 hover:border-blue-600'}`}>Non-AC</button>
               </div>
 
               <div className="hidden sm:flex absolute right-0 items-center gap-3  text-sm text-gray-600">
@@ -359,8 +380,8 @@ const Booking = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Room Type</label>
                 <div className="grid grid-cols-2 gap-3">
-                  <button type="button" onClick={() => setRoomType('AC')} className={`w-full py-2 px-4 rounded-lg border font-semibold text-sm ${roomType==='AC' ? 'bg-primary/20 border-primary text-primary' : 'bg-white border-gray-200 text-gray-700 hover:border-primary'}`}>AC</button>
-                  <button type="button" onClick={() => setRoomType('Non-AC')} className={`w-full py-2 px-4 rounded-lg border font-semibold text-sm ${roomType==='Non-AC' ? 'bg-primary/20 border-primary text-primary' : 'bg-white border-gray-200 text-gray-700 hover:border-primary'}`}>Non-AC</button>
+                  <button type="button" onClick={() => setRoomType('AC')} className={`w-full py-2 px-4 rounded-lg border font-semibold text-sm ${roomType==='AC' ? 'bg-blue-50 border-blue-600 text-blue-600' : 'bg-white border-gray-200 text-gray-700 hover:border-blue-600'}`}>AC</button>
+                  <button type="button" onClick={() => setRoomType('Non-AC')} className={`w-full py-2 px-4 rounded-lg border font-semibold text-sm ${roomType==='Non-AC' ? 'bg-blue-50 border-blue-600 text-blue-600' : 'bg-white border-gray-200 text-gray-700 hover:border-blue-600'}`}>Non-AC</button>
                 </div>
               </div>
 
@@ -376,9 +397,19 @@ const Booking = () => {
               <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-gray-700">Number of Rooms</label>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setRoomsCount(prev => Math.max(1, prev - 1))} className="w-9 h-9 rounded-full border border-gray-300 hover:bg-gray-100">-</button>
+                  <button
+                    onClick={() => setRoomsCount(prev => Math.max(1, prev - 1))}
+                    disabled={roomsCount <= 1}
+                    className={`w-9 h-9 rounded-full border border-gray-300 ${roomsCount <= 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+                    aria-label="Decrease rooms"
+                  >-</button>
                   <div className="w-12 text-center font-semibold">{roomsCount}</div>
-                  <button onClick={() => setRoomsCount(prev => prev + 1)} className="w-9 h-9 rounded-full border border-gray-300 hover:bg-gray-100">+</button>
+                  <button
+                    onClick={() => setRoomsCount(prev => prev + 1)}
+                    disabled={maxAvailableForRange !== null ? roomsCount >= maxAvailableForRange : false}
+                    className={`w-9 h-9 rounded-full border border-gray-300 ${maxAvailableForRange !== null && roomsCount >= maxAvailableForRange ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+                    aria-label="Increase rooms"
+                  >+</button>
                 </div>
               </div>
 
@@ -390,7 +421,7 @@ const Booking = () => {
     </span>
     <div className="relative flex w-full items-stretch">
       <input
-        className="form-input w-full h-11 md:h-12 rounded-2xl border border-gray-200 bg-white px-4 py-2 text-sm md:text-base text-gray-900 placeholder:text-gray-500 shadow-sm focus:border-primary/60 focus:ring-2 focus:ring-primary/50 cursor-pointer transition"
+        className="form-input w-full h-11 md:h-12 rounded-2xl border border-gray-200 bg-white px-4 py-2 text-sm md:text-base text-gray-900 placeholder:text-gray-500 shadow-sm focus:border-blue-600 focus:ring-2 focus:ring-blue-600/50 cursor-pointer transition"
         placeholder="Select a date"
         value={(() => {
           const dt = new Date(checkInDate + "T00:00:00Z");
@@ -675,7 +706,7 @@ const Booking = () => {
           <div className="bg-white px-5 py-3 rounded-xl shadow-lg border border-gray-100 text-[#1a237e] font-medium"><Spinner label="Checking availability..." /></div>
         </div>
       )}
-    </div>
+   </Layout>
   );
 };
 

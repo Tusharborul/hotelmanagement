@@ -6,6 +6,8 @@ import Photos from "./photos.jsx";
 import Details from "./Details.jsx";
 import Treasure from "./Treasure.jsx";
 import { hotelService } from "../services/hotelService";
+import Layout from '../Dashboard/components/Layout.jsx';
+import { authService } from "../services/authService";
 
 
 const HotelDetails = () => {
@@ -36,14 +38,41 @@ const HotelDetails = () => {
         fetchHotelDetails();
     }, [hotelId]);
 
+    const isAuthed = authService.isAuthenticated();
+
     if (loading) {
+        if (isAuthed) {
+            return (
+                <Layout role="user" title="Loading..." subtitle="">
+                    <div className="max-w-7xl mx-auto px-8 w-full py-12 text-center">
+                        Loading hotel details...
+                    </div>
+                </Layout>
+            );
+        }
+
         return (
             <>
                 <Head />
                 <div className="max-w-7xl mx-auto px-8 w-full py-12 text-center">
                     Loading hotel details...
                 </div>
-                <Foot />
+                  <Foot />
+            </>
+        );
+    }
+
+    if (isAuthed) {
+        return (
+            <>
+                <Layout role="user" title={hotel?.name || 'Hotel Details'} subtitle={hotel?.location || ''}>
+                    <div className="max-w-7xl mx-auto px-8 w-full">
+                        <Photos hotel={hotel} />
+                        <Details hotel={hotel} hotelId={hotelId} />
+                        <Treasure hotel={hotel} />
+                    </div>
+                </Layout>
+                
             </>
         );
     }

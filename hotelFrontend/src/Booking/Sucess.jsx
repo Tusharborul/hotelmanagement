@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Img from '../assets/Logos/Group 1 1.png';
+import Layout from '../Dashboard/components/Layout';
 
 const Sucess = () => {
     const navigate = useNavigate();
     return (
+        <Layout role="user" title="Booking Successful" subtitle="Your booking has been completed">
         <div className="w-full min-h-screen flex flex-col items-center bg-white pt-4 sm:pt-6 md:pt-8 px-4 sm:px-6">
             {/* Logo */}
             <div className="text-xl sm:text-2xl font-bold text-[#3252DF] mb-6 sm:mb-8">
@@ -33,6 +35,7 @@ const Sucess = () => {
                 Go to Dashboard
             </button>
         </div>
+        </Layout>
     );
 };
 

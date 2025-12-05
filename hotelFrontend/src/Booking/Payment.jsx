@@ -6,6 +6,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import FullScreenLoader from '../components/FullScreenLoader';
 import { formatINR } from '../utils/currency';
+import Layout from '../Dashboard/components/Layout.jsx';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 
@@ -175,11 +176,9 @@ const Payment = () => {
     );
   };
   return (
+    <Layout role="user" title="Make a Payment" subtitle={`Payment for ${hotelName || 'your booking'}`}>
     <div className="w-full min-h-screen flex flex-col items-center bg-white pt-4 sm:pt-6 md:pt-8 px-4 sm:px-6">
-      {/* Logo */}
-      <div className="text-xl sm:text-2xl font-bold text-[#3252DF] mb-6 sm:mb-8">
-        India<span className="text-[#1a237e]">Stay.</span>
-      </div>
+     
 
       {/* Progress Bar */}
       <div className="flex items-center justify-center mb-6 sm:mb-8">
@@ -254,6 +253,7 @@ const Payment = () => {
       {/* Footer spacing - checkout form contains its own buttons */}
       <div style={{ height: 24 }} />
     </div>
+    </Layout>
   );
 };
 
